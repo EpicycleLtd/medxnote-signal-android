@@ -181,15 +181,15 @@ public class ConversationFragment extends Fragment
     if (messageRecords.size() > 1) {
       menu.findItem(R.id.menu_context_forward).setVisible(false);
       menu.findItem(R.id.menu_context_details).setVisible(false);
-      menu.findItem(R.id.menu_context_save_attachment).setVisible(false);
+//      menu.findItem(R.id.menu_context_save_attachment).setVisible(false);
       menu.findItem(R.id.menu_context_resend).setVisible(false);
     } else {
       MessageRecord messageRecord = messageRecords.iterator().next();
 
       menu.findItem(R.id.menu_context_resend).setVisible(messageRecord.isFailed());
-      menu.findItem(R.id.menu_context_save_attachment).setVisible(messageRecord.isMms()              &&
-                                                                  !messageRecord.isMmsNotification() &&
-                                                                  ((MediaMmsMessageRecord)messageRecord).containsMediaSlide());
+//      menu.findItem(R.id.menu_context_save_attachment).setVisible(messageRecord.isMms()              &&
+//                                                                  !messageRecord.isMmsNotification() &&
+//                                                                  ((MediaMmsMessageRecord)messageRecord).containsMediaSlide());
 
       menu.findItem(R.id.menu_context_forward).setVisible(true);
       menu.findItem(R.id.menu_context_details).setVisible(true);
@@ -335,7 +335,7 @@ public class ConversationFragment extends Fragment
       }
     }.execute(message);
   }
-
+/*
   private void handleSaveAttachment(final MediaMmsMessageRecord message) {
     SaveAttachmentTask.showWarningDialog(getActivity(), new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialog, int which) {
@@ -354,7 +354,7 @@ public class ConversationFragment extends Fragment
       }
     });
   }
-
+*/
   @Override
   public Loader<Cursor> onCreateLoader(int id, Bundle args) {
     return new ConversationLoader(getActivity(), threadId, args.getLong("limit", PARTIAL_CONVERSATION_LIMIT));
@@ -466,10 +466,10 @@ public class ConversationFragment extends Fragment
           handleResendMessage(getSelectedMessageRecord());
           actionMode.finish();
           return true;
-        case R.id.menu_context_save_attachment:
-          handleSaveAttachment((MediaMmsMessageRecord)getSelectedMessageRecord());
-          actionMode.finish();
-          return true;
+//        case R.id.menu_context_save_attachment:
+//          handleSaveAttachment((MediaMmsMessageRecord)getSelectedMessageRecord());
+//          actionMode.finish();
+//          return true;
       }
 
       return false;

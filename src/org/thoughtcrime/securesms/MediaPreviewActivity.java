@@ -165,7 +165,7 @@ public class MediaPreviewActivity extends PassphraseRequiredActionBarActivity im
   private void cleanupMedia() {
     image.setImageDrawable(null);
   }
-
+/*
   private void saveToDisk() {
     SaveAttachmentTask.showWarningDialog(this, new DialogInterface.OnClickListener() {
       @Override
@@ -175,7 +175,7 @@ public class MediaPreviewActivity extends PassphraseRequiredActionBarActivity im
       }
     });
   }
-
+*/
   @Override
   public boolean onPrepareOptionsMenu(Menu menu) {
     super.onPrepareOptionsMenu(menu);
@@ -192,7 +192,7 @@ public class MediaPreviewActivity extends PassphraseRequiredActionBarActivity im
     super.onOptionsItemSelected(item);
 
     switch (item.getItemId()) {
-    case R.id.save:         saveToDisk(); return true;
+//    case R.id.save:         saveToDisk(); return true;
     case android.R.id.home: finish();     return true;
     }
 

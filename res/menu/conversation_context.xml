@@ -24,10 +24,11 @@
           android:id="@+id/menu_context_resend"
           android:visible="false"
           app:showAsAction="never" />
-
+<!--
     <item android:title="@string/conversation_context_image__save_attachment"
           android:id="@+id/menu_context_save_attachment"
           android:visible="false"
           android:icon="?menu_save_icon"
           app:showAsAction="always" />
+-->
 </menu>
