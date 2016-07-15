@@ -21,7 +21,7 @@
     <Preference android:title="@string/preferences__inactivity_timeout_interval"
                 android:key="pref_timeout_interval"
                 android:dependency="pref_timeout_passphrase"/>
-
+<!--
     <org.thoughtcrime.securesms.components.SwitchPreferenceCompat
                         android:defaultValue="true"
                         android:key="pref_screen_security"
@@ -30,4 +30,5 @@
 
     <Preference android:key="preference_category_blocked"
                 android:title="@string/preferences_app_protection__blocked_contacts" />
+-->
 </PreferenceScreen>

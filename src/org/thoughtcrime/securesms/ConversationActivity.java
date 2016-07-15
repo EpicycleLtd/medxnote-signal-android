@@ -383,8 +383,8 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
     menu.clear();
 
     if (isSingleConversation()) {
-      if (isSecureVoice) inflater.inflate(R.menu.conversation_callable_secure, menu);
-      else               inflater.inflate(R.menu.conversation_callable_insecure, menu);
+    //  if (isSecureVoice) inflater.inflate(R.menu.conversation_callable_secure, menu);
+    //  else               inflater.inflate(R.menu.conversation_callable_insecure, menu);
     } else if (isGroupConversation()) {
       inflater.inflate(R.menu.conversation_group_options, menu);
 

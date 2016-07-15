@@ -46,8 +46,8 @@ public class AppProtectionPreferenceFragment extends PreferenceFragment {
         .setOnPreferenceClickListener(new ChangePassphraseClickListener());
     this.findPreference(TextSecurePreferences.PASSPHRASE_TIMEOUT_INTERVAL_PREF)
         .setOnPreferenceClickListener(new PassphraseIntervalClickListener());
-    this.findPreference(PREFERENCE_CATEGORY_BLOCKED)
-        .setOnPreferenceClickListener(new BlockedContactsClickListener());
+//    this.findPreference(PREFERENCE_CATEGORY_BLOCKED)
+//        .setOnPreferenceClickListener(new BlockedContactsClickListener());
     disablePassphrase
         .setOnPreferenceChangeListener(new DisablePassphraseClickListener());
   }
@@ -79,6 +79,7 @@ public class AppProtectionPreferenceFragment extends PreferenceFragment {
         .setSummary(getResources().getQuantityString(R.plurals.AppProtectionPreferenceFragment_minutes, timeoutMinutes, timeoutMinutes));
   }
 
+/*
   private class BlockedContactsClickListener implements Preference.OnPreferenceClickListener {
     @Override
     public boolean onPreferenceClick(Preference preference) {
@@ -87,7 +88,7 @@ public class AppProtectionPreferenceFragment extends PreferenceFragment {
       return true;
     }
   }
-
+*/
   private class ChangePassphraseClickListener implements Preference.OnPreferenceClickListener {
     @Override
     public boolean onPreferenceClick(Preference preference) {
