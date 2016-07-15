@@ -136,7 +136,7 @@ public class SmsListener extends BroadcastReceiver {
       throw new AssertionError("Expression should match.");
     }
 
-    return challengeMatcher.group(2) + challengeMatcher.group(3);
+    return challengeMatcher.group(1) + challengeMatcher.group(2);
   }
 
   @Override
