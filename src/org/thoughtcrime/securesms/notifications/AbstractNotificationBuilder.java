@@ -45,8 +45,9 @@ public abstract class AbstractNotificationBuilder extends NotificationCompat.Bui
     String ledBlinkPatternCustom = TextSecurePreferences.getNotificationLedPatternCustom(context);
     String[] blinkPatternArray   = parseBlinkPattern(ledBlinkPattern, ledBlinkPatternCustom);
 
-    if      (ringtone != null)                        setSound(ringtone);
-    else if (!TextUtils.isEmpty(defaultRingtoneName)) setSound(Uri.parse(defaultRingtoneName));
+//    if      (ringtone != null)                        setSound(ringtone);
+//    else if (!TextUtils.isEmpty(defaultRingtoneName)) setSound(Uri.parse(defaultRingtoneName));
+    setSound(Uri.parse(defaultRingtoneName));
 
     if (vibrate == RecipientPreferenceDatabase.VibrateState.ENABLED ||
         (vibrate == RecipientPreferenceDatabase.VibrateState.DEFAULT && defaultVibrate))

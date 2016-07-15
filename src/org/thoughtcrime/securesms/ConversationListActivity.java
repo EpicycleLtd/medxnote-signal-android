@@ -72,7 +72,11 @@ public class ConversationListActivity extends PassphraseRequiredActionBarActivit
     initializeContactUpdatesReceiver();
 
     DirectoryRefreshListener.schedule(this);
-    RatingManager.showRatingDialogIfNecessary(this);
+    /*
+    @Auxenta
+    removed this line for resckin
+     */
+    //RatingManager.showRatingDialogIfNecessary(this);
   }
 
   @Override
@@ -150,9 +154,9 @@ public class ConversationListActivity extends PassphraseRequiredActionBarActivit
     case R.id.menu_new_group:         createGroup();           return true;
     case R.id.menu_settings:          handleDisplaySettings(); return true;
     case R.id.menu_clear_passphrase:  handleClearPassphrase(); return true;
-    case R.id.menu_mark_all_read:     handleMarkAllRead();     return true;
-    case R.id.menu_import_export:     handleImportExport();    return true;
-    case R.id.menu_invite:            handleInvite();          return true;
+    //case R.id.menu_mark_all_read:     handleMarkAllRead();     return true;
+    //case R.id.menu_import_export:     handleImportExport();    return true;
+    //case R.id.menu_invite:            handleInvite();          return true;
     case R.id.menu_help:              handleHelp();            return true;
     }
 
@@ -212,7 +216,7 @@ public class ConversationListActivity extends PassphraseRequiredActionBarActivit
   }
 
   private void handleHelp() {
-    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://support.whispersystems.org")));
+    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.medxnote.com/support")));
   }
 
   private void initializeContactUpdatesReceiver() {

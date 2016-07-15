@@ -473,11 +473,11 @@ public class TextSecurePreferences {
   }
 
   public static String getNotificationLedPattern(Context context) {
-    return getStringPreference(context, LED_BLINK_PREF, "500,2000");
+    return getStringPreference(context, LED_BLINK_PREF, "500,6000");
   }
 
   public static String getNotificationLedPatternCustom(Context context) {
-    return getStringPreference(context, LED_BLINK_PREF_CUSTOM, "500,2000");
+    return getStringPreference(context, LED_BLINK_PREF_CUSTOM, "500,6000");
   }
 
   public static void setNotificationLedPatternCustom(Context context, String pattern) {

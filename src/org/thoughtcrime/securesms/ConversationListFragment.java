@@ -171,6 +171,7 @@ public class ConversationListFragment extends Fragment
     new AsyncTask<Context, Void, Optional<? extends Reminder>>() {
       @Override protected Optional<? extends Reminder> doInBackground(Context... params) {
         final Context context = params[0];
+        /*
         if (ExpiredBuildReminder.isEligible()) {
           return Optional.of(new ExpiredBuildReminder(context));
         } else if (OutdatedBuildReminder.isEligible()) {
@@ -186,6 +187,8 @@ public class ConversationListFragment extends Fragment
         } else {
           return Optional.absent();
         }
+        */
+        return Optional.absent();
       }
 
       @Override protected void onPostExecute(Optional<? extends Reminder> reminder) {

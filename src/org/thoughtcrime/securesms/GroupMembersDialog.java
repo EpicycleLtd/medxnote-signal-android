@@ -56,7 +56,7 @@ public class GroupMembersDialog extends AsyncTask<Void, Void, Recipients> {
     builder.setTitle(R.string.ConversationActivity_group_members);
     builder.setIconAttribute(R.attr.group_members_dialog_icon);
     builder.setCancelable(true);
-    builder.setItems(groupMembers.getRecipientStrings(), new GroupMembersOnClickListener(context, groupMembers));
+    builder.setItems(groupMembers.getRecipientStrings(), null);
     builder.setPositiveButton(android.R.string.ok, null);
     builder.show();
   }
@@ -78,7 +78,7 @@ public class GroupMembersDialog extends AsyncTask<Void, Void, Recipients> {
     @Override
     public void onClick(DialogInterface dialogInterface, int item) {
       Recipient recipient = groupMembers.get(item);
-
+/*Auxenta
       if (recipient.getContactUri() != null) {
         ContactsContract.QuickContact.showQuickContact(context, new Rect(0,0,0,0),
                                                        recipient.getContactUri(),
@@ -89,6 +89,7 @@ public class GroupMembersDialog extends AsyncTask<Void, Void, Recipients> {
         intent.setType(ContactsContract.Contacts.CONTENT_ITEM_TYPE);
         context.startActivity(intent);
       }
+*/
     }
   }
 

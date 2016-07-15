@@ -11,7 +11,7 @@
     <LinearLayout android:orientation="horizontal"
                   android:layout_width="match_parent"
                   android:layout_height="wrap_content"
-                  android:weightSum="4">
+                  android:weightSum="3">
 
         <LinearLayout android:layout_width="match_parent"
                       android:layout_height="wrap_content"
@@ -35,7 +35,7 @@
                       android:text="@string/attachment_type_selector__image"/>
 
         </LinearLayout>
-
+<!--
         <LinearLayout android:layout_width="match_parent"
                       android:layout_height="wrap_content"
                       android:gravity="center"
@@ -58,7 +58,7 @@
                       android:text="@string/attachment_type_selector__audio"/>
 
         </LinearLayout>
-
+-->
         <LinearLayout android:layout_width="match_parent"
                       android:layout_height="wrap_content"
                       android:gravity="center"
@@ -84,6 +84,30 @@
         </LinearLayout>
 
         <LinearLayout android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <com.medxnote.securesms.components.CircleColorImageView
+                android:id="@+id/camera_button"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@drawable/ic_camera_white_36dp"
+                android:scaleType="center"
+                android:elevation="4dp"
+                app:circleColor="@color/green_400"/>
+
+            <TextView android:layout_marginTop="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                style="@style/AttachmentTypeLabel"
+                android:text="@string/attachment_type_selector__camera"/>
+
+        </LinearLayout>
+<!--
+        <LinearLayout android:layout_width="match_parent"
                       android:layout_height="wrap_content"
                       android:gravity="center"
                       android:orientation="vertical"
@@ -105,9 +129,9 @@
                       android:text="@string/attachment_type_selector__contact"/>
 
         </LinearLayout>
-
+-->
     </LinearLayout>
-
+<!--
     <LinearLayout android:orientation="horizontal"
                   android:layout_width="match_parent"
                   android:layout_height="wrap_content"
@@ -196,5 +220,5 @@
 
 
     </LinearLayout>
-
+-->
 </LinearLayout>

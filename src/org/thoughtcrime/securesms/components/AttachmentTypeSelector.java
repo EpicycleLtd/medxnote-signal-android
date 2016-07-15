@@ -40,12 +40,12 @@ public class AttachmentTypeSelector extends PopupWindow {
   private static final String TAG = AttachmentTypeSelector.class.getSimpleName();
 
   private final @NonNull ImageView   imageButton;
-  private final @NonNull ImageView   audioButton;
+//  private final @NonNull ImageView   audioButton;
   private final @NonNull ImageView   videoButton;
-  private final @NonNull ImageView   contactButton;
+//  private final @NonNull ImageView   contactButton;
   private final @NonNull ImageView   cameraButton;
-  private final @NonNull ImageView   locationButton;
-  private final @NonNull ImageView   closeButton;
+//  private final @NonNull ImageView   locationButton;
+//  private final @NonNull ImageView   closeButton;
 
   private @Nullable View                      currentAnchor;
   private @Nullable AttachmentClickedListener listener;
@@ -58,24 +58,24 @@ public class AttachmentTypeSelector extends PopupWindow {
 
     this.listener       = listener;
     this.imageButton    = ViewUtil.findById(layout, R.id.gallery_button);
-    this.audioButton    = ViewUtil.findById(layout, R.id.audio_button);
+//    this.audioButton    = ViewUtil.findById(layout, R.id.audio_button);
     this.videoButton    = ViewUtil.findById(layout, R.id.video_button);
-    this.contactButton  = ViewUtil.findById(layout, R.id.contact_button);
+//    this.contactButton  = ViewUtil.findById(layout, R.id.contact_button);
     this.cameraButton   = ViewUtil.findById(layout, R.id.camera_button);
-    this.closeButton    = ViewUtil.findById(layout, R.id.close_button);
-    this.locationButton = ViewUtil.findById(layout, R.id.location_button);
+//    this.closeButton    = ViewUtil.findById(layout, R.id.close_button);
+//    this.locationButton = ViewUtil.findById(layout, R.id.location_button);
 
     this.imageButton.setOnClickListener(new PropagatingClickListener(ADD_IMAGE));
-    this.audioButton.setOnClickListener(new PropagatingClickListener(ADD_SOUND));
+//    this.audioButton.setOnClickListener(new PropagatingClickListener(ADD_SOUND));
     this.videoButton.setOnClickListener(new PropagatingClickListener(ADD_VIDEO));
-    this.contactButton.setOnClickListener(new PropagatingClickListener(ADD_CONTACT_INFO));
+//    this.contactButton.setOnClickListener(new PropagatingClickListener(ADD_CONTACT_INFO));
     this.cameraButton.setOnClickListener(new PropagatingClickListener(TAKE_PHOTO));
-    this.locationButton.setOnClickListener(new PropagatingClickListener(ADD_LOCATION));
-    this.closeButton.setOnClickListener(new CloseClickListener());
+//    this.locationButton.setOnClickListener(new PropagatingClickListener(ADD_LOCATION));
+//    this.closeButton.setOnClickListener(new CloseClickListener());
 
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-      ViewUtil.findById(layout, R.id.location_linear_layout).setVisibility(View.INVISIBLE);
-    }
+//    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+//      ViewUtil.findById(layout, R.id.location_linear_layout).setVisibility(View.INVISIBLE);
+//    }
 
     setContentView(layout);
     setWidth(LinearLayout.LayoutParams.MATCH_PARENT);
@@ -110,11 +110,11 @@ public class AttachmentTypeSelector extends PopupWindow {
       animateButtonIn(imageButton, ANIMATION_DURATION / 2);
       animateButtonIn(cameraButton, ANIMATION_DURATION / 2);
 
-      animateButtonIn(audioButton, ANIMATION_DURATION / 3);
-      animateButtonIn(locationButton, ANIMATION_DURATION / 3);
+//      animateButtonIn(audioButton, ANIMATION_DURATION / 3);
+//      animateButtonIn(locationButton, ANIMATION_DURATION / 3);
       animateButtonIn(videoButton, ANIMATION_DURATION / 4);
-      animateButtonIn(contactButton, 0);
-      animateButtonIn(closeButton, 0);
+//      animateButtonIn(contactButton, 0);
+//      animateButtonIn(closeButton, 0);
     }
   }
 

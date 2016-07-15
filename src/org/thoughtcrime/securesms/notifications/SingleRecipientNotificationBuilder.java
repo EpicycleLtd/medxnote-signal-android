@@ -105,11 +105,12 @@ public class SingleRecipientNotificationBuilder extends AbstractNotificationBuil
                          @NonNull PendingIntent quickReplyIntent,
                          @NonNull PendingIntent wearableReplyIntent)
   {
-    Action markAsReadAction = new Action(R.drawable.check,
-                                         context.getString(R.string.MessageNotifier_mark_read),
-                                         markReadIntent);
+//    Action markAsReadAction = new Action(R.drawable.check,
+//                                         context.getString(R.string.MessageNotifier_mark_read),
+//                                         markReadIntent);
 
     if (masterSecret != null) {
+/*
       Action replyAction = new Action(R.drawable.ic_reply_white_36dp,
                                       context.getString(R.string.MessageNotifier_reply),
                                       quickReplyIntent);
@@ -126,10 +127,11 @@ public class SingleRecipientNotificationBuilder extends AbstractNotificationBuil
 
       extend(new NotificationCompat.WearableExtender().addAction(markAsReadAction)
                                                       .addAction(wearableReplyAction));
+*/
     } else {
-      addAction(markAsReadAction);
+//      addAction(markAsReadAction);
 
-      extend(new NotificationCompat.WearableExtender().addAction(markAsReadAction));
+//      extend(new NotificationCompat.WearableExtender().addAction(markAsReadAction));
     }
   }
 

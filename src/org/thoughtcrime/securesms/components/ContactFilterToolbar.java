@@ -23,8 +23,8 @@ public class ContactFilterToolbar extends Toolbar {
   private EditText        searchText;
   private AnimatingToggle toggle;
   private ImageView       action;
-  private ImageView       keyboardToggle;
-  private ImageView       dialpadToggle;
+//  private ImageView       keyboardToggle;
+//  private ImageView       dialpadToggle;
   private ImageView       clearToggle;
   private LinearLayout    toggleContainer;
 
@@ -44,10 +44,15 @@ public class ContactFilterToolbar extends Toolbar {
     this.action          = ViewUtil.findById(this, R.id.action_icon);
     this.searchText      = ViewUtil.findById(this, R.id.search_view);
     this.toggle          = ViewUtil.findById(this, R.id.button_toggle);
-    this.keyboardToggle  = ViewUtil.findById(this, R.id.search_keyboard);
-    this.dialpadToggle   = ViewUtil.findById(this, R.id.search_dialpad);
+//    this.keyboardToggle  = ViewUtil.findById(this, R.id.search_keyboard);
+//    this.dialpadToggle   = ViewUtil.findById(this, R.id.search_dialpad);
     this.clearToggle     = ViewUtil.findById(this, R.id.search_clear);
+    this.clearToggle.setVisibility(GONE);
     this.toggleContainer = ViewUtil.findById(this, R.id.toggle_container);
+
+/*
+     @Auxenta
+     removed for re skin the app
 
     this.keyboardToggle.setOnClickListener(new View.OnClickListener() {
       @Override
@@ -66,14 +71,15 @@ public class ContactFilterToolbar extends Toolbar {
         displayTogglingView(keyboardToggle);
       }
     });
+*/
 
     this.clearToggle.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
         searchText.setText("");
-
-        if (SearchUtil.isTextInput(searchText)) displayTogglingView(dialpadToggle);
-        else displayTogglingView(keyboardToggle);
+        clearToggle.setVisibility(GONE);
+//        if (SearchUtil.isTextInput(searchText)) displayTogglingView(dialpadToggle);
+//        else displayTogglingView(keyboardToggle);
       }
     });
 
@@ -90,15 +96,20 @@ public class ContactFilterToolbar extends Toolbar {
 
       @Override
       public void afterTextChanged(Editable s) {
-        if (!SearchUtil.isEmpty(searchText)) displayTogglingView(clearToggle);
-        else if (SearchUtil.isTextInput(searchText)) displayTogglingView(dialpadToggle);
-        else if (SearchUtil.isPhoneInput(searchText)) displayTogglingView(keyboardToggle);
+        if (!SearchUtil.isEmpty(searchText)) {
+          displayTogglingView(clearToggle);
+          clearToggle.setVisibility(VISIBLE);
+        }
+
+//        if (!SearchUtil.isEmpty(searchText)) displayTogglingView(clearToggle);
+//        else if (SearchUtil.isTextInput(searchText)) displayTogglingView(dialpadToggle);
+//        else if (SearchUtil.isPhoneInput(searchText)) displayTogglingView(keyboardToggle);
         notifyListener();
       }
     });
 
     expandTapArea(this, action);
-    expandTapArea(toggleContainer, dialpadToggle);
+//    expandTapArea(toggleContainer, dialpadToggle);
   }
 
   @Override

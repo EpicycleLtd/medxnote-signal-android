@@ -47,7 +47,6 @@ public class BasicIntroFragment extends Fragment {
 
     ((ImageView)v.findViewById(R.id.watermark)).setImageResource(drawable);
     ((TextView)v.findViewById(R.id.blurb)).setText(text);
-    ((TextView)v.findViewById(R.id.subblurb)).setText(subtext);
 
     return v;
   }
