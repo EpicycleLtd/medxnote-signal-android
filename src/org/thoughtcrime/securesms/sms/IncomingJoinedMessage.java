@@ -11,7 +11,7 @@ public class IncomingJoinedMessage extends IncomingTextMessage {
 
   @Override
   public boolean isJoined() {
-    return true;
+    return false;
   }
 
   @Override
