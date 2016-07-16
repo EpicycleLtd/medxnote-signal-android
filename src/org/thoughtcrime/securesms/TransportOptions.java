@@ -32,6 +32,7 @@ public class TransportOptions {
   public TransportOptions(Context context, boolean media) {
     this.context           = context;
     this.enabledTransports = initializeAvailableTransports(media);
+    setDefaultTransport(Type.TEXTSECURE);
   }
 
   public void reset(boolean media) {

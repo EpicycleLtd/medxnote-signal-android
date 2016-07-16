@@ -14,8 +14,7 @@ import org.whispersystems.libsignal.util.guava.Optional;
 
 public class SendButton extends ImageButton
     implements TransportOptions.OnTransportChangedListener,
-               TransportOptionsPopup.SelectedListener,
-               View.OnLongClickListener
+               TransportOptionsPopup.SelectedListener
 {
 
   private final TransportOptions transportOptions;
@@ -47,7 +46,7 @@ public class SendButton extends ImageButton
     TransportOptions transportOptions = new TransportOptions(getContext(), media);
     transportOptions.addOnTransportChangedListener(this);
 
-    setOnLongClickListener(this);
+//    setOnLongClickListener(this);
 
     return transportOptions;
   }
@@ -99,13 +98,13 @@ public class SendButton extends ImageButton
     setContentDescription(newTransport.getDescription());
   }
 
-  @Override
-  public boolean onLongClick(View v) {
-    if (transportOptions.getEnabledTransports().size() > 1) {
-      getTransportOptionsPopup().display(transportOptions.getEnabledTransports());
-      return true;
-    }
-
-    return false;
-  }
+//  @Override
+//  public boolean onLongClick(View v) {
+//    if (transportOptions.getEnabledTransports().size() > 1) {
+//      getTransportOptionsPopup().display(transportOptions.getEnabledTransports());
+//      return true;
+//    }
+//
+//    return false;
+//  }
 }
