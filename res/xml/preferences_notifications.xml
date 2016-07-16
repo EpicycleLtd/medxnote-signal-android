@@ -61,6 +61,6 @@
         android:key="pref_enable_new_contacts_notifications"
         android:title="@string/preferences__new_contacts_notifications"
         android:summary="@string/preferences__show_a_notification_for_new_signal_contacts"
-        android:defaultValue="true" />
+        android:defaultValue="false" />
 
 </PreferenceScreen>
