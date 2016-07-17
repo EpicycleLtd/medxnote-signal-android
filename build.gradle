@@ -186,9 +186,6 @@ android {
         exclude 'META-INF/NOTICE'
     }
 
-    signingConfigs {
-        release
-    }
 
     buildTypes {
         debug {
@@ -211,11 +208,19 @@ android {
         release {
             minifyEnabled true
             proguardFiles = buildTypes.debug.proguardFiles
-            signingConfig signingConfigs.release
+
+            lintOptions {
+                disable 'MissingTranslation'
+            }
         }
         dev.initWith(buildTypes.debug)
         dev {
             buildConfigField "boolean", "DEV_BUILD", "true"
+        }
+        applicationVariants.all { variant ->
+                        variant.outputs.each { output ->
+                          output.outputFile = file("$project.buildDir/apk/medxnote.apk")
+                        }
         }
     }
 
@@ -261,28 +266,5 @@ def getLastCommitTimestamp() {
     }
 }
 
-def Properties props = new Properties()
-def propFile = new File('signing.properties')
 
-if (propFile.canRead()){
-    props.load(new FileInputStream(propFile))
-
-    if (props !=null &&
-        props.containsKey('STORE_FILE')     &&
-        props.containsKey('STORE_PASSWORD') &&
-        props.containsKey('KEY_ALIAS')      &&
-        props.containsKey('KEY_PASSWORD'))
-    {
-        android.signingConfigs.release.storeFile = file(props['STORE_FILE'])
-        android.signingConfigs.release.storePassword = props['STORE_PASSWORD']
-        android.signingConfigs.release.keyAlias = props['KEY_ALIAS']
-        android.signingConfigs.release.keyPassword = props['KEY_PASSWORD']
-    } else {
-        println 'signing.properties found but some entries are missing'
-        android.buildTypes.release.signingConfig = null
-    }
-}else {
-    println 'signing.properties not found'
-    android.buildTypes.release.signingConfig = null
-}
 
