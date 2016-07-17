@@ -73,7 +73,8 @@ public class ContactsCursorLoader extends CursorLoader {
     } else if (mode == MODE_OTHER_ONLY) {
       cursorList.add(filterNonPushContacts(contactsDatabase.querySystemContacts(filter)));
     }
-
+/* Imre disabling entering non Textsecure phone number to send sms
+   2016-04-15
     if (!TextUtils.isEmpty(filter) && NumberUtil.isValidSmsOrEmail(filter)) {
       MatrixCursor newNumberCursor = new MatrixCursor(new String[] {ContactsDatabase.ID_COLUMN,
                                                                     ContactsDatabase.NAME_COLUMN,
@@ -88,7 +89,7 @@ public class ContactsCursorLoader extends CursorLoader {
 
       cursorList.add(newNumberCursor);
     }
-
+*/
     return new MergeCursor(cursorList.toArray(new Cursor[0]));
   }
 
