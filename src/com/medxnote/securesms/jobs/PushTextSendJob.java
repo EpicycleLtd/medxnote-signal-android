@@ -3,6 +3,8 @@ package com.medxnote.securesms.jobs;
 import android.content.Context;
 import android.util.Log;
 
+import com.medxnote.securesms.MismatchHandler;
+import com.medxnote.securesms.util.TextSecurePreferences;
 import com.medxnote.securesms.crypto.MasterSecret;
 import com.medxnote.securesms.database.DatabaseFactory;
 import com.medxnote.securesms.database.EncryptingSmsDatabase;
@@ -75,8 +77,12 @@ public class PushTextSendJob extends PushSendJob implements InjectableType {
       long       recipientId = recipients.getPrimaryRecipient().getRecipientId();
 
       database.addMismatchedIdentity(record.getId(), recipientId, e.getIdentityKey());
-      database.markAsSentFailed(record.getId());
-      database.markAsPush(record.getId());
+      if(TextSecurePreferences.isAutoacceptKeysEnabled(context)) {
+        new MismatchHandler(context).acceptMismatch(recipients);
+      } else {
+        database.markAsSentFailed(record.getId());
+        database.markAsPush(record.getId());
+      }
     }
   }
 

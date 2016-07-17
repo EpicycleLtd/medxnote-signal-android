@@ -3,6 +3,7 @@ package com.medxnote.securesms.jobs;
 import android.content.Context;
 import android.util.Log;
 
+import com.medxnote.securesms.MismatchHandler;
 import com.medxnote.securesms.crypto.MasterSecret;
 import com.medxnote.securesms.database.DatabaseFactory;
 import com.medxnote.securesms.database.MmsDatabase;
@@ -19,7 +20,7 @@ import com.medxnote.securesms.mms.OutgoingMediaMessage;
 import com.medxnote.securesms.recipients.Recipient;
 import com.medxnote.securesms.recipients.RecipientFactory;
 import com.medxnote.securesms.recipients.RecipientFormattingException;
-
+import com.medxnote.securesms.util.TextSecurePreferences;
 import org.whispersystems.jobqueue.JobParameters;
 import org.whispersystems.jobqueue.requirements.NetworkRequirement;
 import org.whispersystems.signalservice.api.SignalServiceMessageSender;
@@ -101,12 +102,27 @@ public class PushGroupSendJob extends PushSendJob implements InjectableType {
       for (UntrustedIdentityException uie : e.getUntrustedIdentityExceptions()) {
         Recipient recipient = RecipientFactory.getRecipientsFromString(context, uie.getE164Number(), false).getPrimaryRecipient();
         database.addMismatchedIdentity(messageId, recipient.getRecipientId(), uie.getIdentityKey());
+        if(TextSecurePreferences.isAutoacceptKeysEnabled(context)) {
+          new MismatchHandler(context).acceptMismatch(message.getRecipients(), uie.getE164Number());
+        }
       }
 
-      database.addFailures(messageId, failures);
-      database.markAsPush(messageId);
+      if(
+          !e.getNetworkExceptions().isEmpty() || (
+            !e.getUntrustedIdentityExceptions().isEmpty() &&
+            !TextSecurePreferences.isAutoacceptKeysEnabled(context)
+          )
+      ){
+        database.addFailures(messageId, failures);
+        database.markAsPush(messageId);
+      }
 
-      if (e.getNetworkExceptions().isEmpty() && e.getUntrustedIdentityExceptions().isEmpty()) {
+      if(
+          !e.getNetworkExceptions().isEmpty() || (
+            !e.getUntrustedIdentityExceptions().isEmpty() &&
+            !TextSecurePreferences.isAutoacceptKeysEnabled(context)
+          )
+      ){
         database.markAsSecure(messageId);
         database.markAsSent(messageId);
         markAttachmentsUploaded(messageId, message.getAttachments());

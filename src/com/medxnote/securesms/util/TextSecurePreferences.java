@@ -44,6 +44,9 @@ public class TextSecurePreferences {
   public  static final String THREAD_TRIM_NOW                  = "pref_trim_now";
   public  static final String ENABLE_MANUAL_MMS_PREF           = "pref_enable_manual_mms";
 
+  private static final String AUTOACCEPT_PREF                  = "pref_enable_autoaccept_changed_keys";
+  private static final String AUTOACCEPT_MSG_PREF              = "pref_enable_autoaccept_show_message";
+
   private static final String LAST_VERSION_CODE_PREF           = "last_version_code";
   private static final String LAST_EXPERIENCE_VERSION_PREF     = "last_experience_version_code";
   public  static final String RINGTONE_PREF                    = "pref_key_ringtone";
@@ -458,6 +461,14 @@ public class TextSecurePreferences {
 
   public static boolean isNotificationsEnabled(Context context) {
     return getBooleanPreference(context, NOTIFICATION_PREF, true);
+  }
+
+  public static boolean isAutoacceptKeysEnabled(Context context) {
+    return getBooleanPreference(context, AUTOACCEPT_PREF, true);
+  }
+
+  public static boolean isAutoacceptMessageEnabled(Context context) {
+    return getBooleanPreference(context, AUTOACCEPT_MSG_PREF, true);
   }
 
   public static String getNotificationRingtone(Context context) {

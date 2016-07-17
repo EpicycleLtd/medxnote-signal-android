@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import android.util.Pair;
 
+import com.medxnote.securesms.MismatchHandler;
 import com.medxnote.securesms.attachments.DatabaseAttachment;
 import com.medxnote.securesms.attachments.PointerAttachment;
 import com.medxnote.securesms.crypto.MasterSecret;
@@ -478,11 +479,18 @@ public class PushDecryptJob extends ContextJob {
         Pair<Long, Long>            messageAndThreadId = database.insertMessageInbox(masterSecret, bundleMessage);
 
         database.setMismatchedIdentity(messageAndThreadId.first, recipientId, identityKey);
-        MessageNotifier.updateNotification(context, masterSecret.getMasterSecret().orNull(), messageAndThreadId.second);
+        if(!TextSecurePreferences.isAutoacceptKeysEnabled(context)) {
+          MessageNotifier.updateNotification(context, masterSecret.getMasterSecret().orNull(), messageAndThreadId.second);
+        }
       } else {
-        database.updateMessageBody(masterSecret, smsMessageId.get(), encoded);
-        database.markAsPreKeyBundle(smsMessageId.get());
+        if(!TextSecurePreferences.isAutoacceptKeysEnabled(context)) {
+          database.updateMessageBody(masterSecret, smsMessageId.get(), encoded);
+          database.markAsPreKeyBundle(smsMessageId.get());
+        }
         database.setMismatchedIdentity(smsMessageId.get(), recipientId, identityKey);
+      }
+      if(TextSecurePreferences.isAutoacceptKeysEnabled(context)) {
+        new MismatchHandler(context).acceptMismatch(recipients);
       }
     } catch (InvalidMessageException | InvalidVersionException e) {
       throw new AssertionError(e);

@@ -1202,7 +1202,12 @@
     <!-- transport_selection_list_item -->
     <string name="transport_selection_list_item__transport_icon">Transport icon</string>
 
-
+    <!-- autoaccept keys -->
+    <string name="MessageDisplayHelper_keys_have_changed">%s has reinstalled the app or updated the security keys</string>
+    <string name="preferences__enable_autoaccept_changed_keys">Accept keys automatically</string>
+    <string name="preferences__enable_autoaccept_changed_keys_summ">Accept changed keys automatically</string>
+    <string name="preferences__enable_autoaccept_show_message">Show message about changed keys</string>
+    <string name="preferences__enable_autoaccept_show_message_summ">Show message about changed keys</string>
     <!-- EOF -->
 
 </resources>

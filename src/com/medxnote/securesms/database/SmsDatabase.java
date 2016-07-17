@@ -535,6 +535,28 @@ public class SmsDatabase extends MessagingDatabase {
     return insertMessageInbox(message, Types.BASE_INBOX_TYPE);
   }
 
+  public long insertKeysChanged(long threadId, Recipient recipient, long date)
+  {
+    // We can set Types.GROUP_UPDATE_BIT;
+    // And the keys update notifications will be static
+    long type = 0;
+    type |= Types.KEY_UPDATED_BIT;
+    type |= Types.KEY_EXCHANGE_BIT;
+    Log.e(TAG, "Recipient:" + recipient.getNumber(), new Exception());
+    ContentValues contentValues = new ContentValues(6);
+    contentValues.put(ADDRESS, recipient.getNumber());
+    contentValues.put(THREAD_ID, threadId);
+    contentValues.put(BODY, "");
+    contentValues.put(DATE_RECEIVED, date-1);
+    contentValues.put(DATE_SENT, date-1);
+    contentValues.put(READ, 0);
+    contentValues.put(TYPE, type);
+
+    SQLiteDatabase db        = databaseHelper.getWritableDatabase();
+    long           messageId = db.insert(TABLE_NAME, ADDRESS, contentValues);
+    return messageId;
+  }
+
   protected long insertMessageOutbox(long threadId, OutgoingTextMessage message,
                                      long type, boolean forceSms, long date)
   {

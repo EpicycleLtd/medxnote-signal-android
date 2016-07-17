@@ -7,6 +7,19 @@
                         android:title="@string/preferences__enable_passphrase"
                         android:summary="@string/preferences__lock_signal_and_message_notifications_with_a_passphrase"/>
 
+    <com.medxnote.securesms.components.SwitchPreferenceCompat
+        android:key="pref_enable_autoaccept_changed_keys"
+        android:defaultValue="true"
+        android:title="@string/preferences__enable_autoaccept_changed_keys"
+        android:summary="@string/preferences__enable_autoaccept_changed_keys_summ"/>
+
+    <com.medxnote.securesms.components.SwitchPreferenceCompat
+        android:key="pref_enable_autoaccept_show_message"
+        android:defaultValue="true"
+        android:title="@string/preferences__enable_autoaccept_show_message"
+        android:summary="@string/preferences__enable_autoaccept_show_message_summ"
+        android:dependency="pref_enable_autoaccept_changed_keys"/>
+
     <Preference android:key="pref_change_passphrase"
                 android:title="@string/preferences__change_passphrase"
                 android:summary="@string/preferences__change_your_passphrase"

@@ -123,6 +123,10 @@ public abstract class MessageRecord extends DisplayRecord {
     else          return getDateReceived();
   }
 
+  public boolean isKeysUpdated(){
+    return SmsDatabase.Types.isUpdatedType(type);
+  }
+
   public boolean isForcedSms() {
     return SmsDatabase.Types.isForcedSms(type);
   }

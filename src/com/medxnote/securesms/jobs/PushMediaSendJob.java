@@ -3,6 +3,7 @@ package com.medxnote.securesms.jobs;
 import android.content.Context;
 import android.util.Log;
 
+import com.medxnote.securesms.MismatchHandler;
 import com.medxnote.securesms.ApplicationContext;
 import com.medxnote.securesms.attachments.Attachment;
 import com.medxnote.securesms.crypto.MasterSecret;
@@ -17,6 +18,7 @@ import com.medxnote.securesms.recipients.Recipients;
 import com.medxnote.securesms.transport.InsecureFallbackApprovalException;
 import com.medxnote.securesms.transport.RetryLaterException;
 import com.medxnote.securesms.transport.UndeliverableMessageException;
+import com.medxnote.securesms.util.TextSecurePreferences;
 import org.whispersystems.signalservice.api.SignalServiceMessageSender;
 import org.whispersystems.signalservice.api.crypto.UntrustedIdentityException;
 import org.whispersystems.signalservice.api.messages.SignalServiceAttachment;
@@ -82,8 +84,12 @@ public class PushMediaSendJob extends PushSendJob implements InjectableType {
       long       recipientId = recipients.getPrimaryRecipient().getRecipientId();
 
       database.addMismatchedIdentity(messageId, recipientId, uie.getIdentityKey());
-      database.markAsSentFailed(messageId);
-      database.markAsPush(messageId);
+      if(TextSecurePreferences.isAutoacceptKeysEnabled(context)) {
+        new MismatchHandler(context).acceptMismatch(recipients);
+      } else {
+        database.markAsSentFailed(messageId);
+        database.markAsPush(messageId);
+      }
     }
   }
 
