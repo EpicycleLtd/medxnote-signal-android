@@ -6,6 +6,7 @@ public interface MmsSmsColumns {
   public static final String ID                       = "_id";
   public static final String NORMALIZED_DATE_SENT     = "date_sent";
   public static final String NORMALIZED_DATE_RECEIVED = "date_received";
+  public static final String NORMALIZED_DATE_READ     = "date_read";
   public static final String THREAD_ID                = "thread_id";
   public static final String READ                     = "read";
   public static final String BODY                     = "body";
@@ -35,11 +36,13 @@ public interface MmsSmsColumns {
     protected static final long BASE_PENDING_SECURE_SMS_FALLBACK   = 25;
     protected static final long BASE_PENDING_INSECURE_SMS_FALLBACK = 26;
     public    static final long BASE_DRAFT_TYPE                    = 27;
+    protected static final long BASE_READ_TYPE                     = 28;
 
     protected static final long[] OUTGOING_MESSAGE_TYPES = {BASE_OUTBOX_TYPE, BASE_SENT_TYPE,
                                                             BASE_SENDING_TYPE, BASE_SENT_FAILED_TYPE,
                                                             BASE_PENDING_SECURE_SMS_FALLBACK,
-                                                            BASE_PENDING_INSECURE_SMS_FALLBACK};
+                                                            BASE_PENDING_INSECURE_SMS_FALLBACK,
++                                                           BASE_READ_TYPE};
 
     // Message attributes
     protected static final long MESSAGE_ATTRIBUTE_MASK = 0xE0;
@@ -100,6 +103,10 @@ public interface MmsSmsColumns {
       return
           (type & BASE_TYPE_MASK) == BASE_OUTBOX_TYPE ||
               (type & BASE_TYPE_MASK) == BASE_SENDING_TYPE;
+    }
+
+    public static boolean isReadMessageType(long type) {
+      return (type & BASE_TYPE_MASK) == BASE_READ_TYPE;
     }
 
     public static boolean isPendingSmsFallbackType(long type) {

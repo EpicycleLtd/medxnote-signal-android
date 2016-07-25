@@ -123,6 +123,10 @@ public class ThreadRecord extends DisplayRecord {
     return read;
   }
 
+  public boolean isMessageRead(){
+    return super.isRead();
+  }
+
   public long getDate() {
     return getDateReceived();
   }

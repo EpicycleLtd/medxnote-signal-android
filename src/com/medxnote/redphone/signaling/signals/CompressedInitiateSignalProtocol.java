@@ -668,7 +668,7 @@ public final class CompressedInitiateSignalProtocol {
       "ne\"s\n\030CompressedInitiateSignal\022\021\n\tinitia" +
       "tor\030\001 \001(\t\022\021\n\tsessionId\030\002 \001(\004\022\014\n\004port\030\003 \001" +
       "(\r\022\022\n\nserverName\030\004 \001(\t\022\017\n\007version\030\005 \001(\rB" +
-      "O\n+org.thoughtcrime.redphone.signaling.s" +
+      "O\n+com.medxnote.redphone.signaling.s" +
       "ignalsB CompressedInitiateSignalProtocol"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =

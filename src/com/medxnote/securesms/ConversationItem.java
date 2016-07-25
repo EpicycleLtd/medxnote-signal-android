@@ -328,6 +328,7 @@ public class ConversationItem extends LinearLayout
 
       if      (!messageRecord.isOutgoing()) deliveryStatusIndicator.setNone();
       else if (messageRecord.isPending())   deliveryStatusIndicator.setPending();
+      else if (messageRecord.isRead())      deliveryStatusIndicator.setRead();
       else if (messageRecord.isDelivered()) deliveryStatusIndicator.setDelivered();
       else                                  deliveryStatusIndicator.setSent();
     }

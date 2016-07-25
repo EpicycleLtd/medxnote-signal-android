@@ -39,10 +39,25 @@ public abstract class DisplayRecord {
   private final Recipients recipients;
   private final long       dateSent;
   private final long       dateReceived;
+  private final long       dateRead;
   private final long       threadId;
   private final Body       body;
   private final int        deliveryStatus;
   private final int        receiptCount;
+
+  public DisplayRecord(Context context, Body body, Recipients recipients, long dateSent,
+                       long dateReceived, long dateRead, long threadId, int deliveryStatus, int receiptCount, long type) {
+    this.context = context.getApplicationContext();
+    this.threadId = threadId;
+    this.recipients = recipients;
+    this.dateSent = dateSent;
+    this.dateReceived = dateReceived;
+    this.type = type;
+    this.body = body;
+    this.receiptCount = receiptCount;
+    this.deliveryStatus = deliveryStatus;
+    this.dateRead = dateRead;
+  }
 
   public DisplayRecord(Context context, Body body, Recipients recipients, long dateSent,
                        long dateReceived, long threadId, int deliveryStatus, int receiptCount, long type)
@@ -56,6 +71,7 @@ public abstract class DisplayRecord {
     this.body                 = body;
     this.receiptCount         = receiptCount;
     this.deliveryStatus       = deliveryStatus;
+    this.dateRead             = dateReceived;
   }
 
   public Body getBody() {
@@ -85,6 +101,10 @@ public abstract class DisplayRecord {
 
   public long getDateSent() {
     return dateSent;
+  }
+
+  public long getDateRead(){
+    return dateRead;
   }
 
   public long getDateReceived() {
@@ -146,6 +166,10 @@ public abstract class DisplayRecord {
   public boolean isDelivered() {
     return (deliveryStatus >= SmsDatabase.Status.STATUS_COMPLETE &&
             deliveryStatus < SmsDatabase.Status.STATUS_PENDING) || receiptCount > 0;
+  }
+
+  public boolean isRead() {
+    return MmsSmsColumns.Types.isReadMessageType(type);
   }
 
   public boolean isPendingInsecureSmsFallback() {

@@ -17,10 +17,12 @@
 package com.medxnote.securesms;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RelativeLayout;
@@ -31,10 +33,12 @@ import com.medxnote.securesms.components.AvatarImageView;
 import com.medxnote.securesms.components.FromTextView;
 import com.medxnote.securesms.database.DatabaseFactory;
 import com.medxnote.securesms.database.MmsDatabase;
+import com.medxnote.securesms.database.MmsSmsDatabase;
 import com.medxnote.securesms.database.documents.IdentityKeyMismatch;
 import com.medxnote.securesms.database.documents.NetworkFailure;
 import com.medxnote.securesms.database.model.MessageRecord;
 import com.medxnote.securesms.recipients.Recipient;
+import com.medxnote.securesms.recipients.Recipients;
 import com.medxnote.securesms.sms.MessageSender;
 
 /**
@@ -52,6 +56,7 @@ public class MessageRecipientListItem extends RelativeLayout
   private TextView        errorDescription;
   private Button          conflictButton;
   private Button          resendButton;
+  private Button          infoButton;
   private AvatarImageView contactPhotoImage;
 
   private final Handler handler = new Handler();
@@ -71,24 +76,37 @@ public class MessageRecipientListItem extends RelativeLayout
     this.contactPhotoImage = (AvatarImageView) findViewById(R.id.contact_photo_image);
     this.conflictButton    = (Button)          findViewById(R.id.conflict_button);
     this.resendButton      = (Button)          findViewById(R.id.resend_button);
+    this.infoButton        = (Button)          findViewById(R.id.info_button);
   }
 
   public void set(final MasterSecret masterSecret,
                   final MessageRecord record,
                   final Recipient recipient,
-                  final boolean isPushGroup)
+                  final boolean isPushGroup,
+                  final boolean showInfo)
   {
     this.recipient = recipient;
 
     recipient.addListener(this);
     fromView.setText(recipient);
     contactPhotoImage.setAvatar(recipient, false);
-    setIssueIndicators(masterSecret, record, isPushGroup);
+    setIssueIndicators(masterSecret, record, isPushGroup, recipient, showInfo);
+  }
+
+  private void setIssueIndicators(
+    final MasterSecret masterSecret,
+    final MessageRecord record,
+    final boolean isPushGroup,
+    final Recipient recipient
+  ){
+    setIssueIndicators(masterSecret, record, isPushGroup, recipient, false);
   }
 
   private void setIssueIndicators(final MasterSecret masterSecret,
                                   final MessageRecord record,
-                                  final boolean isPushGroup)
+                                  final boolean isPushGroup,
+                                  final Recipient recipient,
+                                  final boolean showInfo)
   {
     final NetworkFailure      networkFailure = getNetworkFailure(record);
     final IdentityKeyMismatch keyMismatch    = networkFailure == null ? getKeyMismatch(record) : null;
@@ -98,6 +116,7 @@ public class MessageRecipientListItem extends RelativeLayout
     if (keyMismatch != null) {
       resendButton.setVisibility(View.GONE);
       conflictButton.setVisibility(View.VISIBLE);
+      infoButton.setVisibility(View.GONE);
 
       errorText = getContext().getString(R.string.MessageDetailsRecipient_new_identity);
       conflictButton.setOnClickListener(new OnClickListener() {
@@ -111,6 +130,7 @@ public class MessageRecipientListItem extends RelativeLayout
       resendButton.setEnabled(true);
       resendButton.requestFocus();
       conflictButton.setVisibility(View.GONE);
+      infoButton.setVisibility(View.GONE);
 
       errorText = getContext().getString(R.string.MessageDetailsRecipient_failed_to_send);
       resendButton.setOnClickListener(new OnClickListener() {
@@ -123,6 +143,35 @@ public class MessageRecipientListItem extends RelativeLayout
     } else {
       resendButton.setVisibility(View.GONE);
       conflictButton.setVisibility(View.GONE);
+
+      final Recipients intermediaryRecipients;
+      if (record.isMms()) {
+        intermediaryRecipients = DatabaseFactory.getMmsAddressDatabase(
+                getContext()
+        ).getRecipientsForId(record.getId());
+      } else {
+        intermediaryRecipients = record.getRecipients();
+      }
+      Log.e(TAG, "simple name" + getContext().getClass().getSimpleName(), new Exception());
+      if (intermediaryRecipients.isGroupRecipient() && showInfo){
+        final MessageRecord messageRecord = record;
+        infoButton.setEnabled(true);
+        infoButton.setVisibility(View.VISIBLE);
+        infoButton.setOnClickListener(new OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            //new ReceiptDialog(getContext()).show();
+            Intent intent = new Intent(getContext(), MessageGroupDetailsActivity.class);
+            intent.putExtra(MessageDetailsActivity.MASTER_SECRET_EXTRA, masterSecret);
+            intent.putExtra(MessageDetailsActivity.MESSAGE_ID_EXTRA, messageRecord.getId());
+            intent.putExtra(MessageDetailsActivity.THREAD_ID_EXTRA, messageRecord.getThreadId());
+            intent.putExtra(MessageDetailsActivity.TYPE_EXTRA, messageRecord.isMms() ? MmsSmsDatabase.MMS_TRANSPORT : MmsSmsDatabase.SMS_TRANSPORT);
+            intent.putExtra(MessageDetailsActivity.IS_PUSH_GROUP_EXTRA, isPushGroup && messageRecord.isPush());
+            intent.putExtra(MessageDetailsActivity.RECIPIENTS_IDS_EXTRA, new long[]{recipient.getRecipientId()});
+            getContext().startActivity(intent);
+          }
+        });
+      }
     }
 
     errorDescription.setText(errorText);

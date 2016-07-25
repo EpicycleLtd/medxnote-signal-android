@@ -47,6 +47,24 @@ public class NotificationMmsMessageRecord extends MessageRecord {
 
   public NotificationMmsMessageRecord(Context context, long id, Recipients recipients,
                                       Recipient individualRecipient, int recipientDeviceId,
+                                      long dateSent, long dateReceived, long dateRead,
+                                      int receiptCount, long threadId, byte[] contentLocation,
+                                      long messageSize, long expiry, int status,
+                                      byte[] transactionId, long mailbox, int subscriptionId)
+  {
+    super(context, id, new Body("", true), recipients, individualRecipient, recipientDeviceId,
+            dateSent, dateReceived, dateRead, threadId, SmsDatabase.Status.STATUS_NONE, receiptCount, mailbox,
+            new LinkedList<IdentityKeyMismatch>(), new LinkedList<NetworkFailure>(), subscriptionId);
+
+    this.contentLocation = contentLocation;
+    this.messageSize     = messageSize;
+    this.expiry          = expiry;
+    this.status          = status;
+    this.transactionId   = transactionId;
+  }
+
+  public NotificationMmsMessageRecord(Context context, long id, Recipients recipients,
+                                      Recipient individualRecipient, int recipientDeviceId,
                                       long dateSent, long dateReceived, int receiptCount,
                                       long threadId, byte[] contentLocation, long messageSize,
                                       long expiry, int status, byte[] transactionId, long mailbox,

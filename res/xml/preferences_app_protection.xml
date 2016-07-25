@@ -14,6 +14,12 @@
         android:summary="@string/preferences__enable_autoaccept_changed_keys_summ"/>
 
     <com.medxnote.securesms.components.SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="pref_send_read_receipts"
+        android:summary="@string/preferences__automatically_send_read_receipts"
+        android:title="@string/preferences__send_read_receipts" />
+
+    <com.medxnote.securesms.components.SwitchPreferenceCompat
         android:key="pref_enable_autoaccept_show_message"
         android:defaultValue="true"
         android:title="@string/preferences__enable_autoaccept_show_message"
@@ -35,7 +41,7 @@
                 android:key="pref_timeout_interval"
                 android:dependency="pref_timeout_passphrase"/>
 <!--
-    <org.thoughtcrime.securesms.components.SwitchPreferenceCompat
+    <com.medxnote.securesms.components.SwitchPreferenceCompat
                         android:defaultValue="true"
                         android:key="pref_screen_security"
                         android:title="@string/preferences__screen_security"

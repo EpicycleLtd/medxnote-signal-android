@@ -86,6 +86,7 @@ public class MmsDatabase extends MessagingDatabase {
   public  static final String TABLE_NAME         = "mms";
           static final String DATE_SENT          = "date";
           static final String DATE_RECEIVED      = "date_received";
+          static final String DATE_READ          = "date_read";
   public  static final String MESSAGE_BOX        = "msg_box";
           static final String CONTENT_LOCATION   = "ct_l";
           static final String EXPIRY             = "exp";
@@ -97,7 +98,8 @@ public class MmsDatabase extends MessagingDatabase {
           static final String NETWORK_FAILURE    = "network_failures";
 
   public static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " (" + ID + " INTEGER PRIMARY KEY, "                          +
-    THREAD_ID + " INTEGER, " + DATE_SENT + " INTEGER, " + DATE_RECEIVED + " INTEGER, " + MESSAGE_BOX + " INTEGER, " +
+    THREAD_ID + " INTEGER, " + DATE_SENT + " INTEGER, " + DATE_RECEIVED + " INTEGER, " +
+    DATE_READ + " INTEGER, " + MESSAGE_BOX + " INTEGER, " +
     READ + " INTEGER DEFAULT 0, " + "m_id" + " TEXT, " + "sub" + " TEXT, "                +
     "sub_cs" + " INTEGER, " + BODY + " TEXT, " + PART_COUNT + " INTEGER, "               +
     "ct_t" + " TEXT, " + CONTENT_LOCATION + " TEXT, " + ADDRESS + " TEXT, "               +
@@ -118,6 +120,7 @@ public class MmsDatabase extends MessagingDatabase {
     "CREATE INDEX IF NOT EXISTS mms_read_and_thread_id_index ON " + TABLE_NAME + "(" + READ + "," + THREAD_ID + ");",
     "CREATE INDEX IF NOT EXISTS mms_message_box_index ON " + TABLE_NAME + " (" + MESSAGE_BOX + ");",
     "CREATE INDEX IF NOT EXISTS mms_date_sent_index ON " + TABLE_NAME + " (" + DATE_SENT + ");",
+    "CREATE INDEX IF NOT EXISTS mms_date_read_index ON " + TABLE_NAME + " (" + DATE_READ + ");",
     "CREATE INDEX IF NOT EXISTS mms_thread_date_index ON " + TABLE_NAME + " (" + THREAD_ID + ", " + DATE_RECEIVED + ");"
   };
 
@@ -125,6 +128,7 @@ public class MmsDatabase extends MessagingDatabase {
       MmsDatabase.TABLE_NAME + "." + ID + " AS " + ID,
       THREAD_ID, DATE_SENT + " AS " + NORMALIZED_DATE_SENT,
       DATE_RECEIVED + " AS " + NORMALIZED_DATE_RECEIVED,
+      DATE_READ + " AS " + NORMALIZED_DATE_READ,
       MESSAGE_BOX, READ,
       CONTENT_LOCATION, EXPIRY, MESSAGE_TYPE,
       MESSAGE_SIZE, STATUS, TRANSACTION_ID,
@@ -390,6 +394,90 @@ public class MmsDatabase extends MessagingDatabase {
     updateMailboxBitmask(messageId, Types.BASE_TYPE_MASK, Types.BASE_SENT_TYPE, Optional.of(threadId));
     notifyConversationListeners(threadId);
   }
+  
+  public void markAsRead(SyncMessageId messageId) {
+    long maskOff = Types.BASE_TYPE_MASK;
+    long maskOn = Types.BASE_READ_TYPE;
+
+    MmsAddressDatabase addressDatabase = DatabaseFactory.getMmsAddressDatabase(context);
+    SQLiteDatabase database = databaseHelper.getWritableDatabase();
+    Cursor cursor = null;
+
+    try {
+      cursor = database.query(TABLE_NAME, new String[]{ID, THREAD_ID, MESSAGE_BOX}, DATE_SENT + " = ?", new String[]{String.valueOf(messageId.getTimetamp())}, null, null, null, null);
+
+      while (cursor.moveToNext()) {
+        List<String> addresses = addressDatabase.getAddressesListForId(cursor.getLong(cursor.getColumnIndexOrThrow(ID)));
+
+        for (String storedAddress : addresses) {
+          try {
+            String ourAddress = canonicalizeNumber(context, messageId.getAddress());
+            String theirAddress = canonicalizeNumberOrGroup(context, storedAddress);
+
+            if (ourAddress.equals(theirAddress) || GroupUtil.isEncodedGroup(theirAddress)) {
+              long id = cursor.getLong(cursor.getColumnIndexOrThrow(ID));
+              long threadId = cursor.getLong(cursor.getColumnIndexOrThrow(THREAD_ID));
+
+              database.execSQL("UPDATE " + TABLE_NAME +
+                  " SET " + MESSAGE_BOX + " = (" + MESSAGE_BOX + " & " +
+                  (Types.TOTAL_MASK - maskOff) + " | " + maskOn + " )" +
+                  ", " + DATE_READ + " = ?" +
+                  " WHERE " + DATE_SENT + " = ?", new String[]{
+                      messageId.getDeliveryTimestamp() + "",
+                      messageId.getTimetamp() + ""
+                  });
+              DatabaseFactory.getThreadDatabase(context).update(threadId, false);
+              notifyConversationListeners(threadId);
+            }
+          } catch (InvalidNumberException e) {
+            Log.w("MmsDatabase", e);
+          }
+        }
+      }
+    } finally {
+      if (cursor != null)
+        cursor.close();
+    }
+  }
+
+  public void markReceived(SyncMessageId messageId) {
+    MmsAddressDatabase addressDatabase = DatabaseFactory.getMmsAddressDatabase(context);
+    SQLiteDatabase database = databaseHelper.getWritableDatabase();
+    Cursor cursor = null;
+
+    try {
+      cursor = database.query(TABLE_NAME, new String[]{ID, THREAD_ID, MESSAGE_BOX}, DATE_SENT + " = ?", new String[]{String.valueOf(messageId.getTimetamp())}, null, null, null, null);
+
+      while (cursor.moveToNext()) {
+        List<String> addresses = addressDatabase.getAddressesListForId(cursor.getLong(cursor.getColumnIndexOrThrow(ID)));
+
+        for (String storedAddress : addresses) {
+          try {
+            String ourAddress = canonicalizeNumber(context, messageId.getAddress());
+            String theirAddress = canonicalizeNumberOrGroup(context, storedAddress);
+
+            if (ourAddress.equals(theirAddress) || GroupUtil.isEncodedGroup(theirAddress)) {
+              long id = cursor.getLong(cursor.getColumnIndexOrThrow(ID));
+              long threadId = cursor.getLong(cursor.getColumnIndexOrThrow(THREAD_ID));
+
+              database.execSQL(
+                  "UPDATE " + TABLE_NAME +
+                  " SET " + DATE_RECEIVED + " = " + messageId.getDeliveryTimestamp() +
+                  " WHERE " + DATE_SENT + " = ?", new String[]{messageId.getTimetamp() + ""}
+              );
+              DatabaseFactory.getThreadDatabase(context).update(threadId, false);
+              notifyConversationListeners(threadId);
+            }
+          } catch (InvalidNumberException e) {
+            Log.w("MmsDatabase", e);
+          }
+        }
+      }
+    } finally {
+      if (cursor != null)
+        cursor.close();
+    }
+  }
 
   public void markDownloadState(long messageId, long state) {
     SQLiteDatabase database     = databaseHelper.getWritableDatabase();
@@ -450,8 +538,9 @@ public class MmsDatabase extends MessagingDatabase {
         }
       }
 
-      ContentValues contentValues = new ContentValues();
+      ContentValues contentValues = new ContentValues(2);
       contentValues.put(READ, 1);
+      contentValues.put(DATE_READ, System.currentTimeMillis());
 
       database.update(TABLE_NAME, contentValues, where, selection);
       database.setTransactionSuccessful();
@@ -1074,6 +1163,7 @@ public class MmsDatabase extends MessagingDatabase {
       long id                    = cursor.getLong(cursor.getColumnIndexOrThrow(ID));
       long dateSent              = cursor.getLong(cursor.getColumnIndexOrThrow(NORMALIZED_DATE_SENT));
       long dateReceived          = cursor.getLong(cursor.getColumnIndexOrThrow(NORMALIZED_DATE_RECEIVED));
+      long dateRead              = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.NORMALIZED_DATE_READ));
       long threadId              = cursor.getLong(cursor.getColumnIndexOrThrow(THREAD_ID));
       long mailbox               = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.MESSAGE_BOX));
       String address             = cursor.getString(cursor.getColumnIndexOrThrow(ADDRESS));
@@ -1099,7 +1189,7 @@ public class MmsDatabase extends MessagingDatabase {
 
 
       return new NotificationMmsMessageRecord(context, id, recipients, recipients.getPrimaryRecipient(),
-                                              addressDeviceId, dateSent, dateReceived, receiptCount, threadId,
+                                              addressDeviceId, dateSent, dateReceived, dateRead, receiptCount, threadId,
                                               contentLocationBytes, messageSize, expiry, status,
                                               transactionIdBytes, mailbox, subscriptionId);
     }
@@ -1108,6 +1198,7 @@ public class MmsDatabase extends MessagingDatabase {
       long id                 = cursor.getLong(cursor.getColumnIndexOrThrow(ID));
       long dateSent           = cursor.getLong(cursor.getColumnIndexOrThrow(NORMALIZED_DATE_SENT));
       long dateReceived       = cursor.getLong(cursor.getColumnIndexOrThrow(NORMALIZED_DATE_RECEIVED));
+      long dateRead           = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.NORMALIZED_DATE_READ));
       long box                = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.MESSAGE_BOX));
       long threadId           = cursor.getLong(cursor.getColumnIndexOrThrow(THREAD_ID));
       String address          = cursor.getString(cursor.getColumnIndexOrThrow(ADDRESS));
@@ -1125,7 +1216,7 @@ public class MmsDatabase extends MessagingDatabase {
       SlideDeck                 slideDeck       = getSlideDeck(cursor);
 
       return new MediaMmsMessageRecord(context, id, recipients, recipients.getPrimaryRecipient(),
-                                       addressDeviceId, dateSent, dateReceived, receiptCount,
+                                       addressDeviceId, dateSent, dateReceived, dateRead, receiptCount,
                                        threadId, body, slideDeck, partCount, box, mismatches,
                                        networkFailures, subscriptionId);
     }

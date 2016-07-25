@@ -29,6 +29,7 @@ import com.medxnote.securesms.crypto.MasterSecret;
 import com.medxnote.securesms.database.MessagingDatabase.SyncMessageId;
 import com.medxnote.securesms.database.model.MessageRecord;
 import org.whispersystems.libsignal.util.guava.Optional;
+import org.whispersystems.signalservice.internal.push.SignalServiceProtos;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -47,6 +48,7 @@ public class MmsSmsDatabase extends Database {
                                               SmsDatabase.ADDRESS, SmsDatabase.ADDRESS_DEVICE_ID, SmsDatabase.SUBJECT,
                                               MmsSmsColumns.NORMALIZED_DATE_SENT,
                                               MmsSmsColumns.NORMALIZED_DATE_RECEIVED,
+                                              MmsSmsColumns.NORMALIZED_DATE_READ,
                                               MmsDatabase.MESSAGE_TYPE, MmsDatabase.MESSAGE_BOX,
                                               SmsDatabase.STATUS, MmsDatabase.PART_COUNT,
                                               MmsDatabase.CONTENT_LOCATION, MmsDatabase.TRANSACTION_ID,
@@ -131,6 +133,18 @@ public class MmsSmsDatabase extends Database {
     DatabaseFactory.getMmsDatabase(context).incrementDeliveryReceiptCount(syncMessageId);
   }
 
+  public void setReceived(SyncMessageId syncMessageId){
+    if(syncMessageId.hasDeliveryTimestamp()) {
+      DatabaseFactory.getSmsDatabase(context).markReceived(syncMessageId);
+      DatabaseFactory.getMmsDatabase(context).markReceived(syncMessageId);
+    }
+  }
+
+  public void setAsRead(SyncMessageId syncMessageId) {
+    DatabaseFactory.getSmsDatabase(context).markAsRead(syncMessageId);
+    DatabaseFactory.getMmsDatabase(context).markAsRead(syncMessageId);
+  }
+
   private Cursor queryTables(String[] projection, String selection, String order, String limit) {
     String[] mmsProjection = {MmsDatabase.DATE_SENT + " AS " + MmsSmsColumns.NORMALIZED_DATE_SENT,
                               MmsDatabase.DATE_RECEIVED + " AS " + MmsSmsColumns.NORMALIZED_DATE_RECEIVED,
@@ -154,6 +168,7 @@ public class MmsSmsDatabase extends Database {
                               AttachmentDatabase.CONTENT_LOCATION,
                               AttachmentDatabase.CONTENT_DISPOSITION,
                               AttachmentDatabase.NAME,
+                              MmsSmsColumns.NORMALIZED_DATE_READ,
                               AttachmentDatabase.TRANSFER_STATE};
 
     String[] smsProjection = {SmsDatabase.DATE_SENT + " AS " + MmsSmsColumns.NORMALIZED_DATE_SENT,
@@ -179,6 +194,7 @@ public class MmsSmsDatabase extends Database {
                               AttachmentDatabase.CONTENT_LOCATION,
                               AttachmentDatabase.CONTENT_DISPOSITION,
                               AttachmentDatabase.NAME,
+                              MmsSmsColumns.NORMALIZED_DATE_READ,
                               AttachmentDatabase.TRANSFER_STATE};
 
     SQLiteQueryBuilder mmsQueryBuilder = new SQLiteQueryBuilder();
@@ -211,6 +227,7 @@ public class MmsSmsDatabase extends Database {
     mmsColumnsPresent.add(MmsDatabase.MESSAGE_BOX);
     mmsColumnsPresent.add(MmsDatabase.DATE_SENT);
     mmsColumnsPresent.add(MmsDatabase.DATE_RECEIVED);
+    mmsColumnsPresent.add(MmsDatabase.DATE_READ);
     mmsColumnsPresent.add(MmsDatabase.PART_COUNT);
     mmsColumnsPresent.add(MmsDatabase.CONTENT_LOCATION);
     mmsColumnsPresent.add(MmsDatabase.TRANSACTION_ID);
@@ -242,6 +259,7 @@ public class MmsSmsDatabase extends Database {
     smsColumnsPresent.add(SmsDatabase.SUBJECT);
     smsColumnsPresent.add(SmsDatabase.DATE_SENT);
     smsColumnsPresent.add(SmsDatabase.DATE_RECEIVED);
+    smsColumnsPresent.add(SmsDatabase.DATE_READ);
     smsColumnsPresent.add(SmsDatabase.STATUS);
 
     @SuppressWarnings("deprecation")

@@ -170,10 +170,18 @@ public abstract class MessagingDatabase extends Database implements MmsSmsColumn
 
     private final String address;
     private final long   timetamp;
+    private final long   deliveryTimestamp;
 
     public SyncMessageId(String address, long timetamp) {
       this.address = address;
       this.timetamp = timetamp;
+      this.deliveryTimestamp = -1;
+    }
+
+    public SyncMessageId(String address, long timetamp, long deliveryTimestamp){
+      this.address = address;
+      this.timetamp = timetamp;
+      this.deliveryTimestamp = deliveryTimestamp;
     }
 
     public String getAddress() {
@@ -182,6 +190,14 @@ public abstract class MessagingDatabase extends Database implements MmsSmsColumn
 
     public long getTimetamp() {
       return timetamp;
+    }
+    
+    public long getDeliveryTimestamp(){
+      return deliveryTimestamp;
+    }
+
+    public boolean hasDeliveryTimestamp(){
+      return deliveryTimestamp > 0;
     }
   }
 }

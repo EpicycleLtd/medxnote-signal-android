@@ -13,7 +13,7 @@ import com.medxnote.securesms.service.KeyCachingService;
 
 public class SecurityEvent {
 
-  public static final String SECURITY_UPDATE_EVENT = "org.thoughtcrime.securesms.KEY_EXCHANGE_UPDATE";
+  public static final String SECURITY_UPDATE_EVENT = "com.medxnote.securesms.KEY_EXCHANGE_UPDATE";
 
   public static void broadcastSecurityUpdateEvent(Context context) {
     Intent intent = new Intent(SECURITY_UPDATE_EVENT);

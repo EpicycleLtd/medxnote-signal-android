@@ -83,6 +83,8 @@ public class MessageDetailsActivity extends PassphraseRequiredActionBarActivity 
   private TextView         sentDate;
   private TextView         receivedDate;
   private View             receivedContainer;
+  private TextView         readDate;
+  private View             readContainer;
   private TextView         transport;
   private TextView         toFrom;
   private ListView         recipientsList;
@@ -163,6 +165,8 @@ public class MessageDetailsActivity extends PassphraseRequiredActionBarActivity 
     sentDate          = (TextView ) header.findViewById(R.id.sent_time);
     receivedContainer =             header.findViewById(R.id.received_container);
     receivedDate      = (TextView ) header.findViewById(R.id.received_time);
+    readContainer     =             header.findViewById(R.id.read_container);
+    readDate          = (TextView)  header.findViewById(R.id.read_time);
     transport         = (TextView ) header.findViewById(R.id.transport);
     toFrom            = (TextView ) header.findViewById(R.id.tofrom);
     recipientsList.setHeaderDividersEnabled(false);
@@ -190,16 +194,37 @@ public class MessageDetailsActivity extends PassphraseRequiredActionBarActivity 
     if (messageRecord.isPending() || messageRecord.isFailed()) {
       sentDate.setText("-");
       receivedContainer.setVisibility(View.GONE);
+      readContainer.setVisibility(View.GONE);
     } else {
       Locale           dateLocale    = dynamicLanguage.getCurrentLocale();
       SimpleDateFormat dateFormatter = DateUtils.getDetailedDateFormatter(this, dateLocale);
       sentDate.setText(dateFormatter.format(new Date(messageRecord.getDateSent())));
 
-      if (messageRecord.getDateReceived() != messageRecord.getDateSent() && !messageRecord.isOutgoing()) {
+      final Recipients intermediaryRecipients;
+      if (messageRecord.isMms()) {
+        intermediaryRecipients = DatabaseFactory.getMmsAddressDatabase(
+          getApplicationContext()
+        ).getRecipientsForId(messageRecord.getId());
+      } else {
+        intermediaryRecipients = messageRecord.getRecipients();
+      }
+
+      if (
+        !intermediaryRecipients.isGroupRecipient() && (
+          messageRecord.isDelivered() || !messageRecord.isOutgoing())
+      ) {
         receivedDate.setText(dateFormatter.format(new Date(messageRecord.getDateReceived())));
         receivedContainer.setVisibility(View.VISIBLE);
+        // TODO: READ SENT AND RECEIVED
+        if (messageRecord.isRead() || !messageRecord.isOutgoing()) {
+          readDate.setText(dateFormatter.format(new Date(messageRecord.getDateRead())));
+          readContainer.setVisibility(View.VISIBLE);
+        } else {
+          readContainer.setVisibility(View.GONE);
+        }
       } else {
         receivedContainer.setVisibility(View.GONE);
+        readContainer.setVisibility(View.GONE);
       }
     }
   }
@@ -217,7 +242,7 @@ public class MessageDetailsActivity extends PassphraseRequiredActionBarActivity 
     conversationItem.bind(masterSecret, messageRecord, dynamicLanguage.getCurrentLocale(),
                          new HashSet<MessageRecord>(), recipients);
     recipientsList.setAdapter(new MessageDetailsRecipientAdapter(this, masterSecret, messageRecord,
-                                                                 recipients, isPushGroup));
+                                                                 recipients, isPushGroup, true));
   }
 
   private void inflateMessageViewIfAbsent(MessageRecord messageRecord) {
@@ -302,7 +327,7 @@ public class MessageDetailsActivity extends PassphraseRequiredActionBarActivity 
 
       final Recipients intermediaryRecipients;
       if (messageRecord.isMms()) {
-        intermediaryRecipients = DatabaseFactory.getMmsAddressDatabase(context).getRecipientsForId(messageRecord.getId());
+        intermediaryRecipients = DatabaseFactory.getMmsAddressDatabase(getContext()).getRecipientsForId(messageRecord.getId());
       } else {
         intermediaryRecipients = messageRecord.getRecipients();
       }

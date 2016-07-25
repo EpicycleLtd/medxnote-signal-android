@@ -279,6 +279,7 @@ public class ConversationFragment extends Fragment
               } else {
                 threadDeleted = DatabaseFactory.getSmsDatabase(getActivity()).deleteMessage(messageRecord.getId());
               }
+              DatabaseFactory.getReceiptDatabase(getActivity()).deleteReceipts(messageRecord.getTimestamp());
 
               if (threadDeleted) {
                 threadId = -1;

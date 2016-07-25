@@ -232,7 +232,7 @@ public class DirectoryHelper {
 
   private static Optional<Account> getOrCreateAccount(Context context) {
     AccountManager accountManager = AccountManager.get(context);
-    Account[]      accounts       = accountManager.getAccountsByType("org.thoughtcrime.securesms");
+    Account[]      accounts       = accountManager.getAccountsByType("com.medxnote.securesms");
 
     Optional<Account> account;
 
@@ -248,7 +248,7 @@ public class DirectoryHelper {
 
   private static Optional<Account> createAccount(Context context) {
     AccountManager accountManager = AccountManager.get(context);
-    Account        account        = new Account(context.getString(R.string.app_name), "org.thoughtcrime.securesms");
+    Account        account        = new Account(context.getString(R.string.app_name), "com.medxnote.securesms");
 
     if (accountManager.addAccountExplicitly(account, null, null)) {
       Log.w(TAG, "Created new account...");

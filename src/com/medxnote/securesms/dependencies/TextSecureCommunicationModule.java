@@ -8,6 +8,7 @@ import com.medxnote.securesms.crypto.storage.SignalProtocolStoreImpl;
 import com.medxnote.securesms.jobs.AttachmentDownloadJob;
 import com.medxnote.securesms.jobs.CleanPreKeysJob;
 import com.medxnote.securesms.jobs.CreateSignedPreKeyJob;
+import com.medxnote.securesms.jobs.DeliveryReadJob;
 import com.medxnote.securesms.jobs.DeliveryReceiptJob;
 import com.medxnote.securesms.jobs.MultiDeviceContactUpdateJob;
 import com.medxnote.securesms.jobs.MultiDeviceReadUpdateJob;
@@ -35,6 +36,7 @@ import dagger.Provides;
 
 @Module(complete = false, injects = {CleanPreKeysJob.class,
                                      CreateSignedPreKeyJob.class,
+                                     DeliveryReadJob.class,
                                      DeliveryReceiptJob.class,
                                      PushGroupSendJob.class,
                                      PushTextSendJob.class,

@@ -16,7 +16,7 @@ public class SingleUseBlobProvider {
 
   private static final String TAG = SingleUseBlobProvider.class.getSimpleName();
 
-  public  static final String AUTHORITY   = "org.thoughtcrime.securesms";
+  public  static final String AUTHORITY   = "com.medxnote.securesms";
   public  static final String PATH        = "memory/*/#";
   private static final Uri    CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/memory");
 

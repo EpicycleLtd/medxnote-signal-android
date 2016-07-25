@@ -16,6 +16,17 @@
                android:visibility="gone"
                android:contentDescription="@string/conversation_item_sent__delivered_description" />
 
+    <ImageView android:id="@+id/read_indicator"
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:layout_gravity="center_vertical|end"
+               android:src="@drawable/ic_done_read_white_18dp"
+               android:paddingLeft="2dp"
+               android:paddingBottom="2dp"
+               android:visibility="gone"
+               android:contentDescription="@string/conversation_item_sent__delivered_description" />
+
+
     <ImageView android:id="@+id/delivered_indicator"
                android:layout_width="wrap_content"
                android:layout_height="wrap_content"

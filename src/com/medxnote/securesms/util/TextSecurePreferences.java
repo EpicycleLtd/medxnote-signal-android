@@ -46,6 +46,7 @@ public class TextSecurePreferences {
 
   private static final String AUTOACCEPT_PREF                  = "pref_enable_autoaccept_changed_keys";
   private static final String AUTOACCEPT_MSG_PREF              = "pref_enable_autoaccept_show_message";
+  private static final String SEND_READ_RECEIPTS               = "pref_send_read_receipts";
 
   private static final String LAST_VERSION_CODE_PREF           = "last_version_code";
   private static final String LAST_EXPERIENCE_VERSION_PREF     = "last_experience_version_code";
@@ -469,6 +470,10 @@ public class TextSecurePreferences {
 
   public static boolean isAutoacceptMessageEnabled(Context context) {
     return getBooleanPreference(context, AUTOACCEPT_MSG_PREF, true);
+  }
+
+  public static boolean isSendRead(Context context) {
+    return getBooleanPreference(context, SEND_READ_RECEIPTS, true);
   }
 
   public static String getNotificationRingtone(Context context) {

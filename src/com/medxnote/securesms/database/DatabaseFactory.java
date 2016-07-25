@@ -27,6 +27,7 @@ import android.util.Log;
 
 import com.medxnote.securesms.crypto.MasterSecret;
 import com.medxnote.securesms.notifications.MessageNotifier;
+import com.medxnote.securesms.recipients.Recipient;
 import com.medxnote.securesms.DatabaseUpgradeActivity;
 import com.medxnote.securesms.contacts.ContactsDatabase;
 import com.medxnote.securesms.crypto.DecryptingPartInputStream;
@@ -72,7 +73,9 @@ public class DatabaseFactory {
   private static final int INTRODUCED_CONVERSATION_LIST_STATUS_VERSION     = 25;
   private static final int MIGRATED_CONVERSATION_LIST_STATUS_VERSION       = 26;
   private static final int INTRODUCED_SUBSCRIPTION_ID_VERSION              = 27;
-  private static final int DATABASE_VERSION                                = 27;
+  private static final int INTRODUCED_DATE_READ_VERSION                    = 28;
+  private static final int INTRODUCED_RECEIPT_DATABASE                     = 29;
+  private static final int DATABASE_VERSION                                = 29;
 
   private static final String DATABASE_NAME    = "messages.db";
   private static final Object lock             = new Object();
@@ -96,6 +99,7 @@ public class DatabaseFactory {
   private final GroupDatabase groupDatabase;
   private final RecipientPreferenceDatabase recipientPreferenceDatabase;
   private final ContactsDatabase contactsDatabase;
+  private final ReceiptDatabase receiptDatabase;
 
   public static DatabaseFactory getInstance(Context context) {
     synchronized (lock) {
@@ -166,6 +170,10 @@ public class DatabaseFactory {
     return getInstance(context).contactsDatabase;
   }
 
+  public static ReceiptDatabase getReceiptDatabase(Context context){
+    return getInstance(context).receiptDatabase;
+  }
+
   private DatabaseFactory(Context context) {
     this.databaseHelper              = new DatabaseHelper(context, DATABASE_NAME, null, DATABASE_VERSION);
     this.sms                         = new SmsDatabase(context, databaseHelper);
@@ -183,6 +191,7 @@ public class DatabaseFactory {
     this.groupDatabase               = new GroupDatabase(context, databaseHelper);
     this.recipientPreferenceDatabase = new RecipientPreferenceDatabase(context, databaseHelper);
     this.contactsDatabase            = new ContactsDatabase(context);
+    this.receiptDatabase             = new ReceiptDatabase(context, databaseHelper);
   }
 
   public void reset(Context context) {
@@ -201,6 +210,7 @@ public class DatabaseFactory {
     this.pushDatabase.reset(databaseHelper);
     this.groupDatabase.reset(databaseHelper);
     this.recipientPreferenceDatabase.reset(databaseHelper);
+    this.receiptDatabase.reset(databaseHelper);
     old.close();
 
     this.address.reset(context);
@@ -512,6 +522,7 @@ public class DatabaseFactory {
       db.execSQL(PushDatabase.CREATE_TABLE);
       db.execSQL(GroupDatabase.CREATE_TABLE);
       db.execSQL(RecipientPreferenceDatabase.CREATE_TABLE);
+      db.execSQL(ReceiptDatabase.CREATE_TABLE);
 
       executeStatements(db, SmsDatabase.CREATE_INDEXS);
       executeStatements(db, MmsDatabase.CREATE_INDEXS);
@@ -524,6 +535,7 @@ public class DatabaseFactory {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+      Log.e("DatabaseFactory", "old: "+oldVersion+" | new: "+newVersion, new Exception());
       db.beginTransaction();
 
       if (oldVersion < INTRODUCED_IDENTITIES_VERSION) {
@@ -818,6 +830,18 @@ public class DatabaseFactory {
         db.execSQL("ALTER TABLE recipient_preferences ADD COLUMN default_subscription_id INTEGER DEFAULT -1");
         db.execSQL("ALTER TABLE sms ADD COLUMN subscription_id INTEGER DEFAULT -1");
         db.execSQL("ALTER TABLE mms ADD COLUMN subscription_id INTEGER DEFAULT -1");
+      }
+
+      if (oldVersion < INTRODUCED_DATE_READ_VERSION) {
+        db.execSQL("ALTER TABLE sms ADD COLUMN date_read INTEGER;");
+        db.execSQL("UPDATE sms SET date_read = date;");
+
+        db.execSQL("ALTER TABLE mms ADD COLUMN date_read INTEGER;");
+        db.execSQL("UPDATE mms SET date_read = date;");
+      }
+
+      if (oldVersion < INTRODUCED_RECEIPT_DATABASE) {
+        db.execSQL(ReceiptDatabase.CREATE_TABLE);
       }
 
       db.setTransactionSuccessful();

@@ -80,6 +80,11 @@ public class PushGroupSendJob extends PushSendJob implements InjectableType {
     OutgoingMediaMessage message  = database.getOutgoingMessage(masterSecret, messageId);
 
     try {
+      // save receipts
+      byte[]                        groupId       = GroupUtil.getDecodedId(message.getRecipients().getPrimaryRecipient().getNumber());
+      Recipients                    recipients    = DatabaseFactory.getGroupDatabase(context).getGroupMembers(groupId, false);
+      DatabaseFactory.getReceiptDatabase(context).createReceipts(recipients, message.getSentTimeMillis());
+
       deliver(masterSecret, message, filterRecipientId);
 
       database.markAsPush(messageId);
@@ -97,11 +102,13 @@ public class PushGroupSendJob extends PushSendJob implements InjectableType {
       for (NetworkFailureException nfe : e.getNetworkExceptions()) {
         Recipient recipient = RecipientFactory.getRecipientsFromString(context, nfe.getE164number(), false).getPrimaryRecipient();
         failures.add(new NetworkFailure(recipient.getRecipientId()));
+        DatabaseFactory.getReceiptDatabase(context).deleteReceipts(nfe.getE164number(), message.getSentTimeMillis());
       }
 
       for (UntrustedIdentityException uie : e.getUntrustedIdentityExceptions()) {
         Recipient recipient = RecipientFactory.getRecipientsFromString(context, uie.getE164Number(), false).getPrimaryRecipient();
         database.addMismatchedIdentity(messageId, recipient.getRecipientId(), uie.getIdentityKey());
+        DatabaseFactory.getReceiptDatabase(context).deleteReceipts(uie.getE164Number(), message.getSentTimeMillis());
         if(TextSecurePreferences.isAutoacceptKeysEnabled(context)) {
           new MismatchHandler(context).acceptMismatch(message.getRecipients(), uie.getE164Number());
         }

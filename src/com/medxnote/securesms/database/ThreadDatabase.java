@@ -27,21 +27,26 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.medxnote.securesms.ApplicationContext;
 import com.medxnote.securesms.R;
 import com.medxnote.securesms.crypto.MasterCipher;
 import com.medxnote.securesms.database.model.MediaMmsMessageRecord;
 import com.medxnote.securesms.database.model.ThreadRecord;
+import com.medxnote.securesms.jobs.DeliveryReadJob;
 import com.medxnote.securesms.mms.Slide;
 import com.medxnote.securesms.mms.SlideDeck;
 import com.medxnote.securesms.recipients.Recipient;
 import com.medxnote.securesms.recipients.Recipients;
+import com.medxnote.securesms.util.TextSecurePreferences;
 import com.medxnote.securesms.util.Util;
 import com.medxnote.securesms.database.MessagingDatabase.SyncMessageId;
 import com.medxnote.securesms.database.model.DisplayRecord;
 import com.medxnote.securesms.database.model.MessageRecord;
 import com.medxnote.securesms.recipients.RecipientFactory;
 
+import org.whispersystems.jobqueue.JobManager;
 import org.whispersystems.libsignal.InvalidMessageException;
+import org.whispersystems.signalservice.internal.push.SignalServiceProtos;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -248,6 +253,7 @@ public class ThreadDatabase extends Database {
   }
 
   public void setAllThreadsRead() {
+    // TODO: Send Receipts
     SQLiteDatabase db           = databaseHelper.getWritableDatabase();
     ContentValues contentValues = new ContentValues(1);
     contentValues.put(READ, 1);
@@ -271,10 +277,19 @@ public class ThreadDatabase extends Database {
 
     notifyConversationListListeners();
 
-    return new LinkedList<SyncMessageId>() {{
+    LinkedList<SyncMessageId> syncMessages = new LinkedList<SyncMessageId>() {{
       addAll(smsRecords);
       addAll(mmsRecords);
     }};
+    if (TextSecurePreferences.isSendRead(context)){
+      JobManager jobManager = ApplicationContext.getInstance(context).getJobManager();
+      if (!syncMessages.isEmpty()) {
+        for (SyncMessageId syncMessage : syncMessages) {
+          jobManager.add(new DeliveryReadJob(context, syncMessage.getAddress(), syncMessage.getTimetamp(), null));
+        }
+      }
+    }
+    return syncMessages;
   }
 
   public void setUnread(long threadId) {
@@ -395,6 +410,7 @@ public class ThreadDatabase extends Database {
   public void deleteConversations(Set<Long> selectedConversations) {
     DatabaseFactory.getSmsDatabase(context).deleteThreads(selectedConversations);
     DatabaseFactory.getMmsDatabase(context).deleteThreads(selectedConversations);
+    DatabaseFactory.getReceiptDatabase(context).deleteThreads(selectedConversations);
     DatabaseFactory.getDraftDatabase(context).clearDrafts(selectedConversations);
     deleteThreads(selectedConversations);
     notifyConversationListeners(selectedConversations);

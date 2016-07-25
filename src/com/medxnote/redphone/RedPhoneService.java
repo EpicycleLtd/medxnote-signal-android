@@ -88,12 +88,12 @@ public class RedPhoneService extends Service implements CallStateListener, CallS
   public static final String EXTRA_SESSION_DESCRIPTOR = "session_descriptor";
   public static final String EXTRA_MUTE               = "mute_value";
 
-  public static final String ACTION_INCOMING_CALL = "org.thoughtcrime.redphone.RedPhoneService.INCOMING_CALL";
-  public static final String ACTION_OUTGOING_CALL = "org.thoughtcrime.redphone.RedPhoneService.OUTGOING_CALL";
-  public static final String ACTION_ANSWER_CALL   = "org.thoughtcrime.redphone.RedPhoneService.ANSWER_CALL";
-  public static final String ACTION_DENY_CALL     = "org.thoughtcrime.redphone.RedPhoneService.DENY_CALL";
-  public static final String ACTION_HANGUP_CALL   = "org.thoughtcrime.redphone.RedPhoneService.HANGUP";
-  public static final String ACTION_SET_MUTE      = "org.thoughtcrime.redphone.RedPhoneService.SET_MUTE";
+  public static final String ACTION_INCOMING_CALL = "com.medxnote.redphone.RedPhoneService.INCOMING_CALL";
+  public static final String ACTION_OUTGOING_CALL = "com.medxnote.redphone.RedPhoneService.OUTGOING_CALL";
+  public static final String ACTION_ANSWER_CALL   = "com.medxnote.redphone.RedPhoneService.ANSWER_CALL";
+  public static final String ACTION_DENY_CALL     = "com.medxnote.redphone.RedPhoneService.DENY_CALL";
+  public static final String ACTION_HANGUP_CALL   = "com.medxnote.redphone.RedPhoneService.HANGUP";
+  public static final String ACTION_SET_MUTE      = "com.medxnote.redphone.RedPhoneService.SET_MUTE";
 
   private final Handler serviceHandler       = new Handler();
 

@@ -48,7 +48,7 @@ import java.util.List;
 public class WearReplyReceiver extends MasterSecretBroadcastReceiver {
 
   public static final String TAG                 = WearReplyReceiver.class.getSimpleName();
-  public static final String REPLY_ACTION        = "org.thoughtcrime.securesms.notifications.WEAR_REPLY";
+  public static final String REPLY_ACTION        = "com.medxnote.securesms.notifications.WEAR_REPLY";
   public static final String RECIPIENT_IDS_EXTRA = "recipient_ids";
 
   @Override

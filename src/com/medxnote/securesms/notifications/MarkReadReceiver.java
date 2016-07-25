@@ -19,7 +19,7 @@ import java.util.List;
 public class MarkReadReceiver extends MasterSecretBroadcastReceiver {
 
   private static final String TAG              = MarkReadReceiver.class.getSimpleName();
-  public static final  String CLEAR_ACTION     = "org.thoughtcrime.securesms.notifications.CLEAR";
+  public static final  String CLEAR_ACTION     = "com.medxnote.securesms.notifications.CLEAR";
   public static final  String THREAD_IDS_EXTRA = "thread_ids";
 
   @Override

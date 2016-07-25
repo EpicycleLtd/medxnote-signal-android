@@ -437,7 +437,7 @@ public class MessageNotifier {
 
   public static class ReminderReceiver extends BroadcastReceiver {
 
-    public static final String REMINDER_ACTION = "org.thoughtcrime.securesms.MessageNotifier.REMINDER_ACTION";
+    public static final String REMINDER_ACTION = "com.medxnote.securesms.MessageNotifier.REMINDER_ACTION";
 
     @Override
     public void onReceive(final Context context, final Intent intent) {
@@ -456,7 +456,7 @@ public class MessageNotifier {
 
   public static class DeleteReceiver extends BroadcastReceiver {
 
-    public static final String DELETE_REMINDER_ACTION = "org.thoughtcrime.securesms.MessageNotifier.DELETE_REMINDER_ACTION";
+    public static final String DELETE_REMINDER_ACTION = "com.medxnote.securesms.MessageNotifier.DELETE_REMINDER_ACTION";
 
     @Override
     public void onReceive(Context context, Intent intent) {

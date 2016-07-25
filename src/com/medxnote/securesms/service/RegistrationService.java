@@ -62,14 +62,14 @@ import java.util.concurrent.Executors;
 
 public class RegistrationService extends Service {
 
-  public static final String REGISTER_NUMBER_ACTION = "org.thoughtcrime.securesms.RegistrationService.REGISTER_NUMBER";
-  public static final String VOICE_REQUESTED_ACTION = "org.thoughtcrime.securesms.RegistrationService.VOICE_REQUESTED";
-  public static final String VOICE_REGISTER_ACTION  = "org.thoughtcrime.securesms.RegistrationService.VOICE_REGISTER";
+  public static final String REGISTER_NUMBER_ACTION = "com.medxnote.securesms.RegistrationService.REGISTER_NUMBER";
+  public static final String VOICE_REQUESTED_ACTION = "com.medxnote.securesms.RegistrationService.VOICE_REQUESTED";
+  public static final String VOICE_REGISTER_ACTION  = "com.medxnote.securesms.RegistrationService.VOICE_REGISTER";
 
-  public static final String NOTIFICATION_TITLE     = "org.thoughtcrime.securesms.NOTIFICATION_TITLE";
-  public static final String NOTIFICATION_TEXT      = "org.thoughtcrime.securesms.NOTIFICATION_TEXT";
-  public static final String CHALLENGE_EVENT        = "org.thoughtcrime.securesms.CHALLENGE_EVENT";
-  public static final String REGISTRATION_EVENT     = "org.thoughtcrime.securesms.REGISTRATION_EVENT";
+  public static final String NOTIFICATION_TITLE     = "com.medxnote.securesms.NOTIFICATION_TITLE";
+  public static final String NOTIFICATION_TEXT      = "com.medxnote.securesms.NOTIFICATION_TEXT";
+  public static final String CHALLENGE_EVENT        = "com.medxnote.securesms.CHALLENGE_EVENT";
+  public static final String REGISTRATION_EVENT     = "com.medxnote.securesms.REGISTRATION_EVENT";
 
   public static final String CHALLENGE_EXTRA        = "CAAChallenge";
 

@@ -75,6 +75,26 @@
 
             </TableRow>
 
+            <TableRow android:id="@+id/read_container"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:padding="@dimen/message_details_table_row_pad">
+
+                <TextView android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="@string/message_details_header__read"
+                          android:gravity="right"
+                          android:textStyle="bold" />
+
+                <TextView android:id="@+id/read_time"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:layout_marginLeft="@dimen/message_details_table_row_pad"
+                          tools:text="Jan 18, 2015, 12:31:15 AM GMT-08:00" />
+
+            </TableRow>
+
+
             <TableRow android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
                       android:padding="@dimen/message_details_table_row_pad">

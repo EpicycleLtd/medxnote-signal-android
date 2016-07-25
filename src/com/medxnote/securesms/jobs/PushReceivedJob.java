@@ -1,6 +1,7 @@
 package com.medxnote.securesms.jobs;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.medxnote.securesms.database.DatabaseFactory;
@@ -8,13 +9,26 @@ import com.medxnote.securesms.ApplicationContext;
 import com.medxnote.securesms.database.MessagingDatabase.SyncMessageId;
 import com.medxnote.securesms.database.NotInDirectoryException;
 import com.medxnote.securesms.database.TextSecureDirectory;
+import com.medxnote.securesms.dependencies.TextSecureCommunicationModule;
 import com.medxnote.securesms.recipients.RecipientFactory;
 import com.medxnote.securesms.recipients.Recipients;
 import com.medxnote.securesms.service.KeyCachingService;
 import org.whispersystems.jobqueue.JobManager;
 import org.whispersystems.jobqueue.JobParameters;
+import org.whispersystems.signalservice.api.SignalServiceMessageSender;
+import org.whispersystems.signalservice.api.crypto.UntrustedIdentityException;
 import org.whispersystems.signalservice.api.messages.SignalServiceEnvelope;
+import org.whispersystems.signalservice.api.messages.multidevice.ReadMessage;
+import org.whispersystems.signalservice.api.messages.multidevice.SignalServiceSyncMessage;
 import org.whispersystems.signalservice.api.push.ContactTokenDetails;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+
+import javax.inject.Inject;
 
 public abstract class PushReceivedJob extends ContextJob {
 
@@ -38,6 +52,8 @@ public abstract class PushReceivedJob extends ContextJob {
 
     if (envelope.isReceipt()) {
       handleReceipt(envelope);
+    } else if (envelope.isRead()){
+      handleRead(envelope);
     } else if (envelope.isPreKeySignalMessage() || envelope.isSignalMessage()) {
       handleMessage(envelope, sendExplicitReceipt);
     } else {
@@ -65,8 +81,50 @@ public abstract class PushReceivedJob extends ContextJob {
 
   private void handleReceipt(SignalServiceEnvelope envelope) {
     Log.w(TAG, String.format("Received receipt: (XXXXX, %d)", envelope.getTimestamp()));
-    DatabaseFactory.getMmsSmsDatabase(context).incrementDeliveryReceiptCount(new SyncMessageId(envelope.getSource(),
-                                                                                               envelope.getTimestamp()));
+    SyncMessageId syncMessageId = new SyncMessageId(
+      envelope.getSource(),
+      envelope.getTimestamp(),
+      envelope.getDeliveryTimestamp()
+    );
+    //DatabaseFactory.getMmsSmsDatabase(context).incrementDeliveryReceiptCount(syncMessageId);
+    setDateGroupReceived(syncMessageId);
+    boolean isGroupReceipt = DatabaseFactory.getReceiptDatabase(context).isGroupReceipt(syncMessageId);
+    int count = DatabaseFactory.getReceiptDatabase(context).getCountUnreceivedMessage(syncMessageId);
+    if(!isGroupReceipt || count < 1) {
+      markReceipt(syncMessageId);
+    }
+    Log.w(TAG, "handleReceipt Envelope deliveryTimestamp" + envelope.getDeliveryTimestamp(), new Exception());
+  }
+
+  private void setDateGroupReceived(SyncMessageId syncMessageId){
+    DatabaseFactory.getReceiptDatabase(context).setDateReceived(syncMessageId);
+  }
+
+  private void markReceipt(SyncMessageId syncMessageId){
+    DatabaseFactory.getMmsSmsDatabase(context).incrementDeliveryReceiptCount(syncMessageId);
+    DatabaseFactory.getMmsSmsDatabase(context).setReceived(syncMessageId);
+  }
+
+  private void handleRead(SignalServiceEnvelope envelope) {
+    SyncMessageId syncMessageId = new SyncMessageId(
+        envelope.getSource(),
+        envelope.getTimestamp(),
+        envelope.getDeliveryTimestamp()
+    );
+    boolean isGroupReceipt = DatabaseFactory.getReceiptDatabase(context).isGroupReceipt(syncMessageId);
+    setDateGroupRead(syncMessageId);
+    int count = DatabaseFactory.getReceiptDatabase(context).getCountUnreadMessage(syncMessageId);
+    if(!isGroupReceipt || count < 1) {
+      markRead(syncMessageId);
+    }
+  }
+
+  private void setDateGroupRead(SyncMessageId syncMessageId){
+    DatabaseFactory.getReceiptDatabase(context).setDateRead(syncMessageId);
+  }
+
+  private void markRead(SyncMessageId syncMessageId){
+    DatabaseFactory.getMmsSmsDatabase(context).setAsRead(syncMessageId);
   }
 
   private boolean isActiveNumber(Context context, String e164number) {
