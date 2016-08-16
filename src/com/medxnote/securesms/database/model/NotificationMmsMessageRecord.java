@@ -20,8 +20,8 @@ import android.content.Context;
 import android.text.SpannableString;
 
 import com.medxnote.securesms.R;
+import com.medxnote.securesms.database.SmsDatabase.Status;
 import com.medxnote.securesms.database.MmsDatabase;
-import com.medxnote.securesms.database.SmsDatabase;
 import com.medxnote.securesms.database.documents.IdentityKeyMismatch;
 import com.medxnote.securesms.database.documents.NetworkFailure;
 import com.medxnote.securesms.recipients.Recipient;
@@ -53,7 +53,7 @@ public class NotificationMmsMessageRecord extends MessageRecord {
                                       byte[] transactionId, long mailbox, int subscriptionId)
   {
     super(context, id, new Body("", true), recipients, individualRecipient, recipientDeviceId,
-            dateSent, dateReceived, dateRead, threadId, SmsDatabase.Status.STATUS_NONE, receiptCount, mailbox,
+            dateSent, dateReceived, dateRead, threadId, com.medxnote.securesms.database.SmsDatabase.Status.STATUS_NONE, receiptCount, mailbox,
             new LinkedList<IdentityKeyMismatch>(), new LinkedList<NetworkFailure>(), subscriptionId);
 
     this.contentLocation = contentLocation;
@@ -71,7 +71,7 @@ public class NotificationMmsMessageRecord extends MessageRecord {
                                       int subscriptionId)
   {
     super(context, id, new Body("", true), recipients, individualRecipient, recipientDeviceId,
-          dateSent, dateReceived, threadId, SmsDatabase.Status.STATUS_NONE, receiptCount, mailbox,
+          dateSent, dateReceived, threadId, com.medxnote.securesms.database.SmsDatabase.Status.STATUS_NONE, receiptCount, mailbox,
           new LinkedList<IdentityKeyMismatch>(), new LinkedList<NetworkFailure>(), subscriptionId);
 
     this.contentLocation = contentLocation;

@@ -172,7 +172,7 @@ public class ThreadDatabase extends Database {
     }
 
     SQLiteDatabase db = databaseHelper.getWritableDatabase();
-    db.update(TABLE_NAME, contentValues, ID + " = ?", new String[] {threadId + ""});
+    db.update(TABLE_NAME, contentValues, ID + " = ?", new String[]{threadId + ""});
     notifyConversationListListeners();
   }
 
@@ -270,7 +270,7 @@ public class ThreadDatabase extends Database {
     contentValues.put(READ, 1);
 
     SQLiteDatabase db = databaseHelper.getWritableDatabase();
-    db.update(TABLE_NAME, contentValues, ID_WHERE, new String[] {threadId+""});
+    db.update(TABLE_NAME, contentValues, ID_WHERE, new String[]{threadId + ""});
 
     final List<SyncMessageId> smsRecords = DatabaseFactory.getSmsDatabase(context).setMessagesRead(threadId);
     final List<SyncMessageId> mmsRecords = DatabaseFactory.getMmsDatabase(context).setMessagesRead(threadId);
@@ -408,9 +408,10 @@ public class ThreadDatabase extends Database {
   }
 
   public void deleteConversations(Set<Long> selectedConversations) {
+    DatabaseFactory.getReceiptDatabase(context).deleteThreads(selectedConversations);
     DatabaseFactory.getSmsDatabase(context).deleteThreads(selectedConversations);
     DatabaseFactory.getMmsDatabase(context).deleteThreads(selectedConversations);
-    DatabaseFactory.getReceiptDatabase(context).deleteThreads(selectedConversations);
+
     DatabaseFactory.getDraftDatabase(context).clearDrafts(selectedConversations);
     deleteThreads(selectedConversations);
     notifyConversationListeners(selectedConversations);
@@ -538,7 +539,7 @@ public class ThreadDatabase extends Database {
     if (!record.isMms() || record.isMmsNotification() || record.isGroupAction()) return null;
 
     SlideDeck slideDeck = ((MediaMmsMessageRecord)record).getSlideDeck();
-    Slide thumbnail = slideDeck.getThumbnailSlide();
+    Slide     thumbnail = slideDeck.getThumbnailSlide();
 
     return thumbnail != null ? thumbnail.getThumbnailUri() : null;
   }

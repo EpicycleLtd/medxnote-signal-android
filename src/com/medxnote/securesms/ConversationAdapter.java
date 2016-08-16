@@ -73,13 +73,10 @@ public class ConversationAdapter <V extends View & BindableConversationItem>
   private final Set<MessageRecord> batchSelected = Collections.synchronizedSet(new HashSet<MessageRecord>());
 
   private final @Nullable ItemClickListener clickListener;
-  private final @NonNull
-  MasterSecret masterSecret;
+  private final @NonNull  MasterSecret      masterSecret;
   private final @NonNull  Locale            locale;
-  private final @NonNull
-  Recipients recipients;
-  private final @NonNull
-  MmsSmsDatabase db;
+  private final @NonNull  Recipients        recipients;
+  private final @NonNull  MmsSmsDatabase    db;
   private final @NonNull  LayoutInflater    inflater;
   private final @NonNull  MessageDigest     digest;
 

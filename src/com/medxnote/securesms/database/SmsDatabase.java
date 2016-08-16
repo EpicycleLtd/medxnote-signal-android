@@ -153,7 +153,7 @@ public class SmsDatabase extends MessagingDatabase {
     Cursor cursor     = null;
 
     try {
-      cursor = db.query(TABLE_NAME, new String[] {"COUNT(*)"}, null, null, null, null, null);
+      cursor = db.query(TABLE_NAME, new String[]{"COUNT(*)"}, null, null, null, null, null);
 
       if (cursor != null && cursor.moveToFirst()) return cursor.getInt(0);
       else                                        return 0;
@@ -168,7 +168,7 @@ public class SmsDatabase extends MessagingDatabase {
     Cursor cursor     = null;
 
     try {
-      cursor = db.query(TABLE_NAME, new String[] {"COUNT(*)"}, THREAD_ID + " = ?",
+      cursor = db.query(TABLE_NAME, new String[]{"COUNT(*)"}, THREAD_ID + " = ?",
                         new String[] {threadId+""}, null, null, null);
 
       if (cursor != null && cursor.moveToFirst())
@@ -816,18 +816,18 @@ public class SmsDatabase extends MessagingDatabase {
     }
 
     public SmsMessageRecord getCurrent() {
-      long messageId          = cursor.getLong(cursor.getColumnIndexOrThrow(ID));
-      String address          = cursor.getString(cursor.getColumnIndexOrThrow(ADDRESS));
-      int addressDeviceId     = cursor.getInt(cursor.getColumnIndexOrThrow(ADDRESS_DEVICE_ID));
+      long messageId          = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.ID));
+      String address          = cursor.getString(cursor.getColumnIndexOrThrow(SmsDatabase.ADDRESS));
+      int addressDeviceId     = cursor.getInt(cursor.getColumnIndexOrThrow(SmsDatabase.ADDRESS_DEVICE_ID));
       long type               = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.TYPE));
-      long dateReceived       = cursor.getLong(cursor.getColumnIndexOrThrow(NORMALIZED_DATE_RECEIVED));
-      long dateSent           = cursor.getLong(cursor.getColumnIndexOrThrow(NORMALIZED_DATE_SENT));
+      long dateReceived       = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.NORMALIZED_DATE_RECEIVED));
+      long dateSent           = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.NORMALIZED_DATE_SENT));
       long dateRead           = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.NORMALIZED_DATE_READ));
-      long threadId           = cursor.getLong(cursor.getColumnIndexOrThrow(THREAD_ID));
+      long threadId           = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.THREAD_ID));
       int status              = cursor.getInt(cursor.getColumnIndexOrThrow(SmsDatabase.STATUS));
-      int receiptCount        = cursor.getInt(cursor.getColumnIndexOrThrow(RECEIPT_COUNT));
-      String mismatchDocument = cursor.getString(cursor.getColumnIndexOrThrow(MISMATCHED_IDENTITIES));
-      int subscriptionId      = cursor.getInt(cursor.getColumnIndexOrThrow(SUBSCRIPTION_ID));
+      int receiptCount        = cursor.getInt(cursor.getColumnIndexOrThrow(SmsDatabase.RECEIPT_COUNT));
+      String mismatchDocument = cursor.getString(cursor.getColumnIndexOrThrow(SmsDatabase.MISMATCHED_IDENTITIES));
+      int subscriptionId      = cursor.getInt(cursor.getColumnIndexOrThrow(SmsDatabase.SUBSCRIPTION_ID));
 
       List<IdentityKeyMismatch> mismatches = getMismatches(mismatchDocument);
       Recipients                recipients = getRecipientsFor(address);
@@ -869,7 +869,7 @@ public class SmsDatabase extends MessagingDatabase {
 
     protected DisplayRecord.Body getBody(Cursor cursor) {
       long type   = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.TYPE));
-      String body = cursor.getString(cursor.getColumnIndexOrThrow(BODY));
+      String body = cursor.getString(cursor.getColumnIndexOrThrow(SmsDatabase.BODY));
 
       if (Types.isSymmetricEncryption(type)) {
         return new DisplayRecord.Body(body, false);

@@ -202,12 +202,15 @@ public class ReceiptDatabase extends MessagingDatabase {
 
   public void deleteReceipts(String address, long timestamp){
     SQLiteDatabase db = databaseHelper.getWritableDatabase();
+    String condition = MESSAGE + " = ?";
+    if(address != "*"){
+      condition += " AND " + ADDRESS + " = " + address;
+    }
     db.delete(
       TABLE_NAME,
-      MESSAGE + " = ? AND " + ADDRESS + " = ?",
+      condition,
       new String[]{
-        timestamp + "",
-        address
+        timestamp + ""
       });
     notifyConversationListListeners();
   }

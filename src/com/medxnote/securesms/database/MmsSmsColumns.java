@@ -42,7 +42,7 @@ public interface MmsSmsColumns {
                                                             BASE_SENDING_TYPE, BASE_SENT_FAILED_TYPE,
                                                             BASE_PENDING_SECURE_SMS_FALLBACK,
                                                             BASE_PENDING_INSECURE_SMS_FALLBACK,
-+                                                           BASE_READ_TYPE};
+                                                            BASE_READ_TYPE};
 
     // Message attributes
     protected static final long MESSAGE_ATTRIBUTE_MASK = 0xE0;

@@ -201,7 +201,7 @@ public class MmsDatabase extends MessagingDatabase {
     boolean            found           = false;
 
     try {
-      cursor = database.query(TABLE_NAME, new String[] {ID, THREAD_ID, MESSAGE_BOX}, DATE_SENT + " = ?", new String[] {String.valueOf(messageId.getTimetamp())}, null, null, null, null);
+      cursor = database.query(TABLE_NAME, new String[]{ID, THREAD_ID, MESSAGE_BOX}, DATE_SENT + " = ?", new String[]{String.valueOf(messageId.getTimetamp())}, null, null, null, null);
 
       while (cursor.moveToNext()) {
         if (Types.isOutgoingMessageType(cursor.getLong(cursor.getColumnIndexOrThrow(MESSAGE_BOX)))) {
@@ -333,13 +333,13 @@ public class MmsDatabase extends MessagingDatabase {
   private Cursor rawQuery(@NonNull String where, @Nullable String[] arguments) {
     SQLiteDatabase database = databaseHelper.getReadableDatabase();
     return database.rawQuery("SELECT " + Util.join(MMS_PROJECTION, ",") +
-                             " FROM " + MmsDatabase.TABLE_NAME +  " LEFT OUTER JOIN " + AttachmentDatabase.TABLE_NAME +
-                             " ON (" + MmsDatabase.TABLE_NAME + "." + ID + " = " + AttachmentDatabase.TABLE_NAME + "." + AttachmentDatabase.MMS_ID + ")" +
-                             " WHERE " + where, arguments);
+            " FROM " + MmsDatabase.TABLE_NAME + " LEFT OUTER JOIN " + AttachmentDatabase.TABLE_NAME +
+            " ON (" + MmsDatabase.TABLE_NAME + "." + MmsDatabase.ID + " = " + AttachmentDatabase.TABLE_NAME + "." + AttachmentDatabase.MMS_ID + ")" +
+            " WHERE " + where, arguments);
   }
 
   public Cursor getMessage(long messageId) {
-    Cursor cursor = rawQuery(RAW_ID_WHERE, new String[] {messageId + ""});
+    Cursor cursor = rawQuery(RAW_ID_WHERE, new String[]{messageId + ""});
     setNotifyConverationListeners(cursor, getThreadIdForMessage(messageId));
     return cursor;
   }
@@ -352,8 +352,8 @@ public class MmsDatabase extends MessagingDatabase {
   private void updateMailboxBitmask(long id, long maskOff, long maskOn, Optional<Long> threadId) {
     SQLiteDatabase db = databaseHelper.getWritableDatabase();
     db.execSQL("UPDATE " + TABLE_NAME +
-                   " SET " + MESSAGE_BOX + " = (" + MESSAGE_BOX + " & " + (Types.TOTAL_MASK - maskOff) + " | " + maskOn + " )" +
-                   " WHERE " + ID + " = ?", new String[] {id + ""});
+            " SET " + MESSAGE_BOX + " = (" + MESSAGE_BOX + " & " + (Types.TOTAL_MASK - maskOff) + " | " + maskOn + " )" +
+            " WHERE " + ID + " = ?", new String[]{id + ""});
 
     if (threadId.isPresent()) {
       DatabaseFactory.getThreadDatabase(context).update(threadId.get(), false);
@@ -394,7 +394,7 @@ public class MmsDatabase extends MessagingDatabase {
     updateMailboxBitmask(messageId, Types.BASE_TYPE_MASK, Types.BASE_SENT_TYPE, Optional.of(threadId));
     notifyConversationListeners(threadId);
   }
-  
+
   public void markAsRead(SyncMessageId messageId) {
     long maskOff = Types.BASE_TYPE_MASK;
     long maskOn = Types.BASE_READ_TYPE;
@@ -1160,14 +1160,14 @@ public class MmsDatabase extends MessagingDatabase {
     }
 
     private NotificationMmsMessageRecord getNotificationMmsMessageRecord(Cursor cursor) {
-      long id                    = cursor.getLong(cursor.getColumnIndexOrThrow(ID));
-      long dateSent              = cursor.getLong(cursor.getColumnIndexOrThrow(NORMALIZED_DATE_SENT));
-      long dateReceived          = cursor.getLong(cursor.getColumnIndexOrThrow(NORMALIZED_DATE_RECEIVED));
+      long id                    = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.ID));
+      long dateSent              = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.NORMALIZED_DATE_SENT));
+      long dateReceived          = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.NORMALIZED_DATE_RECEIVED));
       long dateRead              = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.NORMALIZED_DATE_READ));
-      long threadId              = cursor.getLong(cursor.getColumnIndexOrThrow(THREAD_ID));
+      long threadId              = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.THREAD_ID));
       long mailbox               = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.MESSAGE_BOX));
-      String address             = cursor.getString(cursor.getColumnIndexOrThrow(ADDRESS));
-      int addressDeviceId        = cursor.getInt(cursor.getColumnIndexOrThrow(ADDRESS_DEVICE_ID));
+      String address             = cursor.getString(cursor.getColumnIndexOrThrow(MmsDatabase.ADDRESS));
+      int addressDeviceId        = cursor.getInt(cursor.getColumnIndexOrThrow(MmsDatabase.ADDRESS_DEVICE_ID));
       Recipients recipients      = getRecipientsFor(address);
 
       String contentLocation     = cursor.getString(cursor.getColumnIndexOrThrow(MmsDatabase.CONTENT_LOCATION));
@@ -1175,8 +1175,8 @@ public class MmsDatabase extends MessagingDatabase {
       long messageSize           = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.MESSAGE_SIZE));
       long expiry                = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.EXPIRY));
       int status                 = cursor.getInt(cursor.getColumnIndexOrThrow(MmsDatabase.STATUS));
-      int receiptCount           = cursor.getInt(cursor.getColumnIndexOrThrow(RECEIPT_COUNT));
-      int subscriptionId         = cursor.getInt(cursor.getColumnIndexOrThrow(SUBSCRIPTION_ID));
+      int receiptCount           = cursor.getInt(cursor.getColumnIndexOrThrow(MmsDatabase.RECEIPT_COUNT));
+      int subscriptionId         = cursor.getInt(cursor.getColumnIndexOrThrow(MmsDatabase.SUBSCRIPTION_ID));
 
       byte[]contentLocationBytes = null;
       byte[]transactionIdBytes   = null;
@@ -1195,20 +1195,20 @@ public class MmsDatabase extends MessagingDatabase {
     }
 
     private MediaMmsMessageRecord getMediaMmsMessageRecord(Cursor cursor) {
-      long id                 = cursor.getLong(cursor.getColumnIndexOrThrow(ID));
-      long dateSent           = cursor.getLong(cursor.getColumnIndexOrThrow(NORMALIZED_DATE_SENT));
-      long dateReceived       = cursor.getLong(cursor.getColumnIndexOrThrow(NORMALIZED_DATE_RECEIVED));
+      long id                 = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.ID));
+      long dateSent           = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.NORMALIZED_DATE_SENT));
+      long dateReceived       = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.NORMALIZED_DATE_RECEIVED));
       long dateRead           = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.NORMALIZED_DATE_READ));
       long box                = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.MESSAGE_BOX));
-      long threadId           = cursor.getLong(cursor.getColumnIndexOrThrow(THREAD_ID));
-      String address          = cursor.getString(cursor.getColumnIndexOrThrow(ADDRESS));
-      int addressDeviceId     = cursor.getInt(cursor.getColumnIndexOrThrow(ADDRESS_DEVICE_ID));
-      int receiptCount        = cursor.getInt(cursor.getColumnIndexOrThrow(RECEIPT_COUNT));
+      long threadId           = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.THREAD_ID));
+      String address          = cursor.getString(cursor.getColumnIndexOrThrow(MmsDatabase.ADDRESS));
+      int addressDeviceId     = cursor.getInt(cursor.getColumnIndexOrThrow(MmsDatabase.ADDRESS_DEVICE_ID));
+      int receiptCount        = cursor.getInt(cursor.getColumnIndexOrThrow(MmsDatabase.RECEIPT_COUNT));
       DisplayRecord.Body body = getBody(cursor);
       int partCount           = cursor.getInt(cursor.getColumnIndexOrThrow(MmsDatabase.PART_COUNT));
-      String mismatchDocument = cursor.getString(cursor.getColumnIndexOrThrow(MISMATCHED_IDENTITIES));
+      String mismatchDocument = cursor.getString(cursor.getColumnIndexOrThrow(MmsDatabase.MISMATCHED_IDENTITIES));
       String networkDocument  = cursor.getString(cursor.getColumnIndexOrThrow(MmsDatabase.NETWORK_FAILURE));
-      int subscriptionId      = cursor.getInt(cursor.getColumnIndexOrThrow(SUBSCRIPTION_ID));
+      int subscriptionId      = cursor.getInt(cursor.getColumnIndexOrThrow(MmsDatabase.SUBSCRIPTION_ID));
 
       Recipients                recipients      = getRecipientsFor(address);
       List<IdentityKeyMismatch> mismatches      = getMismatchedIdentities(mismatchDocument);
@@ -1261,7 +1261,7 @@ public class MmsDatabase extends MessagingDatabase {
 
     private DisplayRecord.Body getBody(Cursor cursor) {
       try {
-        String body = cursor.getString(cursor.getColumnIndexOrThrow(BODY));
+        String body = cursor.getString(cursor.getColumnIndexOrThrow(MmsDatabase.BODY));
         long box    = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.MESSAGE_BOX));
 
         if (!TextUtils.isEmpty(body) && masterCipher != null && Types.isSymmetricEncryption(box)) {
