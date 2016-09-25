@@ -67,6 +67,7 @@ public class SmsDatabase extends MessagingDatabase {
   public  static final String TABLE_NAME         = "sms";
   public  static final String PERSON             = "person";
           static final String DATE_RECEIVED      = "date";
+          static final String DATE_RECEIPT_RECEIVED = "date_receipt_received";
           static final String DATE_SENT          = "date_sent";
           static final String DATE_READ          = "date_read";
   public  static final String PROTOCOL           = "protocol";
@@ -78,7 +79,8 @@ public class SmsDatabase extends MessagingDatabase {
 
   public static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " (" + ID + " integer PRIMARY KEY, "                +
     THREAD_ID + " INTEGER, " + ADDRESS + " TEXT, " + ADDRESS_DEVICE_ID + " INTEGER DEFAULT 1, " + PERSON + " INTEGER, " +
-    DATE_RECEIVED  + " INTEGER, " + DATE_SENT + " INTEGER, " + DATE_READ + " INTEGER, " + PROTOCOL + " INTEGER, " + READ + " INTEGER DEFAULT 0, " +
+    DATE_RECEIVED  + " INTEGER, " + DATE_RECEIPT_RECEIVED  + " INTEGER, " +
+    DATE_SENT + " INTEGER, " + DATE_READ + " INTEGER, " + PROTOCOL + " INTEGER, " + READ + " INTEGER DEFAULT 0, " +
     STATUS + " INTEGER DEFAULT -1," + TYPE + " INTEGER, " + REPLY_PATH_PRESENT + " INTEGER, " +
     RECEIPT_COUNT + " INTEGER DEFAULT 0," + SUBJECT + " TEXT, " + BODY + " TEXT, " +
     MISMATCHED_IDENTITIES + " TEXT DEFAULT NULL, " + SERVICE_CENTER + " TEXT, " + SUBSCRIPTION_ID + " INTEGER DEFAULT -1);";
@@ -96,6 +98,7 @@ public class SmsDatabase extends MessagingDatabase {
   private static final String[] MESSAGE_PROJECTION = new String[] {
       ID, THREAD_ID, ADDRESS, ADDRESS_DEVICE_ID, PERSON,
       DATE_RECEIVED + " AS " + NORMALIZED_DATE_RECEIVED,
+      DATE_RECEIPT_RECEIVED + " AS " + NORMALIZED_DATE_RECEIPT_RECEIVED,
       DATE_SENT + " AS " + NORMALIZED_DATE_SENT,
       DATE_READ + " AS " + NORMALIZED_DATE_READ,
       PROTOCOL, READ, STATUS, TYPE,
@@ -245,8 +248,9 @@ public class SmsDatabase extends MessagingDatabase {
     SQLiteDatabase db = databaseHelper.getWritableDatabase();
     db.execSQL(
       "UPDATE " + TABLE_NAME +
-      " SET " + DATE_RECEIVED + " = " + messageId.getDeliveryTimestamp() +
+      " SET " + DATE_RECEIPT_RECEIVED + " = " + messageId.getDeliveryTimestamp() +
       " WHERE " + DATE_SENT + " = " + messageId.getTimetamp()
+//      " AND " + PROTOCOL + " IS NOT NULL"
     );
 
     SQLiteDatabase database     = databaseHelper.getWritableDatabase();
@@ -482,6 +486,7 @@ public class SmsDatabase extends MessagingDatabase {
     contentValues.put(ADDRESS, record.getIndividualRecipient().getNumber());
     contentValues.put(ADDRESS_DEVICE_ID, record.getRecipientDeviceId());
     contentValues.put(DATE_RECEIVED, System.currentTimeMillis());
+    contentValues.put(DATE_RECEIPT_RECEIVED, System.currentTimeMillis());
     contentValues.put(DATE_SENT, record.getDateSent());
     contentValues.put(PROTOCOL, 31337);
     contentValues.put(READ, 0);
@@ -586,6 +591,7 @@ public class SmsDatabase extends MessagingDatabase {
     values.put(ADDRESS, message.getSender());
     values.put(ADDRESS_DEVICE_ID,  message.getSenderDeviceId());
     values.put(DATE_RECEIVED, System.currentTimeMillis());
+    values.put(DATE_RECEIPT_RECEIVED, System.currentTimeMillis());
     values.put(DATE_SENT, message.getSentTimestampMillis());
     values.put(PROTOCOL, message.getProtocol());
     values.put(READ, unread ? 0 : 1);
@@ -631,6 +637,7 @@ public class SmsDatabase extends MessagingDatabase {
     contentValues.put(THREAD_ID, threadId);
     contentValues.put(BODY, "");
     contentValues.put(DATE_RECEIVED, date-10);
+    contentValues.put(DATE_RECEIPT_RECEIVED, date-10);
     contentValues.put(DATE_SENT, date-10);
     contentValues.put(DATE_READ, date-10);
     contentValues.put(READ, 0);
@@ -656,6 +663,7 @@ public class SmsDatabase extends MessagingDatabase {
     contentValues.put(THREAD_ID, threadId);
     contentValues.put(BODY, message.getMessageBody());
     contentValues.put(DATE_RECEIVED, System.currentTimeMillis());
+    contentValues.put(DATE_RECEIPT_RECEIVED, System.currentTimeMillis());
     contentValues.put(DATE_SENT, date);
     contentValues.put(READ, 1);
     contentValues.put(TYPE, type);
@@ -772,6 +780,7 @@ public class SmsDatabase extends MessagingDatabase {
                                                                       PERSON + ", " +
                                                                       DATE_SENT + ", " +
                                                                       DATE_RECEIVED  + ", " +
+                                                                      DATE_RECEIPT_RECEIVED + ", " +
                                                                       PROTOCOL + ", " +
                                                                       READ + ", " +
                                                                       STATUS + ", " +
@@ -781,7 +790,7 @@ public class SmsDatabase extends MessagingDatabase {
                                                                       BODY + ", " +
                                                                       SERVICE_CENTER +
                                                                       ", " + THREAD_ID + ") " +
-                                     " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                                     " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
   }
 
   public static class Status {
@@ -820,7 +829,7 @@ public class SmsDatabase extends MessagingDatabase {
       String address          = cursor.getString(cursor.getColumnIndexOrThrow(SmsDatabase.ADDRESS));
       int addressDeviceId     = cursor.getInt(cursor.getColumnIndexOrThrow(SmsDatabase.ADDRESS_DEVICE_ID));
       long type               = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.TYPE));
-      long dateReceived       = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.NORMALIZED_DATE_RECEIVED));
+      long dateReceived       = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.NORMALIZED_DATE_RECEIPT_RECEIVED));
       long dateSent           = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.NORMALIZED_DATE_SENT));
       long dateRead           = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.NORMALIZED_DATE_READ));
       long threadId           = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.THREAD_ID));

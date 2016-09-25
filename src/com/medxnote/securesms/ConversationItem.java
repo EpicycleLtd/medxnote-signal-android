@@ -68,11 +68,15 @@ import com.medxnote.securesms.util.DateUtils;
 import com.medxnote.securesms.util.Util;
 import com.medxnote.securesms.util.dualsim.SubscriptionManagerCompat;
 import org.whispersystems.libsignal.util.guava.Optional;
+import com.medxnote.securesms.database.MessagingDatabase.SyncMessageId;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.Date;
+import java.text.SimpleDateFormat;
+import java.util.TimeZone;
 
 /**
  * A view that displays an individual conversation item within a conversation
@@ -92,6 +96,7 @@ public class ConversationItem extends LinearLayout
   private Locale        locale;
   private boolean       groupThread;
   private Recipient     recipient;
+  private boolean       isGroupRead;
 
   private View               bodyBubble;
   private TextView           bodyText;
@@ -184,6 +189,7 @@ public class ConversationItem extends LinearLayout
 
     this.recipient.addListener(this);
     this.conversationRecipients.addListener(this);
+    this.isGroupRead = false;
 
     setInteractionState(messageRecord);
     setBodyText(messageRecord);
@@ -311,26 +317,89 @@ public class ConversationItem extends LinearLayout
   }
 
   private void setStatusIcons(MessageRecord messageRecord) {
+    //Log.w(TAG, "setstatus icon for messageid: " + messageRecord.getTimestamp());
     mmsDownloadButton.setVisibility(View.GONE);
     mmsDownloadingLabel.setVisibility(View.GONE);
     indicatorText.setVisibility(View.GONE);
 
-    secureImage.setVisibility(messageRecord.isSecure() ? View.VISIBLE : View.GONE);
+    //secureImage.setVisibility(messageRecord.isSecure() ? View.VISIBLE : View.GONE);
+    secureImage.setVisibility(View.GONE);
     bodyText.setCompoundDrawablesWithIntrinsicBounds(0, 0, messageRecord.isKeyExchange() ? R.drawable.ic_menu_login : 0, 0);
-    dateText.setText(DateUtils.getExtendedRelativeTimeSpanString(getContext(), locale, messageRecord.getTimestamp()));
 
+    //dateText.setText(DateUtils.getExtendedRelativeTimeSpanString(getContext(), locale, messageRecord.getTimestamp()));
+    /*
+    Date rawdate = new Date(messageRecord.getTimestamp()); // *1000 is to convert seconds to milliseconds
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z"); // the format of your date
+    sdf.setTimeZone(TimeZone.getTimeZone("IST")); // give a timezone reference for formating (see comment at the bottom
+    //CharSequence date = sdf.format(rawdate);
+    String date = sdf.format(rawdate);
+    //dateText.setText(date);
+    */
     if (messageRecord.isFailed()) {
       setFailedStatusIcons();
     } else if (messageRecord.isPendingInsecureSmsFallback()) {
       setFallbackStatusIcons();
     } else {
       alertView.setNone();
+      int readCount = 0;
+      int deliveredCount = 0;
+      int unDeliveredCount = 0;
+      int recipientsCount = 0;
+      readCount = DatabaseFactory.getReceiptDatabase(context).getCountReadMessage(messageRecord.getTimestamp());
+      deliveredCount = DatabaseFactory.getReceiptDatabase(context).getCountReceivedMessage(messageRecord.getTimestamp());
+      //unDeliveredCount = DatabaseFactory.getReceiptDatabase(context).getCountUnreceivedMessage(messageRecord.getTimestamp());
+      recipientsCount = DatabaseFactory.getReceiptDatabase(context).getCountForMessage(messageRecord.getTimestamp());
+      //List<Recipient> recipientsCounts = messageRecord.getRecipients().getRecipientsList();
+      //int unsentCount = recipientsCount - unDeliveredCount;
+      String statusText = "";
+      //String statusText = date;
+      if (messageRecord.isOutgoing() && groupThread ) {
+        statusText = DateUtils.getExtendedRelativeTimeSpanString(getContext(), locale, messageRecord.getTimestamp());
+        statusText = statusText + " " + recipientsCount + ":" + recipientsCount + " " + deliveredCount + ":" + recipientsCount + " " + readCount + ":" + recipientsCount;
 
+      }
+      //Log.w(TAG, "Read count: " + readCount);
+      //Log.w(TAG, "messageid: " + messageRecord.getTimestamp());
       if      (!messageRecord.isOutgoing()) deliveryStatusIndicator.setNone();
       else if (messageRecord.isPending())   deliveryStatusIndicator.setPending();
-      else if (messageRecord.isRead())      deliveryStatusIndicator.setRead();
-      else if (messageRecord.isDelivered()) deliveryStatusIndicator.setDelivered();
-      else                                  deliveryStatusIndicator.setSent();
+      else if (messageRecord.isRead()) {
+        deliveryStatusIndicator.setNone();
+        if (groupThread){
+          if (readCount > 0)  {
+            Log.w(TAG, "SetgroupRead count: " + readCount);
+          }else
+            Log.w(TAG, "SetReadxxx count: " + readCount);
+        }
+        else{
+          statusText = statusText + " Read";
+        }
+
+
+
+      }
+      else if (messageRecord.isDelivered()){
+        deliveryStatusIndicator.setNone();
+        if (groupThread){
+          if (readCount == 0) {
+
+            Log.w(TAG, "SetDelivered count: " + readCount);
+          } else
+            Log.w(TAG, "Deliveredxxx: " + readCount);
+        }
+        else{
+          statusText = statusText + " Delivered";
+        }
+
+
+      }
+      else  {
+        deliveryStatusIndicator.setNone();
+        if (!groupThread) {
+          statusText = statusText + " Sent";
+        }
+      }
+
+      dateText.setText(statusText);
     }
   }
 

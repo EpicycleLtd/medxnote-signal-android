@@ -145,6 +145,7 @@ public class Recipient {
 
   public synchronized String toShortString() {
     return (name == null ? number : name);
+//    return (name == null ? "firstname.surname@hospitalname.tld" : name);
   }
 
   public synchronized @NonNull ContactPhoto getContactPhoto() {

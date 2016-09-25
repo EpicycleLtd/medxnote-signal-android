@@ -43,7 +43,11 @@ import com.medxnote.securesms.util.ViewUtil;
 import com.medxnote.securesms.components.AvatarImageView;
 import com.medxnote.securesms.components.DeliveryStatusView;
 import com.medxnote.securesms.util.DateUtils;
+import java.util.TimeZone;
 
+import java.sql.Date;
+import java.text.SimpleDateFormat;
+import com.medxnote.securesms.util.DynamicLanguage;
 import java.util.Locale;
 import java.util.Set;
 
@@ -82,6 +86,8 @@ public class ConversationListItem extends RelativeLayout
 
   private final Handler handler = new Handler();
   private int distributionType;
+
+  private DynamicLanguage dynamicLanguage = new DynamicLanguage();
 
   public ConversationListItem(Context context) {
     this(context, null);
@@ -127,6 +133,15 @@ public class ConversationListItem extends RelativeLayout
 
     if (thread.getDate() > 0) {
       CharSequence date = DateUtils.getBriefRelativeTimeSpanString(getContext(), locale, thread.getDate());
+      /*
+      //Locale           dateLocale    = dynamicLanguage.getCurrentLocale();
+      //SimpleDateFormat dateFormatter = DateUtils.getDetailedDateFormatter(getContext(), dateLocale);
+      //CharSequence date = dateFormatter.format(new Date(thread.getDate()));
+      //Date rawdate = new Date(unixSeconds*1000L); // *1000 is to convert seconds to milliseconds
+      SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z"); // the format of your date
+      sdf.setTimeZone(TimeZone.getTimeZone("GMT-4")); // give a timezone reference for formating (see comment at the bottom
+      String date = sdf.format(thread.getDate());
+      */
       dateView.setText(read ? date : SpanUtil.color(getResources().getColor(R.color.textsecure_primary), date));
       dateView.setTypeface(read ? LIGHT_TYPEFACE : BOLD_TYPEFACE);
     }
@@ -207,10 +222,13 @@ public class ConversationListItem extends RelativeLayout
     } else {
       alertView.setNone();
 
+      deliveryStatusIndicator.setNone();
+      /*
       if      (thread.isPending())     deliveryStatusIndicator.setPending();
       else if (thread.isMessageRead()) deliveryStatusIndicator.setRead();
       else if (thread.isDelivered())   deliveryStatusIndicator.setDelivered();
       else                             deliveryStatusIndicator.setSent();
+      */
     }
   }
 

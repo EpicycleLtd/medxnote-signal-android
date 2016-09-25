@@ -48,6 +48,7 @@ public class MmsSmsDatabase extends Database {
                                               SmsDatabase.ADDRESS, SmsDatabase.ADDRESS_DEVICE_ID, SmsDatabase.SUBJECT,
                                               MmsSmsColumns.NORMALIZED_DATE_SENT,
                                               MmsSmsColumns.NORMALIZED_DATE_RECEIVED,
+                                              MmsSmsColumns.NORMALIZED_DATE_RECEIPT_RECEIVED,
                                               MmsSmsColumns.NORMALIZED_DATE_READ,
                                               MmsDatabase.MESSAGE_TYPE, MmsDatabase.MESSAGE_BOX,
                                               SmsDatabase.STATUS, MmsDatabase.PART_COUNT,
@@ -169,6 +170,7 @@ public class MmsSmsDatabase extends Database {
                               AttachmentDatabase.CONTENT_DISPOSITION,
                               AttachmentDatabase.NAME,
                               MmsSmsColumns.NORMALIZED_DATE_READ,
+                              MmsSmsColumns.NORMALIZED_DATE_RECEIPT_RECEIVED,
                               AttachmentDatabase.TRANSFER_STATE};
 
     String[] smsProjection = {SmsDatabase.DATE_SENT + " AS " + MmsSmsColumns.NORMALIZED_DATE_SENT,
@@ -195,6 +197,7 @@ public class MmsSmsDatabase extends Database {
                               AttachmentDatabase.CONTENT_DISPOSITION,
                               AttachmentDatabase.NAME,
                               MmsSmsColumns.NORMALIZED_DATE_READ,
+                              MmsSmsColumns.NORMALIZED_DATE_RECEIPT_RECEIVED,
                               AttachmentDatabase.TRANSFER_STATE};
 
     SQLiteQueryBuilder mmsQueryBuilder = new SQLiteQueryBuilder();
@@ -216,6 +219,7 @@ public class MmsSmsDatabase extends Database {
     Set<String> mmsColumnsPresent = new HashSet<>();
     mmsColumnsPresent.add(MmsSmsColumns.ID);
     mmsColumnsPresent.add(MmsSmsColumns.READ);
+    mmsColumnsPresent.add(MmsSmsColumns.NORMALIZED_DATE_RECEIPT_RECEIVED);
     mmsColumnsPresent.add(MmsSmsColumns.THREAD_ID);
     mmsColumnsPresent.add(MmsSmsColumns.BODY);
     mmsColumnsPresent.add(MmsSmsColumns.ADDRESS);
@@ -260,6 +264,7 @@ public class MmsSmsDatabase extends Database {
     smsColumnsPresent.add(SmsDatabase.DATE_SENT);
     smsColumnsPresent.add(SmsDatabase.DATE_RECEIVED);
     smsColumnsPresent.add(SmsDatabase.DATE_READ);
+    smsColumnsPresent.add(SmsDatabase.NORMALIZED_DATE_RECEIPT_RECEIVED);
     smsColumnsPresent.add(SmsDatabase.STATUS);
 
     @SuppressWarnings("deprecation")

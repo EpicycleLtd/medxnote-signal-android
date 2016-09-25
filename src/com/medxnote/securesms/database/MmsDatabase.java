@@ -86,6 +86,7 @@ public class MmsDatabase extends MessagingDatabase {
   public  static final String TABLE_NAME         = "mms";
           static final String DATE_SENT          = "date";
           static final String DATE_RECEIVED      = "date_received";
+          static final String DATE_RECEIPT_RECEIVED = "date_receipt_received";
           static final String DATE_READ          = "date_read";
   public  static final String MESSAGE_BOX        = "msg_box";
           static final String CONTENT_LOCATION   = "ct_l";
@@ -99,6 +100,7 @@ public class MmsDatabase extends MessagingDatabase {
 
   public static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " (" + ID + " INTEGER PRIMARY KEY, "                          +
     THREAD_ID + " INTEGER, " + DATE_SENT + " INTEGER, " + DATE_RECEIVED + " INTEGER, " +
+    DATE_RECEIPT_RECEIVED + " INTEGER, " +
     DATE_READ + " INTEGER, " + MESSAGE_BOX + " INTEGER, " +
     READ + " INTEGER DEFAULT 0, " + "m_id" + " TEXT, " + "sub" + " TEXT, "                +
     "sub_cs" + " INTEGER, " + BODY + " TEXT, " + PART_COUNT + " INTEGER, "               +
@@ -128,6 +130,7 @@ public class MmsDatabase extends MessagingDatabase {
       MmsDatabase.TABLE_NAME + "." + ID + " AS " + ID,
       THREAD_ID, DATE_SENT + " AS " + NORMALIZED_DATE_SENT,
       DATE_RECEIVED + " AS " + NORMALIZED_DATE_RECEIVED,
+      DATE_RECEIPT_RECEIVED + " AS " + NORMALIZED_DATE_RECEIPT_RECEIVED,
       DATE_READ + " AS " + NORMALIZED_DATE_READ,
       MESSAGE_BOX, READ,
       CONTENT_LOCATION, EXPIRY, MESSAGE_TYPE,
@@ -462,7 +465,7 @@ public class MmsDatabase extends MessagingDatabase {
 
               database.execSQL(
                   "UPDATE " + TABLE_NAME +
-                  " SET " + DATE_RECEIVED + " = " + messageId.getDeliveryTimestamp() +
+                  " SET " + DATE_RECEIPT_RECEIVED + " = " + messageId.getDeliveryTimestamp() +
                   " WHERE " + DATE_SENT + " = ?", new String[]{messageId.getTimetamp() + ""}
               );
               DatabaseFactory.getThreadDatabase(context).update(threadId, false);
@@ -765,6 +768,7 @@ public class MmsDatabase extends MessagingDatabase {
     contentValues.put(CONTENT_LOCATION, contentLocation);
     contentValues.put(STATUS, Status.DOWNLOAD_INITIALIZED);
     contentValues.put(DATE_RECEIVED, generatePduCompatTimestamp());
+    contentValues.put(DATE_RECEIPT_RECEIVED, generatePduCompatTimestamp());
     contentValues.put(PART_COUNT, retrieved.getAttachments().size());
     contentValues.put(SUBSCRIPTION_ID, retrieved.getSubscriptionId());
     contentValues.put(READ, 0);
@@ -853,6 +857,7 @@ public class MmsDatabase extends MessagingDatabase {
     contentValues.put(THREAD_ID, threadId);
     contentValues.put(STATUS, Status.DOWNLOAD_INITIALIZED);
     contentValues.put(DATE_RECEIVED, generatePduCompatTimestamp());
+    contentValues.put(DATE_RECEIPT_RECEIVED, generatePduCompatTimestamp());
     contentValues.put(READ, Util.isDefaultSmsProvider(context) ? 0 : 1);
     contentValues.put(SUBSCRIPTION_ID, subscriptionId);
 
@@ -914,6 +919,7 @@ public class MmsDatabase extends MessagingDatabase {
     contentValues.put(THREAD_ID, threadId);
     contentValues.put(READ, 1);
     contentValues.put(DATE_RECEIVED, System.currentTimeMillis());
+    contentValues.put(DATE_RECEIPT_RECEIVED, System.currentTimeMillis());
     contentValues.put(SUBSCRIPTION_ID, message.getSubscriptionId());
 
     if (message.getRecipients().isSingleRecipient()) {
@@ -1162,7 +1168,7 @@ public class MmsDatabase extends MessagingDatabase {
     private NotificationMmsMessageRecord getNotificationMmsMessageRecord(Cursor cursor) {
       long id                    = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.ID));
       long dateSent              = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.NORMALIZED_DATE_SENT));
-      long dateReceived          = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.NORMALIZED_DATE_RECEIVED));
+      long dateReceived          = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.NORMALIZED_DATE_RECEIPT_RECEIVED));
       long dateRead              = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.NORMALIZED_DATE_READ));
       long threadId              = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.THREAD_ID));
       long mailbox               = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.MESSAGE_BOX));
@@ -1197,7 +1203,7 @@ public class MmsDatabase extends MessagingDatabase {
     private MediaMmsMessageRecord getMediaMmsMessageRecord(Cursor cursor) {
       long id                 = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.ID));
       long dateSent           = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.NORMALIZED_DATE_SENT));
-      long dateReceived       = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.NORMALIZED_DATE_RECEIVED));
+      long dateReceived       = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.NORMALIZED_DATE_RECEIPT_RECEIVED));
       long dateRead           = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.NORMALIZED_DATE_READ));
       long box                = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.MESSAGE_BOX));
       long threadId           = cursor.getLong(cursor.getColumnIndexOrThrow(MmsDatabase.THREAD_ID));

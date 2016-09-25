@@ -101,7 +101,7 @@ public class ReceiptDatabase extends MessagingDatabase {
             ADDRESS + " = ?",
         new String[]{
             messageId.getTimetamp() + "",
-            messageId.getAddress()
+            messageId.getAddress().replaceAll("\\s+", "")
         }
     );
     notifyConversationListListeners();
@@ -127,7 +127,15 @@ public class ReceiptDatabase extends MessagingDatabase {
     return getCountForMessage(messageId, DATE_RECEIVED + " < 0");
   }
 
+  public int getCountUnreceivedMessage(long messageId){
+    return getCountForMessage(messageId, DATE_RECEIVED + " < 0");
+  }
+
   public int getCountReceivedMessage(SyncMessageId messageId){
+    return getCountForMessage(messageId, DATE_RECEIVED + " > 0");
+  }
+
+  public int getCountReceivedMessage(long messageId){
     return getCountForMessage(messageId, DATE_RECEIVED + " > 0");
   }
 
@@ -139,7 +147,16 @@ public class ReceiptDatabase extends MessagingDatabase {
       return getCountForMessage(messageId, DATE_READ + " > 0");
   }
 
+  public int getCountReadMessage(long messageId){
+      return getCountForMessage(messageId, DATE_READ + " > 0");
+  }
+
+
   public int getCountForMessage(SyncMessageId messageId){
+      return getCountForMessage(messageId, null);
+  }
+
+  public int getCountForMessage(long messageId){
       return getCountForMessage(messageId, null);
   }
 
@@ -150,7 +167,7 @@ public class ReceiptDatabase extends MessagingDatabase {
       if (where != null){ selection = MESSAGE + " = ?" + " AND " + where; }
 
       try {
-          Log.w(TAG, "creating cursor", new Exception());
+          //Log.w(TAG, "creating cursor", new Exception());
           cursor = db.query(
               TABLE_NAME,
               new String[] {
@@ -164,14 +181,48 @@ public class ReceiptDatabase extends MessagingDatabase {
               null,
               null
           );
-          Log.w(TAG, "cursor created", new Exception());
+          //Log.w(TAG, "cursor created", new Exception());
           if (cursor != null && cursor.moveToFirst()) {
-              Log.w(TAG, "Count: " + cursor.getInt(0), new Exception());
+              //Log.w(TAG, "Count: " + cursor.getInt(0), new Exception());
               return cursor.getInt(0);
           }
       } finally {
           if (cursor != null)
-              Log.w(TAG, "cursor != null. closing", new Exception());
+              //Log.w(TAG, "cursor != null. closing", new Exception());
+              cursor.close();
+      }
+      return 0;
+  }
+  
+  public int getCountForMessage(long messageId, String where){
+      SQLiteDatabase db = databaseHelper.getReadableDatabase();
+      Cursor cursor     = null;
+      String selection = MESSAGE + " = ?";
+      if (where != null){ selection = MESSAGE + " = ?" + " AND " + where; }
+
+      try {
+          //Log.w(TAG, "creating cursor", new Exception());
+          cursor = db.query(
+              TABLE_NAME,
+              new String[] {
+                  "COUNT(*)"
+              },
+              selection,
+              new String[] {
+                  messageId+""
+              },
+              null,
+              null,
+              null
+          );
+          //Log.w(TAG, "cursor created", new Exception());
+          if (cursor != null && cursor.moveToFirst()) {
+              //Log.w(TAG, "Count: " + cursor.getInt(0), new Exception());
+              return cursor.getInt(0);
+          }
+      } finally {
+          if (cursor != null)
+              //Log.w(TAG, "cursor != null. closing", new Exception());
               cursor.close();
       }
       return 0;
@@ -204,7 +255,7 @@ public class ReceiptDatabase extends MessagingDatabase {
     SQLiteDatabase db = databaseHelper.getWritableDatabase();
     String condition = MESSAGE + " = ?";
     if(address != "*"){
-      condition += " AND " + ADDRESS + " = " + address;
+      condition += " AND " + ADDRESS + " = " + address.replaceAll("\\s+", "");
     }
     db.delete(
       TABLE_NAME,
@@ -226,7 +277,7 @@ public class ReceiptDatabase extends MessagingDatabase {
   public void createReceipts(Recipients addresses, long timeStamp){
     for(Recipient address : addresses.getRecipientsList()){
       createReceipts(new SyncMessageId(
-          address.getNumber(),
+          address.getNumber().replaceAll("\\s+", ""),
           timeStamp
         )
       );
@@ -235,7 +286,7 @@ public class ReceiptDatabase extends MessagingDatabase {
 
   public void createReceipts(SyncMessageId messageId){
     ContentValues values = new ContentValues(5);
-    values.put(ADDRESS, messageId.getAddress());
+    values.put(ADDRESS, messageId.getAddress().replaceAll("\\s+",""));
     values.put(MESSAGE, messageId.getTimetamp());
     values.put(DATE_SENT, messageId.getTimetamp());
     values.put(DATE_RECEIVED, -1);
@@ -254,7 +305,7 @@ public class ReceiptDatabase extends MessagingDatabase {
       ADDRESS + " = ?",
       new String[]{
         timestamp+"",
-        address
+        address.replaceAll("\\s+","")
       },
       null,
       null,

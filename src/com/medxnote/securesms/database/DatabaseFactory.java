@@ -75,7 +75,8 @@ public class DatabaseFactory {
   private static final int INTRODUCED_SUBSCRIPTION_ID_VERSION              = 27;
   private static final int INTRODUCED_DATE_READ_VERSION                    = 28;
   private static final int INTRODUCED_RECEIPT_DATABASE                     = 29;
-  private static final int DATABASE_VERSION                                = 29;
+  private static final int INTRODUCED_RECEIVED_RECEIPT_FIX                 = 30;
+  private static final int DATABASE_VERSION                                = 30;
 
   private static final String DATABASE_NAME    = "messages.db";
   private static final Object lock             = new Object();
@@ -842,6 +843,14 @@ public class DatabaseFactory {
 
       if (oldVersion < INTRODUCED_RECEIPT_DATABASE) {
         db.execSQL(ReceiptDatabase.CREATE_TABLE);
+      }
+
+      if (oldVersion < INTRODUCED_RECEIVED_RECEIPT_FIX) {
+        db.execSQL("ALTER TABLE sms ADD COLUMN date_receipt_received INTEGER;");
+        db.execSQL("UPDATE sms SET date_receipt_received = date;");
+
+        db.execSQL("ALTER TABLE mms ADD COLUMN date_receipt_received INTEGER;");
+        db.execSQL("UPDATE mms SET date_receipt_received = date_received;");
       }
 
       db.setTransactionSuccessful();

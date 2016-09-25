@@ -86,14 +86,12 @@ public abstract class PushReceivedJob extends ContextJob {
       envelope.getTimestamp(),
       envelope.getDeliveryTimestamp()
     );
-    //DatabaseFactory.getMmsSmsDatabase(context).incrementDeliveryReceiptCount(syncMessageId);
     setDateGroupReceived(syncMessageId);
     boolean isGroupReceipt = DatabaseFactory.getReceiptDatabase(context).isGroupReceipt(syncMessageId);
     int count = DatabaseFactory.getReceiptDatabase(context).getCountUnreceivedMessage(syncMessageId);
-    if(!isGroupReceipt || count < 1) {
+    //if(!isGroupReceipt || count < 1) {
       markReceipt(syncMessageId);
-    }
-    Log.w(TAG, "handleReceipt Envelope deliveryTimestamp" + envelope.getDeliveryTimestamp(), new Exception());
+    //}
   }
 
   private void setDateGroupReceived(SyncMessageId syncMessageId){
@@ -106,6 +104,7 @@ public abstract class PushReceivedJob extends ContextJob {
   }
 
   private void handleRead(SignalServiceEnvelope envelope) {
+    Log.w(TAG, String.format("Received read: (XXXXX, %d)", envelope.getTimestamp()));
     SyncMessageId syncMessageId = new SyncMessageId(
         envelope.getSource(),
         envelope.getTimestamp(),
@@ -114,9 +113,9 @@ public abstract class PushReceivedJob extends ContextJob {
     boolean isGroupReceipt = DatabaseFactory.getReceiptDatabase(context).isGroupReceipt(syncMessageId);
     setDateGroupRead(syncMessageId);
     int count = DatabaseFactory.getReceiptDatabase(context).getCountUnreadMessage(syncMessageId);
-    if(!isGroupReceipt || count < 1) {
+    //if(!isGroupReceipt || count < 1) {
       markRead(syncMessageId);
-    }
+    //}
   }
 
   private void setDateGroupRead(SyncMessageId syncMessageId){
@@ -124,6 +123,7 @@ public abstract class PushReceivedJob extends ContextJob {
   }
 
   private void markRead(SyncMessageId syncMessageId){
+    DatabaseFactory.getMmsSmsDatabase(context).incrementDeliveryReceiptCount(syncMessageId);
     DatabaseFactory.getMmsSmsDatabase(context).setAsRead(syncMessageId);
   }
 

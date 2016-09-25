@@ -195,14 +195,18 @@ public class MessageGroupDetailsActivity extends PassphraseRequiredActionBarActi
 
   private void updateTime(MessageRecord messageRecord, Recipients recipients) {
 
+    MessageRecord msgr = messageRecord;
+    Recipients rs = recipients;
     Cursor cursor = DatabaseFactory.getReceiptDatabase(
       getApplicationContext()
     ).getReceiptsById(
       messageRecord.getTimestamp(),
-      recipients.getPrimaryRecipient().getNumber()
+            recipients.getPrimaryRecipient().getNumber().replaceAll("\\s+","")
+           // recipients.getPrimaryRecipient().getNumber()
     );
     if( cursor == null || !cursor.moveToFirst() ) {
       return;
+
     }
     ReceiptsRecord record = DatabaseFactory.getReceiptDatabase(
       getApplicationContext()
@@ -219,7 +223,7 @@ public class MessageGroupDetailsActivity extends PassphraseRequiredActionBarActi
       sentDate.setText(dateFormatter.format(new Date(messageRecord.getDateSent())));
     }
     if (record.hasReceived()){
-      receivedDate.setText((dateFormatter.format(new Date(record.getDateSent()))));
+      receivedDate.setText((dateFormatter.format(new Date(record.getDateReceived()))));
       receivedContainer.setVisibility(View.VISIBLE);
     }
     if (record.hasRead()){

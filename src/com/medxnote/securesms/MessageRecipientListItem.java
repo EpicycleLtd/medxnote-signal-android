@@ -152,7 +152,7 @@ public class MessageRecipientListItem extends RelativeLayout
       } else {
         intermediaryRecipients = record.getRecipients();
       }
-      Log.e(TAG, "simple name" + getContext().getClass().getSimpleName(), new Exception());
+//      Log.e(TAG, "simple name" + getContext().getClass().getSimpleName(), new Exception());
       if (intermediaryRecipients.isGroupRecipient() && showInfo){
         final MessageRecord messageRecord = record;
         infoButton.setEnabled(true);
