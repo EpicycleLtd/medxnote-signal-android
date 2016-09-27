@@ -118,7 +118,7 @@ public class TextSecurePreferences {
   }
 
   public static NotificationPrivacyPreference getNotificationPrivacy(Context context) {
-    return new NotificationPrivacyPreference(getStringPreference(context, NOTIFICATION_PRIVACY_PREF, "all"));
+    return new NotificationPrivacyPreference(getStringPreference(context, NOTIFICATION_PRIVACY_PREF, "contact"));
   }
 
   public static boolean isNewContactsNotificationEnabled(Context context) {
