@@ -371,6 +371,9 @@
 
     <activity android:name="com.soundcloud.android.crop.CropImageActivity" />
 
+    <activity android:name=".QrCodeScannerActivity"
+              android:screenOrientation="portrait" />
+
     <service android:enabled="true" android:name="com.medxnote.redphone.RedPhoneService"/>
 
     <service android:enabled="true" android:name=".service.ApplicationMigrationService"/>

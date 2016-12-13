@@ -1211,6 +1211,10 @@
     <string name="preferences__enable_autoaccept_changed_keys_summ">Accept changed keys automatically</string>
     <string name="preferences__enable_autoaccept_show_message">Show message about changed keys</string>
     <string name="preferences__enable_autoaccept_show_message_summ">Show message about changed keys</string>
+    <!-- QR Strings -->
+    <string name="attachment_type_selector__qr_scan">QR Scan</string>
+    <string name="QrCodeScannerActivity__title">Scan barcode</string>
+    <string name="AttachmentTypeSelectorAdapter_qr_code">QR Code</string>
     <!-- EOF -->
 
 </resources>

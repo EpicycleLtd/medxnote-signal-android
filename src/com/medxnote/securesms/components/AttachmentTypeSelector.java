@@ -34,6 +34,7 @@ public class AttachmentTypeSelector extends PopupWindow {
   public static final int ADD_CONTACT_INFO  = 4;
   public static final int TAKE_PHOTO        = 5;
   public static final int ADD_LOCATION      = 6;
+  public static final int QR_CODE_SCAN      = 109;
 
   private static final int ANIMATION_DURATION = 300;
 
@@ -46,6 +47,7 @@ public class AttachmentTypeSelector extends PopupWindow {
   private final @NonNull ImageView   cameraButton;
 //  private final @NonNull ImageView   locationButton;
 //  private final @NonNull ImageView   closeButton;
+  private final @NonNull ImageView   qrScanButton;
 
   private @Nullable View                      currentAnchor;
   private @Nullable AttachmentClickedListener listener;
@@ -64,6 +66,7 @@ public class AttachmentTypeSelector extends PopupWindow {
     this.cameraButton   = ViewUtil.findById(layout, R.id.camera_button);
 //    this.closeButton    = ViewUtil.findById(layout, R.id.close_button);
 //    this.locationButton = ViewUtil.findById(layout, R.id.location_button);
+    this.qrScanButton   = ViewUtil.findById(layout, R.id.qr_scan_button);
 
     this.imageButton.setOnClickListener(new PropagatingClickListener(ADD_IMAGE));
 //    this.audioButton.setOnClickListener(new PropagatingClickListener(ADD_SOUND));
@@ -72,6 +75,7 @@ public class AttachmentTypeSelector extends PopupWindow {
     this.cameraButton.setOnClickListener(new PropagatingClickListener(TAKE_PHOTO));
 //    this.locationButton.setOnClickListener(new PropagatingClickListener(ADD_LOCATION));
 //    this.closeButton.setOnClickListener(new CloseClickListener());
+    this.qrScanButton.setOnClickListener(new PropagatingClickListener(QR_CODE_SCAN));
 
 //    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
 //      ViewUtil.findById(layout, R.id.location_linear_layout).setVisibility(View.INVISIBLE);
@@ -115,6 +119,7 @@ public class AttachmentTypeSelector extends PopupWindow {
       animateButtonIn(videoButton, ANIMATION_DURATION / 4);
 //      animateButtonIn(contactButton, 0);
 //      animateButtonIn(closeButton, 0);
+      animateButtonIn(qrScanButton, ANIMATION_DURATION /4);
     }
   }
 

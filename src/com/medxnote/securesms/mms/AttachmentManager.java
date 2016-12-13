@@ -36,6 +36,7 @@ import android.widget.Toast;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.location.places.ui.PlacePicker;
+import com.medxnote.securesms.QrCodeScannerActivity;
 import com.medxnote.securesms.components.location.SignalPlace;
 import com.medxnote.securesms.crypto.MasterSecret;
 import com.medxnote.securesms.util.ViewUtil;
@@ -259,6 +260,10 @@ public class AttachmentManager {
     } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException e) {
       Log.w(TAG, e);
     }
+  }
+
+  public static void scanQrCode(Activity activity, int requestCode) {
+    activity.startActivityForResult(new Intent(activity, QrCodeScannerActivity.class), requestCode);
   }
 
   private @Nullable Uri getSlideUri() {
