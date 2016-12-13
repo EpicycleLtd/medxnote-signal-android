@@ -134,7 +134,7 @@
     <string name="ConversationActivity_transport_insecure_sms">Insecure SMS</string>
     <string name="ConversationActivity_transport_insecure_mms">Insecure MMS</string>
     <string name="ConversationActivity_transport_signal">Medxnote</string>
-    <string name="ConversationActivity_lets_switch_to_signal">Let\'s switch to Medxnote %1$s</string>
+    <string name="ConversationActivity_lets_switch_to_signal">Please use Medxnote. %1$s</string>
     <string name="ConversationActivity_lets_use_this_to_chat">Let\'s use this to chat: %1$s</string>
     <string name="ConversationActivity_error_leaving_group">Error leaving group...</string>
     <string name="ConversationActivity_mms_not_supported_title">MMS not supported</string>
@@ -339,7 +339,7 @@
         <item quantity="one">Send 1 SMS invite?</item>
         <item quantity="other">Send %d SMS invites?</item>
     </plurals>
-    <string name="InviteActivity_lets_switch_to_signal">Let\'s switch to Medxnote: %1$s</string>
+    <string name="InviteActivity_lets_switch_to_signal">Please use Medxnote. %1$s</string>
     <string name="InviteActivity_no_app_to_share_to">It looks like you don\'t have any apps to share to.</string>
     <string name="InviteActivity_friends_dont_let_friends_text_unencrypted">Friends don\'t let friends chat unencrypted.</string>
 
