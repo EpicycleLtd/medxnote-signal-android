@@ -101,7 +101,7 @@ public class ReceiptDatabase extends MessagingDatabase {
             ADDRESS + " = ?",
         new String[]{
             messageId.getTimetamp() + "",
-            messageId.getAddress().replaceAll("\\s+", "")
+            messageId.getAddress().replaceAll("[\\s\\(\\)-]+", "")
         }
     );
     notifyConversationListListeners();
@@ -255,7 +255,7 @@ public class ReceiptDatabase extends MessagingDatabase {
     SQLiteDatabase db = databaseHelper.getWritableDatabase();
     String condition = MESSAGE + " = ?";
     if(address != "*"){
-      condition += " AND " + ADDRESS + " = " + address.replaceAll("\\s+", "");
+      condition += " AND " + ADDRESS + " = " + address.replaceAll("[\\s\\(\\)-]+", "");
     }
     db.delete(
       TABLE_NAME,
@@ -277,7 +277,17 @@ public class ReceiptDatabase extends MessagingDatabase {
   public void createReceipts(Recipients addresses, long timeStamp){
     for(Recipient address : addresses.getRecipientsList()){
       createReceipts(new SyncMessageId(
-          address.getNumber().replaceAll("\\s+", ""),
+          address.getNumber().replaceAll("[\\s\\(\\)-]+", ""),
+          timeStamp
+        )
+      );
+    }
+  }
+
+  public void createReceipts(List<String> addresses, long timeStamp){
+    for(String address : addresses){
+      createReceipts(new SyncMessageId(
+          address,
           timeStamp
         )
       );
@@ -286,7 +296,7 @@ public class ReceiptDatabase extends MessagingDatabase {
 
   public void createReceipts(SyncMessageId messageId){
     ContentValues values = new ContentValues(5);
-    values.put(ADDRESS, messageId.getAddress().replaceAll("\\s+",""));
+    values.put(ADDRESS, messageId.getAddress().replaceAll("[\\s\\(\\)-]+",""));
     values.put(MESSAGE, messageId.getTimetamp());
     values.put(DATE_SENT, messageId.getTimetamp());
     values.put(DATE_RECEIVED, -1);
@@ -297,15 +307,16 @@ public class ReceiptDatabase extends MessagingDatabase {
 
   public Cursor getReceiptsById(long timestamp, String address) {
     SQLiteDatabase db = databaseHelper.getReadableDatabase();
+    String formatted_address = "%" + address.replaceAll("[\\s\\(\\)-]+","").replaceFirst("^0*", "");
     return db.query(
       TABLE_NAME,
       MESSAGE_PROJECTION,
       MESSAGE + " = ?" +
       " AND " +
-      ADDRESS + " = ?",
+      ADDRESS + " LIKE ?",
       new String[]{
         timestamp+"",
-        address.replaceAll("\\s+","")
+        formatted_address
       },
       null,
       null,

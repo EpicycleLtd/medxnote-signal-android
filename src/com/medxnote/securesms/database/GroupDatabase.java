@@ -111,6 +111,21 @@ public class GroupDatabase extends Database {
     return RecipientFactory.getRecipientsFor(context, recipients, false);
   }
 
+  public @NonNull List<String> getGroupMembersList(byte[] groupId, boolean includeSelf) {
+    String          localNumber = TextSecurePreferences.getLocalNumber(context);
+    List<String>    members     = getCurrentMembers(groupId);
+    List<String> recipients  = new LinkedList<String>();
+
+    for (String member : members) {
+      if (!includeSelf && member.equals(localNumber))
+        continue;
+      recipients.add(member);
+    }
+
+    return recipients;
+  }
+
+
   public void create(byte[] groupId, String title, List<String> members,
                      SignalServiceAttachmentPointer avatar, String relay)
   {

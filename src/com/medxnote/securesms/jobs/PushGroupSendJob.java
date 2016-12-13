@@ -82,7 +82,8 @@ public class PushGroupSendJob extends PushSendJob implements InjectableType {
     try {
       // save receipts
       byte[]                        groupId       = GroupUtil.getDecodedId(message.getRecipients().getPrimaryRecipient().getNumber());
-      Recipients                    recipients    = DatabaseFactory.getGroupDatabase(context).getGroupMembers(groupId, false);
+//      Recipients                    recipients    = DatabaseFactory.getGroupDatabase(context).getGroupMembers(groupId, false);
+      List<String> recipients = DatabaseFactory.getGroupDatabase(context).getGroupMembersList(groupId, false);
       DatabaseFactory.getReceiptDatabase(context).createReceipts(recipients, message.getSentTimeMillis());
 
       deliver(masterSecret, message, filterRecipientId);

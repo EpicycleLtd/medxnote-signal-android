@@ -201,7 +201,7 @@ public class MessageGroupDetailsActivity extends PassphraseRequiredActionBarActi
       getApplicationContext()
     ).getReceiptsById(
       messageRecord.getTimestamp(),
-            recipients.getPrimaryRecipient().getNumber().replaceAll("\\s+","")
+            recipients.getPrimaryRecipient().getNumber().replaceAll("[\\s\\(\\)-]+","")
            // recipients.getPrimaryRecipient().getNumber()
     );
     if( cursor == null || !cursor.moveToFirst() ) {
