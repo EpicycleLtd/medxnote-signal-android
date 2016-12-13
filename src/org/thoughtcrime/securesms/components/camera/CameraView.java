@@ -303,6 +303,18 @@ public class CameraView extends ViewGroup {
     });
   }
 
+  public void autoFocus(Camera.AutoFocusCallback callBack){
+    if (camera.isPresent()){
+      Log.w(TAG, "Camera is present", new Exception());
+      Camera cam = camera.get();
+      Camera.Parameters parameters = cam.getParameters();
+      parameters.setFocusMode(Parameters.FOCUS_MODE_AUTO);
+      cam.setParameters(parameters);
+      cam.autoFocus(callBack);
+      Log.w(TAG, "Autofocus set", new Exception());
+    }
+  }
+
   private void startPreview(final @NonNull Parameters parameters) {
     if (this.camera.isPresent()) {
       try {

@@ -361,6 +361,9 @@
               android:theme="@style/TextSecure.LightTheme"
               android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"/>
 
+    <activity android:name=".QrCodeScannerActivity"
+              android:screenOrientation="portrait" />
+
     <activity android:name="com.soundcloud.android.crop.CropImageActivity" />
 
     <service android:enabled="true" android:name="org.thoughtcrime.redphone.RedPhoneService"/>

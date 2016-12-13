@@ -38,6 +38,7 @@ import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.location.places.ui.PlacePicker;
 
 import org.thoughtcrime.securesms.MediaPreviewActivity;
+import org.thoughtcrime.securesms.QrCodeScannerActivity;
 import org.thoughtcrime.securesms.R;
 import org.thoughtcrime.securesms.components.AudioView;
 import org.thoughtcrime.securesms.components.RemovableMediaView;
@@ -259,6 +260,10 @@ public class AttachmentManager {
     } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException e) {
       Log.w(TAG, e);
     }
+  }
+
+  public static void scanQrCode(Activity activity, int requestCode) {
+    activity.startActivityForResult(new Intent(activity, QrCodeScannerActivity.class), requestCode);
   }
 
   private @Nullable Uri getSlideUri() {
