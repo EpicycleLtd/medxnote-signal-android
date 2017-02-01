@@ -43,7 +43,7 @@ public class MultiDeviceReadUpdateJob extends MasterSecretJob implements Injecta
     this.messageIds = new LinkedList<>();
 
     for (SyncMessageId messageId : messageIds) {
-      this.messageIds.add(new SerializableSyncMessageId(messageId.getAddress(), messageId.getTimetamp()));
+      this.messageIds.add(new SerializableSyncMessageId(messageId.getAddress(), messageId.getTimestamp()));
     }
   }
 

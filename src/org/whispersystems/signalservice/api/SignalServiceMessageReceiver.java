@@ -145,7 +145,9 @@ public class SignalServiceMessageReceiver {
     for (SignalServiceEnvelopeEntity entity : entities) {
       SignalServiceEnvelope envelope =  new SignalServiceEnvelope(entity.getType(), entity.getSource(),
               entity.getSourceDevice(), entity.getRelay(),
-              entity.getTimestamp(), entity.getMessage(),
+              entity.getTimestamp(),
+              entity.getDeliveryTimestamp(),
+              entity.getMessage(),
               entity.getContent());
 
       callback.onMessage(envelope);

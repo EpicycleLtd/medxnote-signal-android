@@ -100,7 +100,7 @@ public class ReceiptDatabase extends MessagingDatabase {
             " WHERE " + MESSAGE + " = ? AND " +
             ADDRESS + " = ?",
         new String[]{
-            messageId.getTimetamp() + "",
+            messageId.getTimestamp() + "",
             messageId.getAddress().replaceAll("[\\s\\(\\)-]+", "")
         }
     );
@@ -175,7 +175,7 @@ public class ReceiptDatabase extends MessagingDatabase {
               },
               selection,
               new String[] {
-                  messageId.getTimetamp()+""
+                  messageId.getTimestamp()+""
               },
               null,
               null,
@@ -271,7 +271,7 @@ public class ReceiptDatabase extends MessagingDatabase {
   }
 
   public void deleteReceipts(SyncMessageId messageId) {
-    deleteReceipts("*", messageId.getTimetamp());
+    deleteReceipts("*", messageId.getTimestamp());
   }
 
   public void createReceipts(Recipients addresses, long timeStamp){
@@ -297,8 +297,8 @@ public class ReceiptDatabase extends MessagingDatabase {
   public void createReceipts(SyncMessageId messageId){
     ContentValues values = new ContentValues(5);
     values.put(ADDRESS, messageId.getAddress().replaceAll("[\\s\\(\\)-]+",""));
-    values.put(MESSAGE, messageId.getTimetamp());
-    values.put(DATE_SENT, messageId.getTimetamp());
+    values.put(MESSAGE, messageId.getTimestamp());
+    values.put(DATE_SENT, messageId.getTimestamp());
     values.put(DATE_RECEIVED, -1);
     values.put(DATE_READ, -1);
     SQLiteDatabase db = databaseHelper.getWritableDatabase();

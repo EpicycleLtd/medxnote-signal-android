@@ -103,6 +103,22 @@ public class SignalServiceEnvelope {
   }
 
   public SignalServiceEnvelope(int type, String source, int sourceDevice,
+                               String relay, long timestamp, long deliveryTimestamp,
+                               byte[] legacyMessage, byte[] content) {
+    Envelope.Builder builder = Envelope.newBuilder()
+      .setType(Envelope.Type.valueOf(type))
+      .setSource(source)
+      .setSourceDevice(sourceDevice)
+      .setRelay(relay)
+      .setTimestamp(timestamp)
+      .setDeliveryTimestamp(deliveryTimestamp);
+    if (legacyMessage != null) builder.setLegacyMessage(ByteString.copyFrom(legacyMessage));
+    if (content != null) builder.setContent(ByteString.copyFrom(content));
+
+    this.envelope = builder.build();
+  }
+
+  public SignalServiceEnvelope(int type, String source, int sourceDevice,
                                String relay, long timestamp,
                                byte[] legacyMessage, byte[] content)
   {
@@ -111,6 +127,7 @@ public class SignalServiceEnvelope {
             .setSource(source)
             .setSourceDevice(sourceDevice)
             .setRelay(relay)
+            .setDeliveryTimestamp(0)
             .setTimestamp(timestamp);
 
     if (legacyMessage != null) builder.setLegacyMessage(ByteString.copyFrom(legacyMessage));

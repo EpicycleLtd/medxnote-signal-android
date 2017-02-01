@@ -24,6 +24,9 @@ public class SignalServiceEnvelopeEntity {
 
   @JsonProperty
   private byte[] content;
+  
+  @JsonProperty
+  private long deliveryTimestamp;
 
   public SignalServiceEnvelopeEntity() {}
 
@@ -37,6 +40,10 @@ public class SignalServiceEnvelopeEntity {
 
   public long getTimestamp() {
     return timestamp;
+  }
+  
+  public long getDeliveryTimestamp() {
+    return deliveryTimestamp;
   }
 
   public String getSource() {

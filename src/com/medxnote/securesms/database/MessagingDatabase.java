@@ -169,18 +169,18 @@ public abstract class MessagingDatabase extends Database implements MmsSmsColumn
   public static class SyncMessageId {
 
     private final String address;
-    private final long   timetamp;
+    private final long   timestamp;
     private final long   deliveryTimestamp;
 
-    public SyncMessageId(String address, long timetamp) {
+    public SyncMessageId(String address, long timestamp) {
       this.address = address;
-      this.timetamp = timetamp;
-      this.deliveryTimestamp = -1;
+      this.timestamp = timestamp;
+      this.deliveryTimestamp = 0;
     }
 
-    public SyncMessageId(String address, long timetamp, long deliveryTimestamp){
+    public SyncMessageId(String address, long timestamp, long deliveryTimestamp){
       this.address = address;
-      this.timetamp = timetamp;
+      this.timestamp = timestamp;
       this.deliveryTimestamp = deliveryTimestamp;
     }
 
@@ -188,8 +188,8 @@ public abstract class MessagingDatabase extends Database implements MmsSmsColumn
       return address;
     }
 
-    public long getTimetamp() {
-      return timetamp;
+    public long getTimestamp() {
+      return timestamp;
     }
     
     public long getDeliveryTimestamp(){

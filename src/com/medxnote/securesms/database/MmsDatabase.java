@@ -204,7 +204,7 @@ public class MmsDatabase extends MessagingDatabase {
     boolean            found           = false;
 
     try {
-      cursor = database.query(TABLE_NAME, new String[]{ID, THREAD_ID, MESSAGE_BOX}, DATE_SENT + " = ?", new String[]{String.valueOf(messageId.getTimetamp())}, null, null, null, null);
+      cursor = database.query(TABLE_NAME, new String[]{ID, THREAD_ID, MESSAGE_BOX}, DATE_SENT + " = ?", new String[]{String.valueOf(messageId.getTimestamp())}, null, null, null, null);
 
       while (cursor.moveToNext()) {
         if (Types.isOutgoingMessageType(cursor.getLong(cursor.getColumnIndexOrThrow(MESSAGE_BOX)))) {
@@ -237,7 +237,7 @@ public class MmsDatabase extends MessagingDatabase {
 
       if (!found) {
         try {
-          earlyReceiptCache.increment(messageId.getTimetamp(), canonicalizeNumber(context, messageId.getAddress()));
+          earlyReceiptCache.increment(messageId.getTimestamp(), canonicalizeNumber(context, messageId.getAddress()));
         } catch (InvalidNumberException e) {
           Log.w(TAG, e);
         }
@@ -407,7 +407,7 @@ public class MmsDatabase extends MessagingDatabase {
     Cursor cursor = null;
 
     try {
-      cursor = database.query(TABLE_NAME, new String[]{ID, THREAD_ID, MESSAGE_BOX}, DATE_SENT + " = ?", new String[]{String.valueOf(messageId.getTimetamp())}, null, null, null, null);
+      cursor = database.query(TABLE_NAME, new String[]{ID, THREAD_ID, MESSAGE_BOX}, DATE_SENT + " = ?", new String[]{String.valueOf(messageId.getTimestamp())}, null, null, null, null);
 
       while (cursor.moveToNext()) {
         List<String> addresses = addressDatabase.getAddressesListForId(cursor.getLong(cursor.getColumnIndexOrThrow(ID)));
@@ -427,7 +427,7 @@ public class MmsDatabase extends MessagingDatabase {
                   ", " + DATE_READ + " = ?" +
                   " WHERE " + DATE_SENT + " = ?", new String[]{
                       messageId.getDeliveryTimestamp() + "",
-                      messageId.getTimetamp() + ""
+                      messageId.getTimestamp() + ""
                   });
               DatabaseFactory.getThreadDatabase(context).update(threadId, false);
               notifyConversationListeners(threadId);
@@ -449,7 +449,7 @@ public class MmsDatabase extends MessagingDatabase {
     Cursor cursor = null;
 
     try {
-      cursor = database.query(TABLE_NAME, new String[]{ID, THREAD_ID, MESSAGE_BOX}, DATE_SENT + " = ?", new String[]{String.valueOf(messageId.getTimetamp())}, null, null, null, null);
+      cursor = database.query(TABLE_NAME, new String[]{ID, THREAD_ID, MESSAGE_BOX}, DATE_SENT + " = ?", new String[]{String.valueOf(messageId.getTimestamp())}, null, null, null, null);
 
       while (cursor.moveToNext()) {
         List<String> addresses = addressDatabase.getAddressesListForId(cursor.getLong(cursor.getColumnIndexOrThrow(ID)));
@@ -466,7 +466,7 @@ public class MmsDatabase extends MessagingDatabase {
               database.execSQL(
                   "UPDATE " + TABLE_NAME +
                   " SET " + DATE_RECEIPT_RECEIVED + " = " + messageId.getDeliveryTimestamp() +
-                  " WHERE " + DATE_SENT + " = ?", new String[]{messageId.getTimetamp() + ""}
+                  " WHERE " + DATE_SENT + " = ?", new String[]{messageId.getTimestamp() + ""}
               );
               DatabaseFactory.getThreadDatabase(context).update(threadId, false);
               notifyConversationListeners(threadId);
@@ -561,7 +561,7 @@ public class MmsDatabase extends MessagingDatabase {
     Cursor             cursor          = null;
 
     try {
-      cursor = database.query(TABLE_NAME, new String[] {ID, THREAD_ID, MESSAGE_BOX}, DATE_SENT + " = ?", new String[] {String.valueOf(messageId.getTimetamp())}, null, null, null, null);
+      cursor = database.query(TABLE_NAME, new String[] {ID, THREAD_ID, MESSAGE_BOX}, DATE_SENT + " = ?", new String[] {String.valueOf(messageId.getTimestamp())}, null, null, null, null);
 
       while (cursor.moveToNext()) {
         List<String> addresses = addressDatabase.getAddressesListForId(cursor.getLong(cursor.getColumnIndexOrThrow(ID)));

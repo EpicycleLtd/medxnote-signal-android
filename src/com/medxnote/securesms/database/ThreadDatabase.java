@@ -285,7 +285,7 @@ public class ThreadDatabase extends Database {
       JobManager jobManager = ApplicationContext.getInstance(context).getJobManager();
       if (!syncMessages.isEmpty()) {
         for (SyncMessageId syncMessage : syncMessages) {
-          jobManager.add(new DeliveryReadJob(context, syncMessage.getAddress(), syncMessage.getTimetamp(), null));
+          jobManager.add(new DeliveryReadJob(context, syncMessage.getAddress(), syncMessage.getTimestamp(), null));
         }
       }
     }

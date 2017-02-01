@@ -249,7 +249,7 @@ public class SmsDatabase extends MessagingDatabase {
     db.execSQL(
       "UPDATE " + TABLE_NAME +
       " SET " + DATE_RECEIPT_RECEIVED + " = " + messageId.getDeliveryTimestamp() +
-      " WHERE " + DATE_SENT + " = " + messageId.getTimetamp()
+      " WHERE " + DATE_SENT + " = " + messageId.getTimestamp()
 //      " AND " + PROTOCOL + " IS NOT NULL"
     );
 
@@ -258,7 +258,7 @@ public class SmsDatabase extends MessagingDatabase {
 
     try {
       cursor = database.query(TABLE_NAME, new String[] {ID, THREAD_ID, ADDRESS, TYPE},
-              DATE_SENT + " = ?", new String[] {String.valueOf(messageId.getTimetamp())},
+              DATE_SENT + " = ?", new String[] {String.valueOf(messageId.getTimestamp())},
               null, null, null, null);
 
       while (cursor.moveToNext()) {
@@ -291,7 +291,7 @@ public class SmsDatabase extends MessagingDatabase {
             ", " + DATE_READ + " = ?" +
             " WHERE " + DATE_SENT + " = ?", new String[]{
                 messageId.getDeliveryTimestamp() + "",
-                messageId.getTimetamp() + ""
+                messageId.getTimestamp() + ""
             });
 
     SQLiteDatabase database     = databaseHelper.getWritableDatabase();
@@ -299,7 +299,7 @@ public class SmsDatabase extends MessagingDatabase {
 
     try {
       cursor = database.query(TABLE_NAME, new String[] {ID, THREAD_ID, ADDRESS, TYPE},
-              DATE_SENT + " = ?", new String[] {String.valueOf(messageId.getTimetamp())},
+              DATE_SENT + " = ?", new String[] {String.valueOf(messageId.getTimestamp())},
               null, null, null, null);
 
       while (cursor.moveToNext()) {
@@ -345,7 +345,7 @@ public class SmsDatabase extends MessagingDatabase {
 
     try {
       cursor = database.query(TABLE_NAME, new String[] {ID, THREAD_ID, ADDRESS, TYPE},
-                              DATE_SENT + " = ?", new String[] {String.valueOf(messageId.getTimetamp())},
+                              DATE_SENT + " = ?", new String[] {String.valueOf(messageId.getTimestamp())},
                               null, null, null, null);
 
       while (cursor.moveToNext()) {
@@ -376,7 +376,7 @@ public class SmsDatabase extends MessagingDatabase {
 
       if (!foundMessage) {
         try {
-          earlyReceiptCache.increment(messageId.getTimetamp(), canonicalizeNumber(context, messageId.getAddress()));
+          earlyReceiptCache.increment(messageId.getTimestamp(), canonicalizeNumber(context, messageId.getAddress()));
         } catch (InvalidNumberException e) {
           Log.w(TAG, e);
         }
@@ -425,7 +425,7 @@ public class SmsDatabase extends MessagingDatabase {
 
     try {
       cursor = database.query(TABLE_NAME, new String[] {ID, THREAD_ID, ADDRESS, TYPE},
-                              DATE_SENT + " = ?", new String[] {String.valueOf(messageId.getTimetamp())},
+                              DATE_SENT + " = ?", new String[] {String.valueOf(messageId.getTimestamp())},
                               null, null, null, null);
 
       while (cursor.moveToNext()) {
