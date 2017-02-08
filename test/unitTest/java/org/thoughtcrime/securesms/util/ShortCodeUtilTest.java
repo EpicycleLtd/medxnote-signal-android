@@ -1,4 +1,6 @@
-package org.thoughtcrime.securesms.util;
+package org.medxnote.securesms.util;
+
+import com.medxnote.securesms.util.ShortCodeUtil;
 
 import org.junit.Test;
 
