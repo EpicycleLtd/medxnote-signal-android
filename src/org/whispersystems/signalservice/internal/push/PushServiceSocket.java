@@ -40,6 +40,7 @@ import org.whispersystems.signalservice.api.push.SignedPreKeyEntity;
 import org.whispersystems.signalservice.api.push.SignalServiceAddress;
 import org.whispersystems.signalservice.api.push.TrustStore;
 import org.whispersystems.signalservice.api.push.exceptions.AuthorizationFailedException;
+import org.whispersystems.signalservice.api.push.exceptions.AuthorizationWhiteListException;
 import org.whispersystems.signalservice.api.push.exceptions.ExpectationFailedException;
 import org.whispersystems.signalservice.api.push.exceptions.NonSuccessfulResponseCodeException;
 import org.whispersystems.signalservice.api.push.exceptions.NotFoundException;
@@ -515,8 +516,9 @@ public class PushServiceSocket {
       case 413:
         throw new RateLimitException("Rate limit exceeded: " + responseCode);
       case 401:
-      case 403:
         throw new AuthorizationFailedException("Authorization failed!");
+      case 403:
+        throw new AuthorizationWhiteListException("Phone is not whitelisted!");
       case 404:
         throw new NotFoundException("Not found");
       case 409:

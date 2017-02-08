@@ -17,6 +17,7 @@
 package com.medxnote.securesms.util;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.support.v7.app.AlertDialog;
 
 import com.medxnote.securesms.R;
@@ -37,6 +38,16 @@ public class Dialogs {
     dialog.setMessage(message);
     dialog.setIconAttribute(R.attr.dialog_info_icon);
     dialog.setPositiveButton(android.R.string.ok, null);
+    dialog.show();
+  }
+
+  public static void showInfoDialog(Context context, String title, String message, DialogInterface.OnClickListener listener) {
+    AlertDialog.Builder dialog = new AlertDialog.Builder(context);
+    dialog.setTitle(title);
+    dialog.setMessage(message);
+    dialog.setIconAttribute(R.attr.dialog_info_icon);
+    dialog.setPositiveButton(android.R.string.ok, listener);
+    dialog.setCancelable(false);
     dialog.show();
   }
 }
