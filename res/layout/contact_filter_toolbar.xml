@@ -19,18 +19,20 @@
                       android:layout_height="match_parent"
                       android:orientation="horizontal">
 
-            <EditText android:id="@+id/search_view"
-                      android:layout_height="wrap_content"
-                      android:layout_width="0px"
-                      android:layout_weight="1"
-                      android:layout_marginLeft="5dp"
-                      android:layout_marginStart="5dp"
-                      android:hint="@string/contact_selection_activity__enter_name_or_number"
-                      android:inputType="textPersonName"
-                      style="@style/TextSecure.TitleTextStyle"
-                      android:background="@android:color/transparent"
-                      android:layout_gravity="center_vertical"
-                      android:gravity="center_vertical"/>
+            <EditText
+                android:id="@+id/search_view"
+                android:layout_height="wrap_content"
+                android:layout_width="0px"
+                android:layout_weight="1"
+                android:layout_marginLeft="5dp"
+                android:layout_marginStart="5dp"
+                android:hint="@string/contact_selection_activity__enter_name_or_number"
+                android:inputType="textPersonName"
+                style="@style/TextSecure.TitleTextStyle"
+                android:background="@android:color/transparent"
+                android:layout_gravity="center_vertical"
+                android:gravity="center_vertical"
+                android:textCursorDrawable="@drawable/color_cursor"/>
 
             <com.medxnote.securesms.components.AnimatingToggle
                 android:id="@+id/button_toggle"
