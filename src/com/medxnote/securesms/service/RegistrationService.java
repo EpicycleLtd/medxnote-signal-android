@@ -33,6 +33,7 @@ import org.whispersystems.libsignal.state.SignedPreKeyRecord;
 import org.whispersystems.libsignal.util.KeyHelper;
 import org.whispersystems.libsignal.util.guava.Optional;
 import org.whispersystems.signalservice.api.SignalServiceAccountManager;
+import org.whispersystems.signalservice.api.push.exceptions.AuthorizationWhiteListException;
 import org.whispersystems.signalservice.api.push.exceptions.ExpectationFailedException;
 
 import java.io.IOException;
@@ -222,6 +223,10 @@ public class RegistrationService extends Service {
       Log.w("RegistrationService", avte);
       setState(new RegistrationState(RegistrationState.STATE_TIMEOUT, number));
       broadcastComplete(false);
+    } catch (AuthorizationWhiteListException awe) {
+      Log.w("RegistrationService", awe);
+      setState(new RegistrationState(RegistrationState.STATE_REGISTRATION_FAILED, number));
+      broadcastComplete(false);
     } catch (IOException e) {
       Log.w("RegistrationService", e);
       setState(new RegistrationState(RegistrationState.STATE_NETWORK_ERROR, number));
@@ -364,6 +369,8 @@ public class RegistrationService extends Service {
     public static final int STATE_GENERATING_KEYS      = 13;
 
     public static final int STATE_MULTI_REGISTERED     = 14;
+
+    public static final int STATE_REGISTRATION_FAILED     = 15;
 
     public final int    state;
     public final String number;

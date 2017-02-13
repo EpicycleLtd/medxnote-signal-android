@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -298,6 +299,18 @@ public class RegistrationProgressActivity extends BaseActionBarActivity {
     codeEditText.setEnabled(true);
   }
 
+  private void handleRegistrationFailed(RegistrationService.RegistrationState state) {
+    Dialogs.showInfoDialog(this, getString(R.string.RegistrationProgressActivity_registration_conflict),
+            getString(R.string.RegistrationProgressActivity_this_number_is_not_whitelisted), new DialogInterface.OnClickListener() {
+              @Override
+              public void onClick(DialogInterface dialog, int which) {
+                shutdownService();
+                startActivity(new Intent(RegistrationProgressActivity.this, ConversationListActivity.class));
+                finish();
+              }
+            });
+  }
+
   private void handleVerificationTimeout(RegistrationService.RegistrationState state) {
     this.callButton.setOnClickListener(new CallClickListener(state.number));
     this.verifyButton.setEnabled(false);
@@ -402,18 +415,19 @@ public class RegistrationProgressActivity extends BaseActionBarActivity {
       RegistrationService.RegistrationState state = (RegistrationService.RegistrationState)message.obj;
 
       switch (message.what) {
-      case RegistrationService.RegistrationState.STATE_IDLE:                 handleStateIdle();                       break;
-      case RegistrationService.RegistrationState.STATE_CONNECTING:           handleStateConnecting();                 break;
-      case RegistrationService.RegistrationState.STATE_VERIFYING:            handleStateVerifying();                  break;
-      case RegistrationService.RegistrationState.STATE_TIMER:                handleTimerUpdate();                     break;
-      case RegistrationService.RegistrationState.STATE_GENERATING_KEYS:      handleStateGeneratingKeys();             break;
-      case RegistrationService.RegistrationState.STATE_GCM_REGISTERING:      handleStateGcmRegistering();             break;
-      case RegistrationService.RegistrationState.STATE_TIMEOUT:              handleVerificationTimeout(state);        break;
-      case RegistrationService.RegistrationState.STATE_COMPLETE:             handleVerificationComplete();            break;
-      case RegistrationService.RegistrationState.STATE_GCM_TIMEOUT:          handleGcmTimeout(state);                 break;
-      case RegistrationService.RegistrationState.STATE_NETWORK_ERROR:        handleConnectivityError(state);          break;
-      case RegistrationService.RegistrationState.STATE_MULTI_REGISTERED:     handleMultiRegistrationError(state);     break;
-      case RegistrationService.RegistrationState.STATE_VOICE_REQUESTED:      handleVerificationRequestedVoice(state); break;
+        case RegistrationService.RegistrationState.STATE_IDLE:                 handleStateIdle();                       break;
+        case RegistrationService.RegistrationState.STATE_CONNECTING:           handleStateConnecting();                 break;
+        case RegistrationService.RegistrationState.STATE_VERIFYING:            handleStateVerifying();                  break;
+        case RegistrationService.RegistrationState.STATE_TIMER:                handleTimerUpdate();                     break;
+        case RegistrationService.RegistrationState.STATE_GENERATING_KEYS:      handleStateGeneratingKeys();             break;
+        case RegistrationService.RegistrationState.STATE_GCM_REGISTERING:      handleStateGcmRegistering();             break;
+        case RegistrationService.RegistrationState.STATE_TIMEOUT:              handleVerificationTimeout(state);        break;
+        case RegistrationService.RegistrationState.STATE_COMPLETE:             handleVerificationComplete();            break;
+        case RegistrationService.RegistrationState.STATE_GCM_TIMEOUT:          handleGcmTimeout(state);                 break;
+        case RegistrationService.RegistrationState.STATE_NETWORK_ERROR:        handleConnectivityError(state);          break;
+        case RegistrationService.RegistrationState.STATE_MULTI_REGISTERED:     handleMultiRegistrationError(state);     break;
+        case RegistrationService.RegistrationState.STATE_VOICE_REQUESTED:      handleVerificationRequestedVoice(state); break;
+        case RegistrationService.RegistrationState.STATE_REGISTRATION_FAILED:  handleRegistrationFailed(state);         break;
       }
     }
   }
