@@ -74,29 +74,54 @@
                   android:gravity="start"
                   android:text="@string/registration_activity__registration_will_transmit_some_contact_information_to_the_server_temporariliy"/>
 
-        <LinearLayout android:layout_width="wrap_content"
-                      android:layout_height="wrap_content"
-                      android:layout_marginTop="16dip"
-                      android:layout_marginBottom="16dip"
-                      android:layout_gravity="right"
-                      android:orientation="horizontal">
+        <RelativeLayout android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dip"
+            android:layout_marginBottom="16dip" >
 
-            <Button android:id="@+id/skipButton"
+            <TextView
+                android:id="@+id/eula"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/Registration.Description"
+                android:text="@string/RegistrationActivity_eula"
+                android:layout_centerVertical="true"
+                android:layout_toLeftOf="@+id/eulaCheckBox"
+                android:autoLink="web"/>
+
+            <CheckBox
+                android:id="@+id/eulaCheckBox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_toLeftOf="@+id/registrationButtonLayout"/>
+
+            <LinearLayout android:id="@+id/registrationButtonLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:orientation="horizontal">
+
+                <Button android:id="@+id/skipButton"
                     android:visibility="gone"
                     android:text="@android:string/cancel"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginRight="5dip"
-                    android:layout_weight="1"
                     android:textAppearance="?android:attr/textAppearanceMedium"/>
 
-            <Button android:id="@+id/registerButton"
+                <Button android:id="@+id/registerButton"
                     android:text="@string/registration_activity__register"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:textAppearance="?android:attr/textAppearanceMedium"/>
-        </LinearLayout>
+
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:enabled="false"/>
+            </LinearLayout>
+
+        </RelativeLayout>
 
         <ImageView android:id="@+id/twilio_shoutout"
                    android:layout_width="wrap_content"

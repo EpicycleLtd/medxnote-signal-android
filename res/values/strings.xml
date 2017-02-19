@@ -464,6 +464,9 @@
     <string name="RegistrationActivity_you_must_specify_your_phone_number">You must specify your
         phone number
     </string>
+    <string name="RegistrationActivity_you_must_accept_eula">You must accept EULA before
+         registration
+    </string>
     <string name="RegistrationActivity_invalid_number">Invalid number</string>
     <string name="RegistrationActivity_the_number_you_specified_s_is_invalid">The number you
         specified (%s) is invalid.
@@ -479,6 +482,9 @@
     </string>
     <string name="RegistrationActivity_continue">Continue</string>
     <string name="RegistrationActivity_edit">Edit</string>
+    <string name="RegistrationActivity_eula">Some text about obligations, full details available
+        on http://www.medxnote.com/
+    </string>
 
     <!-- RegistrationProblemsActivity -->
     <string name="RegistrationProblemsActivity_possible_problems">Possible problems</string>
