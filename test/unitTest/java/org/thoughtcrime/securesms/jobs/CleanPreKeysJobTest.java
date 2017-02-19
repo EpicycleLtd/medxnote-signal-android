@@ -1,9 +1,12 @@
-package org.thoughtcrime.securesms.jobs;
+package org.medxnote.securesms.jobs;
 
 import org.junit.Test;
-import org.thoughtcrime.securesms.BaseUnitTest;
-import org.thoughtcrime.securesms.crypto.MasterSecret;
-import org.thoughtcrime.securesms.dependencies.AxolotlStorageModule;
+import org.medxnote.securesms.BaseUnitTest;
+import com.medxnote.securesms.crypto.MasterSecret;
+import com.medxnote.securesms.dependencies.AxolotlStorageModule;
+import com.medxnote.securesms.jobs.CleanPreKeysJob;
+import com.medxnote.securesms.jobs.MasterSecretJob;
+
 import org.whispersystems.libsignal.ecc.Curve;
 import org.whispersystems.libsignal.state.SignedPreKeyRecord;
 import org.whispersystems.libsignal.state.SignedPreKeyStore;

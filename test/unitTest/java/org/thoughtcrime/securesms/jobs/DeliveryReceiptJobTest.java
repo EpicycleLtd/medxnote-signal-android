@@ -1,10 +1,12 @@
-package org.thoughtcrime.securesms.jobs;
+package org.medxnote.securesms.jobs;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.thoughtcrime.securesms.BaseUnitTest;
-import org.thoughtcrime.securesms.dependencies.TextSecureCommunicationModule.TextSecureMessageSenderFactory;
+import org.medxnote.securesms.BaseUnitTest;
+import com.medxnote.securesms.dependencies.TextSecureCommunicationModule.TextSecureMessageSenderFactory;
+import com.medxnote.securesms.jobs.DeliveryReceiptJob;
+
 import org.whispersystems.signalservice.api.SignalServiceMessageSender;
 import org.whispersystems.signalservice.api.push.SignalServiceAddress;
 import org.whispersystems.signalservice.api.push.exceptions.NotFoundException;

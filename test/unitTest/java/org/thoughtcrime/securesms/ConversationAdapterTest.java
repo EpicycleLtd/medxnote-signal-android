@@ -1,6 +1,8 @@
-package org.thoughtcrime.securesms;
+package org.medxnote.securesms;
 
 import android.database.Cursor;
+
+import com.medxnote.securesms.ConversationAdapter;
 
 import org.junit.Before;
 import org.junit.Test;

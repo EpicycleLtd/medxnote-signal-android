@@ -1,4 +1,4 @@
-package org.thoughtcrime.securesms;
+package org.medxnote.securesms;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -15,7 +15,7 @@ import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import org.thoughtcrime.securesms.crypto.MasterSecret;
+import com.medxnote.securesms.crypto.MasterSecret;
 
 import javax.crypto.spec.SecretKeySpec;
 

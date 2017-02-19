@@ -1,7 +1,9 @@
-package org.thoughtcrime.securesms.util;
+package org.medxnote.securesms.util;
+
+import com.medxnote.securesms.util.Util;
 
 import org.junit.Test;
-import org.thoughtcrime.securesms.BaseUnitTest;
+import org.medxnote.securesms.BaseUnitTest;
 
 import java.util.LinkedList;
 import java.util.List;
