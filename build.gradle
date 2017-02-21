@@ -174,10 +174,10 @@ android {
         targetSdkVersion 22
 
         buildConfigField "long", "BUILD_TIMESTAMP", getLastCommitTimestamp() + "L"
-        buildConfigField "String", "TEXTSECURE_URL", "\"https://global.textsecure.medx.im\""
+        buildConfigField "String", "TEXTSECURE_URL", "\"https://global2.textsecure.medx.im\""
         buildConfigField "String", "USER_AGENT", "\"OWA\""
-        buildConfigField "String", "REDPHONE_MASTER_URL", "\"https://global.textsecure.medx.im\""
-        buildConfigField "String", "REDPHONE_RELAY_HOST", "\"global.textsecure.medx.im\""
+        buildConfigField "String", "REDPHONE_MASTER_URL", "\"https://global2.textsecure.medx.im\""
+        buildConfigField "String", "REDPHONE_RELAY_HOST", "\"global2.textsecure.medx.im\""
         buildConfigField "String", "REDPHONE_PREFIX_NAME", "\".medx.im\""
         buildConfigField "boolean", "DEV_BUILD", "false"
     }
