@@ -326,7 +326,8 @@ public class ConversationItem extends LinearLayout
     secureImage.setVisibility(View.GONE);
     bodyText.setCompoundDrawablesWithIntrinsicBounds(0, 0, messageRecord.isKeyExchange() ? R.drawable.ic_menu_login : 0, 0);
 
-    //dateText.setText(DateUtils.getExtendedRelativeTimeSpanString(getContext(), locale, messageRecord.getTimestamp()));
+    String statusText = DateUtils.getExtendedRelativeTimeSpanString(getContext(), locale, messageRecord.getTimestamp());
+//    dateText.setText(DateUtils.getExtendedRelativeTimeSpanString(getContext(), locale, messageRecord.getTimestamp()));
     /*
     Date rawdate = new Date(messageRecord.getTimestamp()); // *1000 is to convert seconds to milliseconds
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z"); // the format of your date
@@ -351,7 +352,6 @@ public class ConversationItem extends LinearLayout
       recipientsCount = DatabaseFactory.getReceiptDatabase(context).getCountForMessage(messageRecord.getTimestamp());
       //List<Recipient> recipientsCounts = messageRecord.getRecipients().getRecipientsList();
       //int unsentCount = recipientsCount - unDeliveredCount;
-      String statusText = "";
       //String statusText = date;
       if (messageRecord.isOutgoing() && groupThread ) {
         statusText = DateUtils.getExtendedRelativeTimeSpanString(getContext(), locale, messageRecord.getTimestamp());
