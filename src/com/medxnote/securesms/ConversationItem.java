@@ -327,15 +327,6 @@ public class ConversationItem extends LinearLayout
     bodyText.setCompoundDrawablesWithIntrinsicBounds(0, 0, messageRecord.isKeyExchange() ? R.drawable.ic_menu_login : 0, 0);
 
     String statusText = DateUtils.getExtendedRelativeTimeSpanString(getContext(), locale, messageRecord.getTimestamp());
-//    dateText.setText(DateUtils.getExtendedRelativeTimeSpanString(getContext(), locale, messageRecord.getTimestamp()));
-    /*
-    Date rawdate = new Date(messageRecord.getTimestamp()); // *1000 is to convert seconds to milliseconds
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z"); // the format of your date
-    sdf.setTimeZone(TimeZone.getTimeZone("IST")); // give a timezone reference for formating (see comment at the bottom
-    //CharSequence date = sdf.format(rawdate);
-    String date = sdf.format(rawdate);
-    //dateText.setText(date);
-    */
     if (messageRecord.isFailed()) {
       setFailedStatusIcons();
     } else if (messageRecord.isPendingInsecureSmsFallback()) {
@@ -348,18 +339,12 @@ public class ConversationItem extends LinearLayout
       int recipientsCount = 0;
       readCount = DatabaseFactory.getReceiptDatabase(context).getCountReadMessage(messageRecord.getTimestamp());
       deliveredCount = DatabaseFactory.getReceiptDatabase(context).getCountReceivedMessage(messageRecord.getTimestamp());
-      //unDeliveredCount = DatabaseFactory.getReceiptDatabase(context).getCountUnreceivedMessage(messageRecord.getTimestamp());
       recipientsCount = DatabaseFactory.getReceiptDatabase(context).getCountForMessage(messageRecord.getTimestamp());
-      //List<Recipient> recipientsCounts = messageRecord.getRecipients().getRecipientsList();
-      //int unsentCount = recipientsCount - unDeliveredCount;
-      //String statusText = date;
       if (messageRecord.isOutgoing() && groupThread ) {
         statusText = DateUtils.getExtendedRelativeTimeSpanString(getContext(), locale, messageRecord.getTimestamp());
         statusText = statusText + " " + recipientsCount + ":" + recipientsCount + " " + deliveredCount + ":" + recipientsCount + " " + readCount + ":" + recipientsCount;
 
       }
-      //Log.w(TAG, "Read count: " + readCount);
-      //Log.w(TAG, "messageid: " + messageRecord.getTimestamp());
       if      (!messageRecord.isOutgoing()) deliveryStatusIndicator.setNone();
       else if (messageRecord.isPending())   deliveryStatusIndicator.setPending();
       else if (messageRecord.isRead()) {
@@ -379,18 +364,9 @@ public class ConversationItem extends LinearLayout
       }
       else if (messageRecord.isDelivered()){
         deliveryStatusIndicator.setNone();
-        if (groupThread){
-          if (readCount == 0) {
-
-            Log.w(TAG, "SetDelivered count: " + readCount);
-          } else
-            Log.w(TAG, "Deliveredxxx: " + readCount);
-        }
-        else{
+        if (!groupThread) {
           statusText = statusText + " Delivered";
         }
-
-
       }
       else  {
         deliveryStatusIndicator.setNone();
