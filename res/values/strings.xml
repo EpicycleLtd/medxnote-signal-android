@@ -1218,4 +1218,8 @@
     <string name="AttachmentTypeSelectorAdapter_qr_code">QR Code</string>
     <!-- EOF -->
 
+    <string name="dialog_message_title">No Medxnote recipient has been found in your contact list with that phone number</string>
+    <string name="dialog_message_add_to_contact">Add to contacts</string>
+    <string name="dialog_message_copy_to_clipboard">Copy to clipboard</string>
+
 </resources>
