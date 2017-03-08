@@ -45,7 +45,6 @@ import com.medxnote.securesms.util.Util;
 
 import org.whispersystems.jobqueue.JobManager;
 import org.whispersystems.signalservice.api.util.InvalidNumberException;
-import org.whispersystems.signalservice.internal.push.SignalServiceProtos;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -76,6 +75,7 @@ public class SmsDatabase extends MessagingDatabase {
   public  static final String REPLY_PATH_PRESENT = "reply_path_present";
   public  static final String SUBJECT            = "subject";
   public  static final String SERVICE_CENTER     = "service_center";
+  public  static final String HIDDEN             = "hidden";
 
   public static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " (" + ID + " integer PRIMARY KEY, "                +
     THREAD_ID + " INTEGER, " + ADDRESS + " TEXT, " + ADDRESS_DEVICE_ID + " INTEGER DEFAULT 1, " + PERSON + " INTEGER, " +
@@ -83,7 +83,7 @@ public class SmsDatabase extends MessagingDatabase {
     DATE_SENT + " INTEGER, " + DATE_READ + " INTEGER, " + PROTOCOL + " INTEGER, " + READ + " INTEGER DEFAULT 0, " +
     STATUS + " INTEGER DEFAULT -1," + TYPE + " INTEGER, " + REPLY_PATH_PRESENT + " INTEGER, " +
     RECEIPT_COUNT + " INTEGER DEFAULT 0," + SUBJECT + " TEXT, " + BODY + " TEXT, " +
-    MISMATCHED_IDENTITIES + " TEXT DEFAULT NULL, " + SERVICE_CENTER + " TEXT, " + SUBSCRIPTION_ID + " INTEGER DEFAULT -1);";
+    MISMATCHED_IDENTITIES + " TEXT DEFAULT NULL, " + SERVICE_CENTER + " TEXT, " + SUBSCRIPTION_ID + " INTEGER DEFAULT -1, " + HIDDEN + " INTEGER DEFAULT 0);";
 
   public static final String[] CREATE_INDEXS = {
     "CREATE INDEX IF NOT EXISTS sms_thread_id_index ON " + TABLE_NAME + " (" + THREAD_ID + ");",
@@ -103,7 +103,7 @@ public class SmsDatabase extends MessagingDatabase {
       DATE_READ + " AS " + NORMALIZED_DATE_READ,
       PROTOCOL, READ, STATUS, TYPE,
       REPLY_PATH_PRESENT, SUBJECT, BODY, SERVICE_CENTER, RECEIPT_COUNT,
-      MISMATCHED_IDENTITIES, SUBSCRIPTION_ID
+      MISMATCHED_IDENTITIES, SUBSCRIPTION_ID, HIDDEN
   };
 
   private static final EarlyReceiptCache earlyReceiptCache = new EarlyReceiptCache();
@@ -579,8 +579,8 @@ public class SmsDatabase extends MessagingDatabase {
       groupRecipients = RecipientFactory.getRecipientsFromString(context, message.getGroupId(), true);
     }
 
-    boolean    unread     = Util.isDefaultSmsProvider(context) ||
-                            message.isSecureMessage() || message.isPreKeyBundle();
+    boolean unread = Util.isDefaultSmsProvider(context) ||
+            message.isSecureMessage() || message.isPreKeyBundle();
 
     long       threadId;
 
@@ -651,6 +651,12 @@ public class SmsDatabase extends MessagingDatabase {
   protected long insertMessageOutbox(long threadId, OutgoingTextMessage message,
                                      long type, boolean forceSms, long date)
   {
+    return insertMessageOutbox(threadId, message, type, forceSms, date, false);
+  }
+
+  protected long insertMessageOutbox(long threadId, OutgoingTextMessage message,
+                                     long type, boolean forceSms, long date, boolean hidden)
+  {
     if      (message.isKeyExchange())   type |= Types.KEY_EXCHANGE_BIT;
     else if (message.isSecureMessage()) type |= Types.SECURE_MESSAGE_BIT;
     else if (message.isEndSession())    type |= Types.END_SESSION_BIT;
@@ -658,7 +664,7 @@ public class SmsDatabase extends MessagingDatabase {
 
     String address = message.getRecipients().getPrimaryRecipient().getNumber();
 
-    ContentValues contentValues = new ContentValues(6);
+    ContentValues contentValues = new ContentValues(10);
     contentValues.put(ADDRESS, PhoneNumberUtils.formatNumber(address));
     contentValues.put(THREAD_ID, threadId);
     contentValues.put(BODY, message.getMessageBody());
@@ -668,6 +674,7 @@ public class SmsDatabase extends MessagingDatabase {
     contentValues.put(READ, 1);
     contentValues.put(TYPE, type);
     contentValues.put(SUBSCRIPTION_ID, message.getSubscriptionId());
+    if (hidden) { contentValues.put(HIDDEN, 1); }
 
     try {
       contentValues.put(RECEIPT_COUNT, earlyReceiptCache.remove(date, canonicalizeNumber(context, address)));
@@ -704,7 +711,7 @@ public class SmsDatabase extends MessagingDatabase {
 
   public Cursor getEncryptedRogueMessages(Recipient recipient) {
     String selection  = TYPE + " & " + Types.ENCRYPTION_REMOTE_NO_SESSION_BIT + " != 0" +
-                        " AND PHONE_NUMBERS_EQUAL(" + ADDRESS + ", ?)";
+            " AND PHONE_NUMBERS_EQUAL(" + ADDRESS + ", ?)";
     String[] args     = {recipient.getNumber()};
     SQLiteDatabase db = databaseHelper.getReadableDatabase();
     return db.query(TABLE_NAME, MESSAGE_PROJECTION, selection, args, null, null, null);
@@ -777,20 +784,20 @@ public class SmsDatabase extends MessagingDatabase {
 
   /*package*/ SQLiteStatement createInsertStatement(SQLiteDatabase database) {
     return database.compileStatement("INSERT INTO " + TABLE_NAME + " (" + ADDRESS + ", " +
-                                                                      PERSON + ", " +
-                                                                      DATE_SENT + ", " +
-                                                                      DATE_RECEIVED  + ", " +
-                                                                      DATE_RECEIPT_RECEIVED + ", " +
-                                                                      PROTOCOL + ", " +
-                                                                      READ + ", " +
-                                                                      STATUS + ", " +
-                                                                      TYPE + ", " +
-                                                                      REPLY_PATH_PRESENT + ", " +
-                                                                      SUBJECT + ", " +
-                                                                      BODY + ", " +
-                                                                      SERVICE_CENTER +
-                                                                      ", " + THREAD_ID + ") " +
-                                     " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            PERSON + ", " +
+            DATE_SENT + ", " +
+            DATE_RECEIVED  + ", " +
+            DATE_RECEIPT_RECEIVED + ", " +
+            PROTOCOL + ", " +
+            READ + ", " +
+            STATUS + ", " +
+            TYPE + ", " +
+            REPLY_PATH_PRESENT + ", " +
+            SUBJECT + ", " +
+            BODY + ", " +
+            SERVICE_CENTER +
+            ", " + THREAD_ID + ") " +
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
   }
 
   public static class Status {
@@ -830,6 +837,9 @@ public class SmsDatabase extends MessagingDatabase {
       int addressDeviceId     = cursor.getInt(cursor.getColumnIndexOrThrow(SmsDatabase.ADDRESS_DEVICE_ID));
       long type               = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.TYPE));
       long dateReceived       = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.NORMALIZED_DATE_RECEIPT_RECEIVED));
+      if (dateReceived < 1){
+        dateReceived = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.NORMALIZED_DATE_RECEIVED));
+      }
       long dateSent           = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.NORMALIZED_DATE_SENT));
       long dateRead           = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.NORMALIZED_DATE_READ));
       long threadId           = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.THREAD_ID));

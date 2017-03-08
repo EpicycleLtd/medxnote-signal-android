@@ -76,7 +76,9 @@ public class DatabaseFactory {
   private static final int INTRODUCED_DATE_READ_VERSION                    = 28;
   private static final int INTRODUCED_RECEIPT_DATABASE                     = 29;
   private static final int INTRODUCED_RECEIVED_RECEIPT_FIX                 = 30;
-  private static final int DATABASE_VERSION                                = 30;
+  private static final int INTRODUCED_MENU_DATABASE                        = 31;
+  private static final int INTRODUCED_HIDDEN_MESSAGE                       = 32;
+  private static final int DATABASE_VERSION                                = 32;
 
   private static final String DATABASE_NAME    = "messages.db";
   private static final Object lock             = new Object();
@@ -101,6 +103,7 @@ public class DatabaseFactory {
   private final RecipientPreferenceDatabase recipientPreferenceDatabase;
   private final ContactsDatabase contactsDatabase;
   private final ReceiptDatabase receiptDatabase;
+  private final MenuDatabase menuDatabase;
 
   public static DatabaseFactory getInstance(Context context) {
     synchronized (lock) {
@@ -175,6 +178,10 @@ public class DatabaseFactory {
     return getInstance(context).receiptDatabase;
   }
 
+  public static MenuDatabase getMenuDatabase(Context context){
+    return getInstance(context).menuDatabase;
+  }
+
   private DatabaseFactory(Context context) {
     this.databaseHelper              = new DatabaseHelper(context, DATABASE_NAME, null, DATABASE_VERSION);
     this.sms                         = new SmsDatabase(context, databaseHelper);
@@ -193,6 +200,7 @@ public class DatabaseFactory {
     this.recipientPreferenceDatabase = new RecipientPreferenceDatabase(context, databaseHelper);
     this.contactsDatabase            = new ContactsDatabase(context);
     this.receiptDatabase             = new ReceiptDatabase(context, databaseHelper);
+    this.menuDatabase                = new MenuDatabase(context, databaseHelper);
   }
 
   public void reset(Context context) {
@@ -212,6 +220,7 @@ public class DatabaseFactory {
     this.groupDatabase.reset(databaseHelper);
     this.recipientPreferenceDatabase.reset(databaseHelper);
     this.receiptDatabase.reset(databaseHelper);
+    this.menuDatabase.reset(databaseHelper);
     old.close();
 
     this.address.reset(context);
@@ -524,6 +533,7 @@ public class DatabaseFactory {
       db.execSQL(GroupDatabase.CREATE_TABLE);
       db.execSQL(RecipientPreferenceDatabase.CREATE_TABLE);
       db.execSQL(ReceiptDatabase.CREATE_TABLE);
+      db.execSQL(MenuDatabase.CREATE_TABLE);
 
       executeStatements(db, SmsDatabase.CREATE_INDEXS);
       executeStatements(db, MmsDatabase.CREATE_INDEXS);
@@ -851,6 +861,15 @@ public class DatabaseFactory {
 
         db.execSQL("ALTER TABLE mms ADD COLUMN date_receipt_received INTEGER;");
         db.execSQL("UPDATE mms SET date_receipt_received = date_received;");
+      }
+
+      if (oldVersion < INTRODUCED_HIDDEN_MESSAGE) {
+        db.execSQL("ALTER TABLE sms ADD COLUMN hidden INTEGER DEFAULT 0;");
+        db.execSQL("ALTER TABLE mms ADD COLUMN hidden INTEGER DEFAULT 0;");
+      }
+
+      if (oldVersion < INTRODUCED_MENU_DATABASE) {
+        db.execSQL(MenuDatabase.CREATE_TABLE);
       }
 
       db.setTransactionSuccessful();

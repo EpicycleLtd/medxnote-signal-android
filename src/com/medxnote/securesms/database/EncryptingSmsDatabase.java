@@ -62,6 +62,23 @@ public class EncryptingSmsDatabase extends SmsDatabase {
     return ciphertext;
   }
 
+  public long insertMessageOutboxHidden(MasterSecretUnion masterSecret, long threadId,
+                                        OutgoingTextMessage message, boolean forceSms,
+                                        long timestamp)
+  {
+    long type = Types.BASE_OUTBOX_TYPE;
+
+    if (masterSecret.getMasterSecret().isPresent()) {
+      message = message.withBody(getEncryptedBody(masterSecret.getMasterSecret().get(), message.getMessageBody()));
+      type   |= Types.ENCRYPTION_SYMMETRIC_BIT;
+    } else {
+      message = message.withBody(getAsymmetricEncryptedBody(masterSecret.getAsymmetricMasterSecret().get(), message.getMessageBody()));
+      type   |= Types.ENCRYPTION_ASYMMETRIC_BIT;
+    }
+
+    return insertMessageOutbox(threadId, message, type, forceSms, timestamp, true);
+  }
+
   public long insertMessageOutbox(MasterSecretUnion masterSecret, long threadId,
                                   OutgoingTextMessage message, boolean forceSms,
                                   long timestamp)

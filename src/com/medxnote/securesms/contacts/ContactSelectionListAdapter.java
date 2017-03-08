@@ -123,7 +123,7 @@ public class ContactSelectionListAdapter extends CursorRecyclerViewAdapter<ViewH
                                                                              numberType, label).toString();
 
     int color = (contactType == ContactsDatabase.PUSH_TYPE) ? drawables.getColor(0, 0xa0000000) :
-                drawables.getColor(1, 0xff000000);
+                drawables.getColor(0, 0xff000000);
 
     viewHolder.getView().unbind();
     viewHolder.getView().set(id, contactType, name, number, labelText, color, multiSelect);

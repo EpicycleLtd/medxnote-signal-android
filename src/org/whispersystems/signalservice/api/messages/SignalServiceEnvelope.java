@@ -233,6 +233,12 @@ public class SignalServiceEnvelope {
     return envelope.getType().getNumber() == Envelope.Type.RECEIPT_VALUE;
   }
 
+/*
+  public boolean hasBubbles() {
+    return ((SignalServiceProtos.DataMessage)envelope.getContent().toStringUtf8())
+  }
+*/
+
   public boolean isRead() {
     return envelope.getType().getNumber() == Envelope.Type.READ_VALUE;
   }

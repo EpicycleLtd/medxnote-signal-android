@@ -2,9 +2,9 @@ package org.whispersystems.signalservice.internal.util;
 
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -41,6 +41,12 @@ public class JsonUtil {
           throws IOException
   {
     return objectMapper.readValue(json, clazz);
+  }
+
+  public static <T> T fromJson(String json, TypeReference<T> typeReference)
+          throws IOException
+  {
+    return objectMapper.readValue(json, typeReference);
   }
 
   public static class IdentityKeySerializer extends JsonSerializer<IdentityKey> {

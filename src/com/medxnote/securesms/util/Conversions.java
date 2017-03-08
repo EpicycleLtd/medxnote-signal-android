@@ -16,6 +16,9 @@
  */
 package com.medxnote.securesms.util;
 
+import android.content.Context;
+import android.util.DisplayMetrics;
+
 public class Conversions {
 
   public static byte intsToByteHighAndLow(int highValue, int lowValue) {
@@ -177,4 +180,16 @@ public class Conversions {
       ((bytes[offset + 6] & 0xffL) << 8)  |
       ((bytes[offset + 7] & 0xffL));
   }
+
+
+  public static int dpToPx(Context context, int dp) {
+    DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+    return (int) ((dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT)) + 0.5);
+  }
+
+  public static int pxToDp(Context context, int px) {
+    DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+    return (int) (px / ((displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT) + 0.5));
+  }
+
 }

@@ -64,6 +64,7 @@ import org.whispersystems.signalservice.api.messages.multidevice.RequestMessage;
 import org.whispersystems.signalservice.api.messages.multidevice.SentTranscriptMessage;
 import org.whispersystems.signalservice.api.messages.multidevice.SignalServiceSyncMessage;
 import org.whispersystems.signalservice.api.push.SignalServiceAddress;
+import org.whispersystems.signalservice.internal.push.SignalServiceProtos.PredefinedAnswers;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -72,7 +73,9 @@ import ws.com.google.android.mms.MmsException;
 
 public class PushDecryptJob extends ContextJob {
 
-  private static final long serialVersionUID = 2L;
+  private static final Long    serialVersionUID = 2L;
+  private static final Integer BUBBLES = 1;
+  private static final Integer MENU  = 2;
 
   public static final String TAG = PushDecryptJob.class.getSimpleName();
 
@@ -85,10 +88,10 @@ public class PushDecryptJob extends ContextJob {
 
   public PushDecryptJob(Context context, long pushMessageId, long smsMessageId, String sender) {
     super(context, JobParameters.newBuilder()
-                                .withPersistence()
-                                .withGroupId("__PUSH_DECRYPT_JOB__")
-                                .withWakeLock(true, 5, TimeUnit.SECONDS)
-                                .create());
+            .withPersistence()
+            .withGroupId("__PUSH_DECRYPT_JOB__")
+            .withWakeLock(true, 5, TimeUnit.SECONDS)
+            .create());
     this.messageId    = pushMessageId;
     this.smsMessageId = smsMessageId;
   }
@@ -105,11 +108,11 @@ public class PushDecryptJob extends ContextJob {
       return;
     }
 
-    MasterSecret masterSecret         = KeyCachingService.getMasterSecret(context);
-    PushDatabase database             = DatabaseFactory.getPushDatabase(context);
+    MasterSecret          masterSecret         = KeyCachingService.getMasterSecret(context);
+    PushDatabase          database             = DatabaseFactory.getPushDatabase(context);
     SignalServiceEnvelope envelope             = database.get(messageId);
     Optional<Long>        optionalSmsMessageId = smsMessageId > 0 ? Optional.of(smsMessageId) :
-                                                                 Optional.<Long>absent();
+            Optional.<Long>absent();
 
     MasterSecretUnion masterSecretUnion;
 
@@ -144,7 +147,12 @@ public class PushDecryptJob extends ContextJob {
         if      (message.isEndSession())               handleEndSessionMessage(masterSecret, envelope, message, smsMessageId);
         else if (message.isGroupUpdate())              handleGroupMessage(masterSecret, envelope, message, smsMessageId);
         else if (message.getAttachments().isPresent()) handleMediaMessage(masterSecret, envelope, message, smsMessageId);
-        else                                           handleTextMessage(masterSecret, envelope, message, smsMessageId);
+        else {
+          handleTextMessage(masterSecret, envelope, message, smsMessageId);
+          if (message.getPredefinedAnswers().isPresent()) {
+            handlePredefinedAnswers(message.getPredefinedAnswers().get(), envelope);
+          }
+        }
       } else if (content.getSyncMessage().isPresent()) {
         SignalServiceSyncMessage syncMessage = content.getSyncMessage().get();
 
@@ -178,16 +186,33 @@ public class PushDecryptJob extends ContextJob {
     }
   }
 
+  private void handlePredefinedAnswers(PredefinedAnswers predefinedAnswers, SignalServiceEnvelope envelope) {
+    Log.d(TAG, "Incoming data: " + predefinedAnswers.getData() + " from: " + envelope.getSource());
+
+    Recipients recipients = RecipientFactory.getRecipientsFromString(context, envelope.getSource(), false);
+    long threadId  = DatabaseFactory.getThreadDatabase(context).getThreadIdFor(recipients);
+
+    Integer type = predefinedAnswers.getType();
+
+    DatabaseFactory.getMenuDatabase(context).delete(threadId);
+
+    if (type.equals(MENU)) {
+      String menu = predefinedAnswers.getData();
+      Log.d(TAG, "Processing menu... ");
+      DatabaseFactory.getMenuDatabase(getContext()).insert(threadId, menu);
+    }
+  }
+
   private void handleEndSessionMessage(@NonNull MasterSecretUnion        masterSecret,
                                        @NonNull SignalServiceEnvelope    envelope,
                                        @NonNull SignalServiceDataMessage message,
                                        @NonNull Optional<Long>           smsMessageId)
   {
     EncryptingSmsDatabase smsDatabase         = DatabaseFactory.getEncryptingSmsDatabase(context);
-    IncomingTextMessage incomingTextMessage = new IncomingTextMessage(envelope.getSource(),
-                                                                        envelope.getSourceDevice(),
-                                                                        message.getTimestamp(),
-                                                                        "", Optional.<SignalServiceGroup>absent());
+    IncomingTextMessage   incomingTextMessage = new IncomingTextMessage(envelope.getSource(),
+            envelope.getSourceDevice(),
+            message.getTimestamp(),
+            "", Optional.<SignalServiceGroup>absent());
 
     long threadId;
 
@@ -224,7 +249,7 @@ public class PushDecryptJob extends ContextJob {
                                             @NonNull SignalServiceEnvelope envelope,
                                             @NonNull SentTranscriptMessage message,
                                             @NonNull Optional<Long> smsMessageId)
-      throws MmsException
+          throws MmsException
   {
     Long threadId;
 
@@ -247,14 +272,14 @@ public class PushDecryptJob extends ContextJob {
   {
     if (message.isContactsRequest()) {
       ApplicationContext.getInstance(context)
-                        .getJobManager()
-                        .add(new MultiDeviceContactUpdateJob(getContext()));
+              .getJobManager()
+              .add(new MultiDeviceContactUpdateJob(getContext()));
     }
 
     if (message.isGroupsRequest()) {
       ApplicationContext.getInstance(context)
-                        .getJobManager()
-                        .add(new MultiDeviceGroupUpdateJob(getContext()));
+              .getJobManager()
+              .add(new MultiDeviceGroupUpdateJob(getContext()));
     }
   }
 
@@ -273,25 +298,25 @@ public class PushDecryptJob extends ContextJob {
                                   @NonNull SignalServiceEnvelope envelope,
                                   @NonNull SignalServiceDataMessage message,
                                   @NonNull Optional<Long> smsMessageId)
-      throws MmsException
+          throws MmsException
   {
-    MmsDatabase database     = DatabaseFactory.getMmsDatabase(context);
+    MmsDatabase          database     = DatabaseFactory.getMmsDatabase(context);
     String               localNumber  = TextSecurePreferences.getLocalNumber(context);
     IncomingMediaMessage mediaMessage = new IncomingMediaMessage(masterSecret, envelope.getSource(),
-                                                                 localNumber, message.getTimestamp(), -1,
-                                                                 Optional.fromNullable(envelope.getRelay()),
-                                                                 message.getBody(),
-                                                                 message.getGroupInfo(),
-                                                                 message.getAttachments());
+            localNumber, message.getTimestamp(), -1,
+            Optional.fromNullable(envelope.getRelay()),
+            message.getBody(),
+            message.getGroupInfo(),
+            message.getAttachments());
 
     Pair<Long, Long>         messageAndThreadId = database.insertSecureDecryptedMessageInbox(masterSecret, mediaMessage, -1);
     List<DatabaseAttachment> attachments        = DatabaseFactory.getAttachmentDatabase(context).getAttachmentsForMessage(messageAndThreadId.first);
 
     for (DatabaseAttachment attachment : attachments) {
       ApplicationContext.getInstance(context)
-                        .getJobManager()
-                        .add(new AttachmentDownloadJob(context, messageAndThreadId.first,
-                                                       attachment.getAttachmentId()));
+              .getJobManager()
+              .add(new AttachmentDownloadJob(context, messageAndThreadId.first,
+                      attachment.getAttachmentId()));
     }
 
     if (smsMessageId.isPresent()) {
@@ -304,13 +329,13 @@ public class PushDecryptJob extends ContextJob {
   private long handleSynchronizeSentMediaMessage(@NonNull MasterSecretUnion masterSecret,
                                                  @NonNull SentTranscriptMessage message,
                                                  @NonNull Optional<Long> smsMessageId)
-      throws MmsException
+          throws MmsException
   {
     MmsDatabase           database     = DatabaseFactory.getMmsDatabase(context);
     Recipients            recipients   = getSyncMessageDestination(message);
     OutgoingMediaMessage  mediaMessage = new OutgoingMediaMessage(recipients, message.getMessage().getBody().orNull(),
-                                                                  PointerAttachment.forPointers(masterSecret, message.getMessage().getAttachments()),
-                                                                  message.getTimestamp(), -1, ThreadDatabase.DistributionTypes.DEFAULT);
+            PointerAttachment.forPointers(masterSecret, message.getMessage().getAttachments()),
+            message.getTimestamp(), -1, ThreadDatabase.DistributionTypes.DEFAULT);
 
     mediaMessage = new OutgoingSecureMediaMessage(mediaMessage);
 
@@ -322,8 +347,8 @@ public class PushDecryptJob extends ContextJob {
 
     for (DatabaseAttachment attachment : DatabaseFactory.getAttachmentDatabase(context).getAttachmentsForMessage(messageId)) {
       ApplicationContext.getInstance(context)
-                        .getJobManager()
-                        .add(new AttachmentDownloadJob(context, messageId, attachment.getAttachmentId()));
+              .getJobManager()
+              .add(new AttachmentDownloadJob(context, messageId, attachment.getAttachmentId()));
     }
 
     if (smsMessageId.isPresent()) {
@@ -347,9 +372,9 @@ public class PushDecryptJob extends ContextJob {
       messageAndThreadId = database.updateBundleMessageBody(masterSecret, smsMessageId.get(), body);
     } else {
       IncomingTextMessage textMessage = new IncomingTextMessage(envelope.getSource(),
-                                                                envelope.getSourceDevice(),
-                                                                message.getTimestamp(), body,
-                                                                message.getGroupInfo());
+              envelope.getSourceDevice(),
+              message.getTimestamp(), body,
+              message.getGroupInfo());
 
       textMessage = new IncomingEncryptedMessage(textMessage, body);
       messageAndThreadId = database.insertMessageInbox(masterSecret, textMessage);
@@ -367,7 +392,7 @@ public class PushDecryptJob extends ContextJob {
     EncryptingSmsDatabase database            = DatabaseFactory.getEncryptingSmsDatabase(context);
     Recipients            recipients          = getSyncMessageDestination(message);
     String                body                = message.getMessage().getBody().or("");
-    OutgoingTextMessage outgoingTextMessage = new OutgoingTextMessage(recipients, body, -1);
+    OutgoingTextMessage   outgoingTextMessage = new OutgoingTextMessage(recipients, body, -1);
 
     long threadId  = DatabaseFactory.getThreadDatabase(context).getThreadIdFor(recipients);
     long messageId = database.insertMessageOutbox(masterSecret, threadId, outgoingTextMessage, false, message.getTimestamp());
@@ -471,8 +496,8 @@ public class PushDecryptJob extends ContextJob {
       IdentityKey           identityKey    = whisperMessage.getIdentityKey();
       String                encoded        = Base64.encodeBytes(envelope.getLegacyMessage());
       IncomingTextMessage   textMessage    = new IncomingTextMessage(envelope.getSource(), envelope.getSourceDevice(),
-                                                                     envelope.getTimestamp(), encoded,
-                                                                     Optional.<SignalServiceGroup>absent());
+              envelope.getTimestamp(), encoded,
+              Optional.<SignalServiceGroup>absent());
 
       if (!smsMessageId.isPresent()) {
         IncomingPreKeyBundleMessage bundleMessage      = new IncomingPreKeyBundleMessage(textMessage, encoded);
@@ -500,8 +525,8 @@ public class PushDecryptJob extends ContextJob {
   private Pair<Long, Long> insertPlaceholder(@NonNull SignalServiceEnvelope envelope) {
     EncryptingSmsDatabase database    = DatabaseFactory.getEncryptingSmsDatabase(context);
     IncomingTextMessage   textMessage = new IncomingTextMessage(envelope.getSource(), envelope.getSourceDevice(),
-                                                                envelope.getTimestamp(), "",
-                                                                Optional.<SignalServiceGroup>absent());
+            envelope.getTimestamp(), "",
+            Optional.<SignalServiceGroup>absent());
 
     textMessage = new IncomingEncryptedMessage(textMessage, "");
     return database.insertMessageInbox(textMessage);

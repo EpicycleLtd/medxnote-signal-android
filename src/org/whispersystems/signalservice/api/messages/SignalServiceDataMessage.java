@@ -17,6 +17,7 @@
 package org.whispersystems.signalservice.api.messages;
 
 import org.whispersystems.libsignal.util.guava.Optional;
+import org.whispersystems.signalservice.internal.push.SignalServiceProtos.PredefinedAnswers;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -31,6 +32,7 @@ public class SignalServiceDataMessage {
   private final Optional<String>                        body;
   private final Optional<SignalServiceGroup>            group;
   private final boolean                                 endSession;
+  private final Optional<PredefinedAnswers>             predefinedAnswers;
 
   /**
    * Construct a SignalServiceDataMessage with a body and no attachments.
@@ -77,6 +79,30 @@ public class SignalServiceDataMessage {
    * @param attachments The attachments (or null if none).
    * @param body The message contents.
    * @param endSession Flag indicating whether this message should close a session.
+   * @param predefinedAnswers {@link PredefinedAnswers}
+   */
+  public SignalServiceDataMessage(long timestamp, SignalServiceGroup group, List<SignalServiceAttachment> attachments, String body, boolean endSession, Optional<PredefinedAnswers> predefinedAnswers) {
+    this.timestamp   = timestamp;
+    this.body        = Optional.fromNullable(body);
+    this.group       = Optional.fromNullable(group);
+    this.endSession  = endSession;
+
+    if (attachments != null && !attachments.isEmpty()) {
+      this.attachments = Optional.of(attachments);
+    } else {
+      this.attachments = Optional.absent();
+    }
+    this.predefinedAnswers = predefinedAnswers;
+  }
+
+  /**
+   * Construct a SignalServiceDataMessage.
+   *
+   * @param timestamp The sent timestamp.
+   * @param group The group information (or null if none).
+   * @param attachments The attachments (or null if none).
+   * @param body The message contents.
+   * @param endSession Flag indicating whether this message should close a session.
    */
   public SignalServiceDataMessage(long timestamp, SignalServiceGroup group, List<SignalServiceAttachment> attachments, String body, boolean endSession) {
     this.timestamp   = timestamp;
@@ -89,6 +115,7 @@ public class SignalServiceDataMessage {
     } else {
       this.attachments = Optional.absent();
     }
+    this.predefinedAnswers = null;
   }
 
   public static Builder newBuilder() {
@@ -121,6 +148,10 @@ public class SignalServiceDataMessage {
    */
   public Optional<SignalServiceGroup> getGroupInfo() {
     return group;
+  }
+
+  public Optional<PredefinedAnswers> getPredefinedAnswers() {
+    return predefinedAnswers;
   }
 
   public boolean isEndSession() {

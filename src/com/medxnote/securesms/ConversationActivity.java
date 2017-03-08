@@ -24,6 +24,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuff.Mode;
@@ -36,6 +37,8 @@ import android.os.Vibrator;
 import android.provider.Browser;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.support.v4.view.WindowCompat;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
@@ -58,6 +61,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.places.ui.PlacePicker;
+import com.google.common.eventbus.Subscribe;
 import com.google.protobuf.ByteString;
 import com.medxnote.securesms.audio.AudioRecorder;
 import com.medxnote.securesms.audio.AudioSlidePlayer;
@@ -72,6 +76,10 @@ import com.medxnote.securesms.contacts.ContactAccessor;
 import com.medxnote.securesms.crypto.MasterSecret;
 import com.medxnote.securesms.database.DatabaseFactory;
 import com.medxnote.securesms.database.RecipientPreferenceDatabase;
+import com.medxnote.securesms.database.loaders.MenuLoader;
+import com.medxnote.securesms.database.model.Cell;
+import com.medxnote.securesms.database.model.MenuRecord;
+import com.medxnote.securesms.events.DatabaseEvent;
 import com.medxnote.securesms.jobs.MultiDeviceReadUpdateJob;
 import com.medxnote.securesms.mms.AttachmentManager;
 import com.medxnote.securesms.mms.AttachmentTypeSelectorAdapter;
@@ -91,6 +99,7 @@ import com.medxnote.securesms.util.DynamicLanguage;
 import com.medxnote.securesms.util.DynamicTheme;
 import com.medxnote.securesms.util.GroupUtil;
 import com.medxnote.securesms.util.MediaUtil;
+import com.medxnote.securesms.util.ServiceUtil;
 import com.medxnote.securesms.util.TextSecurePreferences;
 import com.medxnote.securesms.util.Util;
 import com.medxnote.securesms.util.ViewUtil;
@@ -138,6 +147,7 @@ import java.security.SecureRandom;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import de.greenrobot.event.EventBus;
 import ws.com.google.android.mms.ContentType;
 
 import static com.medxnote.securesms.database.GroupDatabase.GroupRecord;
@@ -156,7 +166,7 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
         Recipients.RecipientsModifiedListener,
         KeyboardAwareLinearLayout.OnKeyboardShownListener,
                AttachmentDrawerListener,
-        InputPanel.Listener
+        InputPanel.Listener, LoaderManager.LoaderCallbacks<Cursor>, ConversationMenuAdapter.MenuClickListener
 {
   private static final String TAG = ConversationActivity.class.getSimpleName();
 
@@ -165,6 +175,7 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
   public static final String IS_ARCHIVED_EXTRA       = "is_archived";
   public static final String TEXT_EXTRA              = "draft_text";
   public static final String DISTRIBUTION_TYPE_EXTRA = "distribution_type";
+  private static final int ANIMATION_DURATION        = 500; // 0.5 sec
 
   private static final int PICK_IMAGE        = 1;
   private static final int PICK_VIDEO        = 2;
@@ -199,6 +210,9 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
   private   QuickAttachmentDrawer  quickAttachmentDrawer;
   private   InputPanel             inputPanel;
 
+  private   LinearLayout            mMenuContainer;
+  private   ConversationMenuAdapter mMenuTableAdapter;
+
   private Recipients recipients;
   private long       threadId;
   private int        distributionType;
@@ -231,6 +245,7 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
     initializeActionBar();
     initializeViews();
     initializeResources();
+    initializeLoaders();
     initializeSecurity(false, false).addListener(new AssertedSuccessListener<Boolean>() {
       @Override
       public void onSuccess(Boolean result) {
@@ -275,6 +290,8 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
     dynamicLanguage.onResume(this);
     quickAttachmentDrawer.onResume();
 
+    EventBus.getDefault().registerSticky(this);
+
     initializeEnabledCheck();
     initializeMmsEnabledCheck();
     composeText.setTransport(sendButton.getSelectedTransport());
@@ -291,6 +308,7 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
   @Override
   protected void onPause() {
     super.onPause();
+    EventBus.getDefault().unregister(this);
     MessageNotifier.setVisibleThread(-1L);
     if (isFinishing()) overridePendingTransition(R.anim.fade_scale_in, R.anim.slide_to_right);
     quickAttachmentDrawer.onPause();
@@ -451,6 +469,141 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
   @Override
   public void onKeyboardShown() {
     inputPanel.onKeyboardShown();
+  }
+
+  private void hideSoftKeyboard() {
+    View view = getCurrentFocus();
+    if (view != null) {
+      ServiceUtil.getInputMethodManager(this).hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+  }
+
+  @Subscribe
+  public void onEventMainThread(final DatabaseEvent event) {
+    switch (event.getType()) {
+      case MENU:
+        getSupportLoaderManager().restartLoader(MenuLoader.ID, Bundle.EMPTY, this).forceLoad();
+        break;
+
+      default:break;
+    }
+  }
+
+  @Override
+  public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+    if (MenuLoader.ID.equals(id)) {
+      return new MenuLoader(this, threadId);
+    }
+    return null;
+  }
+
+  @Override
+  public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+    Integer loaderId = loader.getId();
+    if (loaderId.equals(MenuLoader.ID)) {
+      if (data != null && data.getCount() != 0) {
+
+        Log.d(TAG, "Menu is incoming! ");
+
+        hideSoftKeyboard();
+        ViewUtil.fadeIn(mMenuContainer, ANIMATION_DURATION);
+
+        List<MenuRecord> records = DatabaseFactory.getMenuDatabase(this).readerFor(data).getCurrent();
+        mMenuTableAdapter.setRecords(records);
+
+        mMenuContainer.removeAllViews();
+
+        // At start always shows 1st menu
+        ConversationMenuView menuView = mMenuTableAdapter.getConversationMenuView(1L);
+        if (menuView != null) {
+
+          mMenuContainer.addView(menuView);
+          mMenuContainer.invalidate();
+
+          if (menuView.hasInput()) {
+            ViewUtil.fadeIn(inputPanel, 0);
+          } else {
+            ViewUtil.fadeOut(inputPanel, 0);
+          }
+
+        }
+        mMenuContainer.setVisibility(View.VISIBLE);
+      } else {
+        Log.d(TAG, "Menu is absent! ");
+        ViewUtil.fadeOut(mMenuContainer, ANIMATION_DURATION);
+        ViewUtil.fadeIn(inputPanel, ANIMATION_DURATION);
+      }
+    } else {
+      Log.d(TAG, "Unexpected loader. ");
+    }
+  }
+
+  @Override
+  public void onLoaderReset(Loader<Cursor> loader) {
+    Integer loaderId = loader.getId();
+    if (loaderId.equals(MenuLoader.ID)) {
+      if (mMenuTableAdapter != null) {
+        mMenuTableAdapter.setRecords(null);
+      }
+    }
+  }
+
+  @Override
+  public void onMenuClick(ConversationMenuRecordItem item) {
+    Cell cell = item.getCell();
+
+    if (cell != null) {
+      String linkId = cell.getLink();
+
+      // if was button contains link
+      if (linkId != null) {
+        mMenuContainer.removeAllViews();
+        ConversationMenuView menu = mMenuTableAdapter.getConversationMenuView(Long.parseLong(linkId));
+        if (menu != null) {
+          mMenuContainer.addView(menu);
+          mMenuContainer.invalidate();
+        }
+
+        // if was clicked link button, then get menu by id and handle input panel view
+        // if menu has input then show it, otherwise not
+        if (menu != null && menu.hasInput()) {
+          ViewUtil.fadeIn(inputPanel, ANIMATION_DURATION);
+        } else {
+          ViewUtil.fadeOut(inputPanel, ANIMATION_DURATION);
+        }
+      } else {
+        if (cell.isInput()) {
+          ViewUtil.fadeIn(inputPanel, ANIMATION_DURATION);
+        } else {
+          Boolean echo = cell.getEcho();
+          try {
+            // show command in chat or not
+            if (echo != null) {
+              sendCommand(cell.getCmd(), echo);
+            } else {
+              sendCommand(cell.getCmd(), true);
+            }
+          } catch (InvalidMessageException e) {
+            e.printStackTrace();
+          }
+        }
+        // del menu record for current thread
+        DatabaseFactory.getMenuDatabase(this).delete(threadId);
+
+        // restart menu's loader
+        getSupportLoaderManager().restartLoader(MenuLoader.ID, Bundle.EMPTY, this).forceLoad();
+
+        // request focus on input panel
+        composeText.requestFocus();
+
+        // show soft keyboard
+        ServiceUtil.getInputMethodManager(this).showSoftInput(composeText, 0);
+      }
+    }
+  }
+
+  private void initializeLoaders() {
+    getSupportLoaderManager().initLoader(MenuLoader.ID, Bundle.EMPTY, this).forceLoad();
   }
 
   //////// Event Handlers
@@ -965,6 +1118,11 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
       quickCameraToggle.setVisibility(View.GONE);
       quickCameraToggle.setEnabled(false);
     }
+
+    mMenuContainer        = ViewUtil.findById(this, R.id.menu_container);
+    mMenuTableAdapter     = new ConversationMenuAdapter(this);
+    mMenuTableAdapter.setMenuClickListener(this);
+
   }
 
   protected void initializeActionBar() {
@@ -1273,6 +1431,46 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
 
     fragment.scrollToBottom();
     attachmentManager.cleanup();
+  }
+
+  private void sendVisibleCommand(String cmd)
+          throws InvalidMessageException {
+
+    new AsyncTask<OutgoingTextMessage, Void, Long>() {
+      @Override
+      protected Long doInBackground(OutgoingTextMessage... messages) {
+        return MessageSender.send(getApplicationContext(), masterSecret, messages[0], threadId, false);
+      }
+
+      @Override
+      protected void onPostExecute(Long result) {
+        sendComplete(result);
+      }
+    }.execute(new OutgoingEncryptedMessage(recipients, cmd));
+  }
+
+  private void sendHiddenCommand(String cmd)
+          throws InvalidMessageException {
+
+    new AsyncTask<OutgoingTextMessage, Void, Long>() {
+      @Override
+      protected Long doInBackground(OutgoingTextMessage... messages) {
+        return MessageSender.sendHidden(getApplicationContext(), masterSecret, messages[0], threadId, false);
+      }
+
+      @Override
+      protected void onPostExecute(Long result) {
+        sendComplete(result);
+      }
+    }.execute(new OutgoingEncryptedMessage(recipients, cmd));
+  }
+
+  private void sendCommand(String cmd, boolean echo) throws InvalidMessageException {
+    if (echo) {
+      sendVisibleCommand(cmd);
+    } else {
+      sendHiddenCommand(cmd);
+    }
   }
 
   private void sendMessage() {

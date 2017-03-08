@@ -20,7 +20,9 @@ package com.medxnote.securesms.util;
 import android.content.Context;
 import android.content.res.Resources.Theme;
 import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.support.annotation.ArrayRes;
 import android.support.annotation.AttrRes;
 import android.support.v4.content.ContextCompat;
@@ -58,4 +60,20 @@ public class ResUtil {
     typedArray.recycle();
     return resourceIds;
   }
+
+  public static Drawable getDrawable(int shape, int background, int radius, int stroke, int width) {
+    GradientDrawable gd = new GradientDrawable();
+      gd.setShape(shape);
+      gd.setColor(background);
+      gd.setCornerRadius(radius);
+      gd.setStroke(width, stroke);
+    return gd;
+  }
+
+  public static int getColor(Context context, String background) {
+    return background != null && !background.isEmpty()
+            ? Color.parseColor(background)
+            : context.getResources().getColor(android.R.color.transparent);
+  }
+
 }

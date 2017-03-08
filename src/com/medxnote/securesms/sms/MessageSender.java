@@ -57,6 +57,32 @@ public class MessageSender {
 
   private static final String TAG = MessageSender.class.getSimpleName();
 
+  public static long sendHidden(final Context context,
+                                final MasterSecret masterSecret,
+                                final OutgoingTextMessage message,
+                                final long threadId,
+                                final boolean forceSms)
+  {
+    EncryptingSmsDatabase database    = DatabaseFactory.getEncryptingSmsDatabase(context);
+    Recipients            recipients  = message.getRecipients();
+    boolean               keyExchange = message.isKeyExchange();
+
+    long allocatedThreadId;
+
+    if (threadId == -1) {
+      allocatedThreadId = DatabaseFactory.getThreadDatabase(context).getThreadIdFor(recipients);
+    } else {
+      allocatedThreadId = threadId;
+    }
+
+    long messageId = database.insertMessageOutboxHidden(new MasterSecretUnion(masterSecret), allocatedThreadId,
+            message, forceSms, System.currentTimeMillis());
+
+    sendTextMessage(context, recipients, forceSms, keyExchange, messageId);
+
+    return allocatedThreadId;
+  }
+
   public static long send(final Context context,
                           final MasterSecret masterSecret,
                           final OutgoingTextMessage message,

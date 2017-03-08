@@ -1216,6 +1216,7 @@
     <string name="attachment_type_selector__qr_scan">QR Scan</string>
     <string name="QrCodeScannerActivity__title">Scan barcode</string>
     <string name="AttachmentTypeSelectorAdapter_qr_code">QR Code</string>
+    <string name="preferences__automatically_delete_older_messages_once_a_conversation_exceeds_a_specified_length">Automatically delete older messages once a conversation exceeds a specified length</string>
     <!-- EOF -->
 
 </resources>

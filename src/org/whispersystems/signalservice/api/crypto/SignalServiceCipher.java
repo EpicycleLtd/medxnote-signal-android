@@ -173,7 +173,7 @@ public class SignalServiceCipher {
     }
 
     return new SignalServiceDataMessage(envelope.getTimestamp(), groupInfo, attachments,
-            content.getBody(), endSession);
+            content.getBody(), endSession, Optional.of(content.getPa()));
   }
 
   private SignalServiceSyncMessage createSynchronizeMessage(SignalServiceEnvelope envelope, SyncMessage content) {
