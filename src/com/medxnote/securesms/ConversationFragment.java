@@ -55,6 +55,7 @@ import com.medxnote.securesms.database.ThreadDatabase;
 import com.medxnote.securesms.database.model.MediaMmsMessageRecord;
 import com.medxnote.securesms.mms.Slide;
 import com.medxnote.securesms.recipients.Recipients;
+import com.medxnote.securesms.util.DirectoryHelper;
 import com.medxnote.securesms.util.TextViewClickMovement;
 import com.medxnote.securesms.util.ViewUtil;
 import com.medxnote.securesms.util.task.ProgressDialogAsyncTask;
@@ -366,7 +367,7 @@ public class ConversationFragment extends Fragment
   @Override
   public Loader<Cursor> onCreateLoader(int id, Bundle args) {
     if(id == CONTACT_ID){
-      return new ContactsCursorLoader(getActivity(), 0, cursorFilter);
+      return new ContactsCursorLoader(getActivity(), ContactsCursorLoader.MODE_ALL, cursorFilter);
     }
     return new ConversationLoader(getActivity(), threadId, args.getLong("limit", PARTIAL_CONVERSATION_LIMIT));
   }
@@ -387,32 +388,36 @@ public class ConversationFragment extends Fragment
         final String phoneNumber = cursorFilter;
         if (cursor.getCount() > 0) {
           Recipients recipients = RecipientFactory.getRecipientsFromString(getActivity(), phoneNumber, true);
-          Intent intent = new Intent(getActivity(), ConversationActivity.class);
-          intent.putExtra(ConversationActivity.RECIPIENTS_EXTRA, recipients.getIds());
-          intent.putExtra(ConversationActivity.TEXT_EXTRA, getActivity().getIntent().getStringExtra(ConversationActivity.TEXT_EXTRA));
-          intent.setDataAndType(getActivity().getIntent().getData(), getActivity().getIntent().getType());
+          DirectoryHelper.UserCapabilities capabilities = DirectoryHelper.getUserCapabilities(getActivity(), recipients);
+          if (capabilities.getTextCapability() == DirectoryHelper.UserCapabilities.Capability.SUPPORTED) {
+            Intent intent = new Intent(getActivity(), ConversationActivity.class);
+            intent.putExtra(ConversationActivity.RECIPIENTS_EXTRA, recipients.getIds());
+            intent.putExtra(ConversationActivity.TEXT_EXTRA, getActivity().getIntent().getStringExtra(ConversationActivity.TEXT_EXTRA));
+            intent.setDataAndType(getActivity().getIntent().getData(), getActivity().getIntent().getType());
 
-          long existingThread = DatabaseFactory.getThreadDatabase(getActivity()).getThreadIdIfExistsFor(recipients);
-          intent.putExtra(ConversationActivity.THREAD_ID_EXTRA, existingThread);
-          intent.putExtra(ConversationActivity.DISTRIBUTION_TYPE_EXTRA, ThreadDatabase.DistributionTypes.DEFAULT);
-          startActivity(intent);
-        }else{
-          final AlertDialog.Builder builder = new AlertDialog.Builder(this.getActivity());
-
-          builder.setTitle(R.string.dialog_message_title);
-          builder.setItems(R.array.dialog_message_number, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-              if (which == 0){
-                addContact(phoneNumber);
-              }else{
-                setClipboard(phoneNumber);
-              }
-            }
-          });
-          builder.setCancelable(true);
-          builder.create().show();
+            long existingThread = DatabaseFactory.getThreadDatabase(getActivity()).getThreadIdIfExistsFor(recipients);
+            intent.putExtra(ConversationActivity.THREAD_ID_EXTRA, existingThread);
+            intent.putExtra(ConversationActivity.DISTRIBUTION_TYPE_EXTRA, ThreadDatabase.DistributionTypes.DEFAULT);
+            startActivity(intent);
+            this.cursorFilter = null;
+            return;
+          }
         }
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this.getActivity());
+
+        builder.setTitle(R.string.dialog_message_title);
+        builder.setItems(R.array.dialog_message_number, new DialogInterface.OnClickListener() {
+          @Override
+          public void onClick(DialogInterface dialog, int which) {
+            if (which == 0){
+              addContact(phoneNumber);
+            }else{
+              setClipboard(phoneNumber);
+            }
+          }
+        });
+        builder.setCancelable(true);
+        builder.create().show();
 
         this.cursorFilter = null;
       }
