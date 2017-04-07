@@ -36,6 +36,7 @@ import com.medxnote.securesms.database.MmsSmsDatabase;
 import com.medxnote.securesms.database.SmsDatabase;
 import com.medxnote.securesms.recipients.Recipients;
 import com.medxnote.securesms.util.LRUCache;
+import com.medxnote.securesms.util.TextViewClickMovement;
 import com.medxnote.securesms.util.ViewUtil;
 import com.medxnote.securesms.util.VisibleForTesting;
 import com.medxnote.securesms.database.MmsSmsColumns;
@@ -79,6 +80,7 @@ public class ConversationAdapter <V extends View & BindableConversationItem>
   private final @NonNull  MmsSmsDatabase    db;
   private final @NonNull  LayoutInflater    inflater;
   private final @NonNull  MessageDigest     digest;
+  private final @Nullable TextViewClickMovement.OnTextViewClickMovementListener linkListener;
 
   protected static class ViewHolder extends RecyclerView.ViewHolder {
     public <V extends View & BindableConversationItem> ViewHolder(final @NonNull V itemView) {
@@ -107,6 +109,7 @@ public class ConversationAdapter <V extends View & BindableConversationItem>
       this.recipients    = null;
       this.inflater      = null;
       this.db            = null;
+      this.linkListener  = null;
       this.digest        = MessageDigest.getInstance("SHA1");
     } catch (NoSuchAlgorithmException nsae) {
       throw new AssertionError("SHA1 isn't supported!");
@@ -118,7 +121,8 @@ public class ConversationAdapter <V extends View & BindableConversationItem>
                              @NonNull Locale locale,
                              @Nullable ItemClickListener clickListener,
                              @Nullable Cursor cursor,
-                             @NonNull Recipients recipients)
+                             @NonNull Recipients recipients,
+                             @Nullable TextViewClickMovement.OnTextViewClickMovementListener linkListener)
   {
     super(context, cursor);
     try {
@@ -128,6 +132,7 @@ public class ConversationAdapter <V extends View & BindableConversationItem>
       this.recipients    = recipients;
       this.inflater      = LayoutInflater.from(context);
       this.db            = DatabaseFactory.getMmsSmsDatabase(context);
+      this.linkListener  = linkListener;
       this.digest        = MessageDigest.getInstance("SHA1");
 
       setHasStableIds(true);
@@ -168,6 +173,9 @@ public class ConversationAdapter <V extends View & BindableConversationItem>
           return true;
         }
       });
+      if (itemView instanceof ConversationItem){
+        ((ConversationItem) itemView).setLinkListener(linkListener);
+      }
     }
 
     return new ViewHolder(itemView);

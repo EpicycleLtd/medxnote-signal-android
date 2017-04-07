@@ -1219,4 +1219,8 @@
     <string name="preferences__automatically_delete_older_messages_once_a_conversation_exceeds_a_specified_length">Automatically delete older messages once a conversation exceeds a specified length</string>
     <!-- EOF -->
 
+    <string name="dialog_message_title">No Medxnote recipient has been found in your contact list with that phone number</string>
+    <string name="dialog_message_add_to_contact">Add to contacts</string>
+    <string name="dialog_message_copy_to_clipboard">Copy to clipboard</string>
+
 </resources>

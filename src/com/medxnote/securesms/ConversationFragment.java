@@ -21,9 +21,11 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -44,12 +46,17 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
 
+import com.medxnote.securesms.contacts.ContactsCursorLoader;
+import com.medxnote.securesms.contacts.ContactsDatabase;
 import com.medxnote.securesms.crypto.MasterSecret;
 import com.medxnote.securesms.database.DatabaseFactory;
 import com.medxnote.securesms.database.MmsSmsDatabase;
+import com.medxnote.securesms.database.ThreadDatabase;
 import com.medxnote.securesms.database.model.MediaMmsMessageRecord;
 import com.medxnote.securesms.mms.Slide;
 import com.medxnote.securesms.recipients.Recipients;
+import com.medxnote.securesms.util.DirectoryHelper;
+import com.medxnote.securesms.util.TextViewClickMovement;
 import com.medxnote.securesms.util.ViewUtil;
 import com.medxnote.securesms.util.task.ProgressDialogAsyncTask;
 import com.medxnote.securesms.database.loaders.ConversationLoader;
@@ -65,11 +72,16 @@ import java.util.Locale;
 import java.util.Set;
 
 public class ConversationFragment extends Fragment
-  implements LoaderManager.LoaderCallbacks<Cursor>
+  implements LoaderManager.LoaderCallbacks<Cursor>, TextViewClickMovement.OnTextViewClickMovementListener
 {
   private static final String TAG = ConversationFragment.class.getSimpleName();
 
   private static final long   PARTIAL_CONVERSATION_LIMIT = 500L;
+
+  private final int CONVERSATION_ID = 0;
+  private final int CONTACT_ID = 1;
+
+  private String cursorFilter;
 
   private final ActionModeCallback actionModeCallback     = new ActionModeCallback();
   private final ConversationAdapter.ItemClickListener selectionClickListener = new ConversationFragmentItemClickListener();
@@ -158,8 +170,9 @@ public class ConversationFragment extends Fragment
 
   private void initializeListAdapter() {
     if (this.recipients != null && this.threadId != -1) {
-      list.setAdapter(new ConversationAdapter(getActivity(), masterSecret, locale, selectionClickListener, null, this.recipients));
-      getLoaderManager().restartLoader(0, Bundle.EMPTY, this);
+      list.setAdapter(new ConversationAdapter(getActivity(), masterSecret, locale, selectionClickListener, null, this.recipients, this));
+      getLoaderManager().restartLoader(CONVERSATION_ID, Bundle.EMPTY, this);
+      getLoaderManager().initLoader(CONTACT_ID, null, this);
       list.getItemAnimator().setSupportsChangeAnimations(false);
       list.getItemAnimator().setMoveDuration(120);
     }
@@ -353,18 +366,61 @@ public class ConversationFragment extends Fragment
 */
   @Override
   public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+    if(id == CONTACT_ID){
+      return new ContactsCursorLoader(getActivity(), ContactsCursorLoader.MODE_ALL, cursorFilter);
+    }
     return new ConversationLoader(getActivity(), threadId, args.getLong("limit", PARTIAL_CONVERSATION_LIMIT));
   }
 
   @Override
   public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-    if (list.getAdapter() != null) {
-      if (cursor.getCount() >= PARTIAL_CONVERSATION_LIMIT && ((ConversationLoader)loader).hasLimit()) {
-        getListAdapter().setFooterView(loadMoreView);
-      } else {
-        getListAdapter().setFooterView(null);
+    if (loader.getId() == CONVERSATION_ID) {
+      if (list.getAdapter() != null) {
+        if (cursor.getCount() >= PARTIAL_CONVERSATION_LIMIT && ((ConversationLoader) loader).hasLimit()) {
+          getListAdapter().setFooterView(loadMoreView);
+        } else {
+          getListAdapter().setFooterView(null);
+        }
+        getListAdapter().changeCursor(cursor);
       }
-      getListAdapter().changeCursor(cursor);
+    }else if (loader.getId() == CONTACT_ID){
+      if (this.cursorFilter != null) {
+        final String phoneNumber = cursorFilter;
+        if (cursor.getCount() > 0) {
+          Recipients recipients = RecipientFactory.getRecipientsFromString(getActivity(), phoneNumber, true);
+          DirectoryHelper.UserCapabilities capabilities = DirectoryHelper.getUserCapabilities(getActivity(), recipients);
+          if (capabilities.getTextCapability() == DirectoryHelper.UserCapabilities.Capability.SUPPORTED) {
+            Intent intent = new Intent(getActivity(), ConversationActivity.class);
+            intent.putExtra(ConversationActivity.RECIPIENTS_EXTRA, recipients.getIds());
+            intent.putExtra(ConversationActivity.TEXT_EXTRA, getActivity().getIntent().getStringExtra(ConversationActivity.TEXT_EXTRA));
+            intent.setDataAndType(getActivity().getIntent().getData(), getActivity().getIntent().getType());
+
+            long existingThread = DatabaseFactory.getThreadDatabase(getActivity()).getThreadIdIfExistsFor(recipients);
+            intent.putExtra(ConversationActivity.THREAD_ID_EXTRA, existingThread);
+            intent.putExtra(ConversationActivity.DISTRIBUTION_TYPE_EXTRA, ThreadDatabase.DistributionTypes.DEFAULT);
+            startActivity(intent);
+            this.cursorFilter = null;
+            return;
+          }
+        }
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this.getActivity());
+
+        builder.setTitle(R.string.dialog_message_title);
+        builder.setItems(R.array.dialog_message_number, new DialogInterface.OnClickListener() {
+          @Override
+          public void onClick(DialogInterface dialog, int which) {
+            if (which == 0){
+              addContact(phoneNumber);
+            }else{
+              setClipboard(phoneNumber);
+            }
+          }
+        });
+        builder.setCancelable(true);
+        builder.create().show();
+
+        this.cursorFilter = null;
+      }
     }
   }
 
@@ -372,6 +428,57 @@ public class ConversationFragment extends Fragment
   public void onLoaderReset(Loader<Cursor> arg0) {
     if (list.getAdapter() != null) {
       getListAdapter().changeCursor(null);
+    }
+  }
+
+  @Override
+  public void onLinkClicked(String linkText, TextViewClickMovement.LinkType linkType, MessageRecord messageRecord) {
+    if(!shouldInterceptClicks(messageRecord)){
+      if (linkType == TextViewClickMovement.LinkType.WEB_URL){
+        Uri uri = Uri.parse(linkText);
+
+        if (uri.getScheme() == null || uri.getScheme().isEmpty()) {
+          uri = Uri.parse("http://" + linkText);
+        }
+
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, uri);
+
+        if (browserIntent.resolveActivity(getActivity().getPackageManager()) != null) {
+          getActivity().startActivity(browserIntent);
+        }
+      }else if (linkType == TextViewClickMovement.LinkType.PHONE){
+        this.cursorFilter = linkText;
+        getLoaderManager().restartLoader(CONTACT_ID, null, this);
+      }
+    }
+  }
+
+  @Override
+  public void onLongClick(String text) {
+
+  }
+
+  private boolean shouldInterceptClicks(MessageRecord messageRecord) {
+    return ((messageRecord.isFailed() && !messageRecord.isMmsNotification()) ||
+                    messageRecord.isPendingInsecureSmsFallback() ||
+                    messageRecord.isBundleKeyExchange());
+  }
+
+  private void addContact(String phoneNumber){
+    Intent intent = new Intent(ContactsContract.Intents.Insert.ACTION);
+    intent.setType(ContactsContract.RawContacts.CONTENT_TYPE);
+    intent.putExtra(ContactsContract.Intents.Insert.PHONE, phoneNumber);
+    startActivity(intent);
+  }
+
+  private void setClipboard(String text) {
+    if(android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.HONEYCOMB) {
+      android.text.ClipboardManager clipboard = (android.text.ClipboardManager) getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
+      clipboard.setText(text);
+    } else {
+      android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
+      android.content.ClipData clip = android.content.ClipData.newPlainText("Copied Text", text);
+      clipboard.setPrimaryClip(clip);
     }
   }
 

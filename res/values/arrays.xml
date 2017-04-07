@@ -238,4 +238,9 @@
         <item>@null</item>
     </array>
 
+    <array name="dialog_message_number">
+        <item>@string/dialog_message_add_to_contact</item>
+        <item>@string/dialog_message_copy_to_clipboard</item>
+    </array>
+
 </resources>
