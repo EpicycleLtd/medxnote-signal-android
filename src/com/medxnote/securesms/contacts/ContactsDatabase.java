@@ -201,8 +201,8 @@ public class ContactsDatabase {
     } else {
       cursor = context.getContentResolver().query(ContactsContract.Data.CONTENT_URI,
                                                   projection,
-                                                  ContactsContract.Data.MIMETYPE + " = ? AND (" + ContactsContract.Contacts.DISPLAY_NAME + " LIKE ? OR REPLACE(REPLACE(REPLACE(REPLACE(" + ContactsContract.Data.DATA1 + ", ' ', ''), '-',' '), ')', ''), '(', '')" +
-                                                          " LIKE REPLACE(REPLACE(REPLACE(REPLACE(?, ' ', ''), '-',' '), ')', ''), '(', ''))",
+                                                  ContactsContract.Data.MIMETYPE + " = ? AND (" + ContactsContract.Contacts.DISPLAY_NAME + " LIKE ? OR REPLACE(REPLACE(REPLACE(REPLACE(" + ContactsContract.Data.DATA1 + ", ' ', ''), '-',''), ')', ''), '(', '')" +
+                                                          " LIKE REPLACE(REPLACE(REPLACE(REPLACE(?, ' ', ''), '-',''), ')', ''), '(', ''))",
                                                   new String[] {CONTACT_MIMETYPE,
                                                                 "%" + filter + "%", "%" + filter + "%"},
                                                   sort);
