@@ -1,0 +1,101 @@
+package com.medxnote.securesms.jobs;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.util.Log;
+
+import com.medxnote.securesms.BuildConfig;
+import com.medxnote.securesms.crypto.MasterSecret;
+import com.medxnote.securesms.database.DatabaseFactory;
+import com.medxnote.securesms.jobs.requirements.MasterSecretRequirement;
+import com.medxnote.securesms.mms.AttachmentStreamUriLoader;
+import com.medxnote.securesms.push.TextSecurePushTrustStore;
+import com.medxnote.securesms.util.BitmapDecodingException;
+import com.medxnote.securesms.util.BitmapUtil;
+import com.medxnote.securesms.util.TextSecurePreferences;
+import com.medxnote.securesms.database.GroupDatabase;
+
+import org.whispersystems.jobqueue.JobParameters;
+import org.whispersystems.jobqueue.requirements.NetworkRequirement;
+import org.whispersystems.signalservice.api.push.exceptions.NonSuccessfulResponseCodeException;
+import org.whispersystems.signalservice.internal.push.PushServiceSocket;
+import org.whispersystems.signalservice.internal.util.StaticCredentialsProvider;
+
+import java.io.File;
+import java.io.IOException;
+
+public class AvatarDownloadJob extends MasterSecretJob {
+
+  private static final String TAG = AvatarDownloadJob.class.getSimpleName();
+
+  private final byte[] groupId;
+
+  public AvatarDownloadJob(Context context, byte[] groupId) {
+    super(context, JobParameters.newBuilder()
+                                .withRequirement(new MasterSecretRequirement(context))
+                                .withRequirement(new NetworkRequirement(context))
+                                .withPersistence()
+                                .create());
+
+    this.groupId = groupId;
+  }
+
+  @Override
+  public void onAdded() {}
+
+  @Override
+  public void onRun(MasterSecret masterSecret) throws IOException {
+    GroupDatabase             database   = DatabaseFactory.getGroupDatabase(context);
+    GroupDatabase.GroupRecord record     = database.getGroup(groupId);
+    File                      attachment = null;
+
+    try {
+      if (record != null) {
+        long   avatarId = record.getAvatarId();
+        byte[] key      = record.getAvatarKey();
+        String relay    = record.getRelay();
+
+        if (avatarId == -1 || key == null) {
+          return;
+        }
+
+        attachment = downloadAttachment(relay, avatarId);
+        Bitmap avatar = BitmapUtil.createScaledBitmap(context, new AttachmentStreamUriLoader.AttachmentModel(attachment, key), 500, 500);
+
+        database.updateAvatar(groupId, avatar);
+      }
+    } catch (BitmapDecodingException | NonSuccessfulResponseCodeException e) {
+      Log.w(TAG, e);
+    } finally {
+      if (attachment != null)
+        attachment.delete();
+    }
+  }
+
+  @Override
+  public void onCanceled() {}
+
+  @Override
+  public boolean onShouldRetryThrowable(Exception exception) {
+    if (exception instanceof IOException) return true;
+    return false;
+  }
+
+  private File downloadAttachment(String relay, long contentLocation) throws IOException {
+    PushServiceSocket socket = new PushServiceSocket(BuildConfig.TEXTSECURE_URL,
+                                                     new TextSecurePushTrustStore(context),
+                                                     new StaticCredentialsProvider(TextSecurePreferences.getLocalNumber(context),
+                                                                                   TextSecurePreferences.getPushServerPassword(context),
+                                                                                   null),
+                                                     BuildConfig.USER_AGENT);
+
+    File destination = File.createTempFile("avatar", "tmp");
+
+    destination.deleteOnExit();
+
+    socket.retrieveAttachment(relay, contentLocation, destination, null);
+
+    return destination;
+  }
+
+}

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<org.thoughtcrime.securesms.ConversationItem
+<com.medxnote.securesms.ConversationItem
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -19,7 +19,7 @@
                     android:layout_marginBottom="6dp"
                     android:layout_marginRight="0dp">
 
-        <org.thoughtcrime.securesms.components.AlertView
+        <com.medxnote.securesms.components.AlertView
                 android:id="@+id/indicators_parent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -38,7 +38,7 @@
                       android:background="@drawable/sent_bubble"
                       android:orientation="vertical">
 
-            <org.thoughtcrime.securesms.components.ThumbnailView
+            <com.medxnote.securesms.components.ThumbnailView
                     android:id="@+id/image_view"
                     android:layout_width="@dimen/media_bubble_height"
                     android:layout_height="@dimen/media_bubble_height"
@@ -51,21 +51,21 @@
                     tools:src="@drawable/ic_video_light"
                     tools:visibility="visible" />
 
-            <org.thoughtcrime.securesms.components.AudioView
+            <com.medxnote.securesms.components.AudioView
                     android:id="@+id/audio_view"
                     android:layout_width="210dp"
                     android:layout_height="wrap_content"
                     app:tintColor="@color/grey_500"
                     android:visibility="gone"/>
 
-            <org.thoughtcrime.securesms.components.emoji.EmojiTextView
+            <com.medxnote.securesms.components.emoji.EmojiTextView
                     android:id="@+id/conversation_item_body"
-                    android:autoLink="all"
+                    android:autoLink="phone|web"
+                    android:linksClickable="false"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:paddingLeft="4dp"
                     android:paddingRight="4dp"
-                    android:linksClickable="true"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     android:textColor="?conversation_item_sent_text_primary_color"
                     android:textColorLink="?conversation_item_sent_text_primary_color"
@@ -147,7 +147,7 @@
                           tools:visibility="visible"
                           tools:text="to SIM1"/>
 
-                <org.thoughtcrime.securesms.components.DeliveryStatusView
+                <com.medxnote.securesms.components.DeliveryStatusView
                         android:id="@+id/delivery_status"
                         android:layout_width="20dp"
                         android:layout_height="wrap_content"
@@ -186,4 +186,4 @@
             android:visibility="gone" />
 
     </RelativeLayout>
-</org.thoughtcrime.securesms.ConversationItem>
+</com.medxnote.securesms.ConversationItem>

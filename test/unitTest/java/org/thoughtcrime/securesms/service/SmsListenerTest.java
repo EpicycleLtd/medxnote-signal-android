@@ -1,10 +1,12 @@
-package org.thoughtcrime.securesms.service;
+package org.medxnote.securesms.service;
+
+import com.medxnote.securesms.service.SmsListener;
 
 import junit.framework.AssertionFailedError;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.thoughtcrime.securesms.BaseUnitTest;
+import org.medxnote.securesms.BaseUnitTest;
 
 import java.util.HashMap;
 import java.util.Map;

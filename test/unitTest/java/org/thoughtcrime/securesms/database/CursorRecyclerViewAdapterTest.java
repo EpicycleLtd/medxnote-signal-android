@@ -1,4 +1,4 @@
-package org.thoughtcrime.securesms.database;
+package org.medxnote.securesms.database;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -6,6 +6,8 @@ import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.medxnote.securesms.database.CursorRecyclerViewAdapter;
 
 import org.junit.Before;
 import org.junit.Test;

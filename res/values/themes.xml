@@ -261,6 +261,7 @@
         <item name="conversation_attach_video">@drawable/ic_movie_creation_dark</item>
         <item name="conversation_attach_sound">@drawable/ic_volume_up_dark</item>
         <item name="conversation_attach_contact_info">@drawable/ic_account_box_dark</item>
+        <item name="conversation_attach_qr_code_scan">@mipmap/ic_qr_code</item>
         <item name="conversation_attach">@drawable/ic_attach_white_24dp</item>
 
         <item name="emoji_tab_strip_background">@color/gray95</item>
