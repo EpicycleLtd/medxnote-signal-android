@@ -483,7 +483,7 @@ public class ConversationItem extends LinearLayout
   private void setContactPhotoForRecipient(final Recipient recipient) {
     if (contactPhoto == null) return;
 
-    contactPhoto.setAvatar(recipient, true);
+    contactPhoto.setAvatar(recipient, true, groupThread);
     contactPhoto.setVisibility(View.VISIBLE);
   }
 
