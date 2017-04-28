@@ -114,7 +114,7 @@ public class MmsDatabase extends MessagingDatabase {
     "ct_cls" + " INTEGER, " + "resp_txt" + " TEXT, " + "d_tm" + " INTEGER, "     +
     RECEIPT_COUNT + " INTEGER DEFAULT 0, " + MISMATCHED_IDENTITIES + " TEXT DEFAULT NULL, "     +
     NETWORK_FAILURE + " TEXT DEFAULT NULL," + "d_rpt" + " INTEGER, " +
-    SUBSCRIPTION_ID + " INTEGER DEFAULT -1);";
+    SUBSCRIPTION_ID + " INTEGER DEFAULT -1, " + HIDDEN + " INTEGER DEFAULT 0);";
 
   public static final String[] CREATE_INDEXS = {
     "CREATE INDEX IF NOT EXISTS mms_thread_id_index ON " + TABLE_NAME + " (" + THREAD_ID + ");",
@@ -136,7 +136,7 @@ public class MmsDatabase extends MessagingDatabase {
       CONTENT_LOCATION, EXPIRY, MESSAGE_TYPE,
       MESSAGE_SIZE, STATUS, TRANSACTION_ID,
       BODY, PART_COUNT, ADDRESS, ADDRESS_DEVICE_ID,
-      RECEIPT_COUNT, MISMATCHED_IDENTITIES, NETWORK_FAILURE, SUBSCRIPTION_ID,
+      RECEIPT_COUNT, MISMATCHED_IDENTITIES, NETWORK_FAILURE, SUBSCRIPTION_ID, HIDDEN,
       AttachmentDatabase.TABLE_NAME + "." + AttachmentDatabase.ROW_ID + " AS " + AttachmentDatabase.ATTACHMENT_ID_ALIAS,
       AttachmentDatabase.UNIQUE_ID,
       AttachmentDatabase.MMS_ID,
@@ -883,7 +883,7 @@ public class MmsDatabase extends MessagingDatabase {
 
   public long insertMessageOutbox(@NonNull MasterSecretUnion masterSecret,
                                   @NonNull OutgoingMediaMessage message,
-                                  long threadId, boolean forceSms)
+                                  long threadId, boolean forceSms, boolean isHidden)
       throws MmsException
   {
     long type = Types.BASE_OUTBOX_TYPE;
@@ -921,6 +921,10 @@ public class MmsDatabase extends MessagingDatabase {
     contentValues.put(DATE_RECEIVED, System.currentTimeMillis());
     contentValues.put(DATE_RECEIPT_RECEIVED, System.currentTimeMillis());
     contentValues.put(SUBSCRIPTION_ID, message.getSubscriptionId());
+
+    if (isHidden) {
+      contentValues.put(HIDDEN, 1);
+    }
 
     if (message.getRecipients().isSingleRecipient()) {
       try {

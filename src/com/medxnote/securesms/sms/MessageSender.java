@@ -128,7 +128,37 @@ public class MessageSender {
       }
 
       Recipients recipients = message.getRecipients();
-      long       messageId  = database.insertMessageOutbox(new MasterSecretUnion(masterSecret), message, allocatedThreadId, forceSms);
+      long       messageId  = database.insertMessageOutbox(new MasterSecretUnion(masterSecret), message, allocatedThreadId, forceSms, false /* not hidden */);
+
+      sendMediaMessage(context, masterSecret, recipients, forceSms, messageId);
+
+      return allocatedThreadId;
+    } catch (MmsException e) {
+      Log.w(TAG, e);
+      return threadId;
+    }
+  }
+
+  public static long sendHidden(final Context context,
+                          final MasterSecret masterSecret,
+                          final OutgoingMediaMessage message,
+                          final long threadId,
+                          final boolean forceSms)
+  {
+    try {
+      ThreadDatabase threadDatabase = DatabaseFactory.getThreadDatabase(context);
+      MmsDatabase database = DatabaseFactory.getMmsDatabase(context);
+
+      long allocatedThreadId;
+
+      if (threadId == -1) {
+        allocatedThreadId = threadDatabase.getThreadIdFor(message.getRecipients(), message.getDistributionType());
+      } else {
+        allocatedThreadId = threadId;
+      }
+
+      Recipients recipients = message.getRecipients();
+      long       messageId  = database.insertMessageOutbox(new MasterSecretUnion(masterSecret), message, allocatedThreadId, forceSms, true);
 
       sendMediaMessage(context, masterSecret, recipients, forceSms, messageId);
 
@@ -218,11 +248,13 @@ public class MessageSender {
   }
 
   private static void sendMediaPush(Context context, Recipients recipients, long messageId) {
+    Log.d(TAG, "sendMediaPush: " + recipients.toShortString());
     JobManager jobManager = ApplicationContext.getInstance(context).getJobManager();
     jobManager.add(new PushMediaSendJob(context, messageId, recipients.getPrimaryRecipient().getNumber()));
   }
 
   private static void sendGroupPush(Context context, Recipients recipients, long messageId, long filterRecipientId) {
+    Log.d(TAG, "sendGroupPush: " + recipients.toShortString());
     JobManager jobManager = ApplicationContext.getInstance(context).getJobManager();
     jobManager.add(new PushGroupSendJob(context, messageId, recipients.getPrimaryRecipient().getNumber(), filterRecipientId));
   }
@@ -233,6 +265,7 @@ public class MessageSender {
   }
 
   private static void sendMms(Context context, long messageId) {
+    Log.d(TAG, "sendMms: " + messageId);
     JobManager jobManager = ApplicationContext.getInstance(context).getJobManager();
     jobManager.add(new MmsSendJob(context, messageId));
   }

@@ -78,7 +78,8 @@ public class DatabaseFactory {
   private static final int INTRODUCED_RECEIVED_RECEIPT_FIX                 = 30;
   private static final int INTRODUCED_MENU_DATABASE                        = 31;
   private static final int INTRODUCED_HIDDEN_MESSAGE                       = 32;
-  private static final int DATABASE_VERSION                                = 32;
+  private static final int INTRODUCED_HIDDEN_MESSAGE_MMS                   = 33;
+  private static final int DATABASE_VERSION                                = 33;
 
   private static final String DATABASE_NAME    = "messages.db";
   private static final Object lock             = new Object();
@@ -870,6 +871,16 @@ public class DatabaseFactory {
 
       if (oldVersion < INTRODUCED_MENU_DATABASE) {
         db.execSQL(MenuDatabase.CREATE_TABLE);
+      }
+
+      if (oldVersion < INTRODUCED_HIDDEN_MESSAGE_MMS){
+        Cursor cursor = db.rawQuery(
+          "SELECT * FROM mms LIMIT 0,1;",
+          new String[]{}
+        );
+        if (cursor.getColumnIndex("hidden") < 0){
+          db.execSQL("ALTER TABLE mms ADD COLUMN hidden INTEGER DEFAULT 0;");
+        }
       }
 
       db.setTransactionSuccessful();

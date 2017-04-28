@@ -75,7 +75,6 @@ public class SmsDatabase extends MessagingDatabase {
   public  static final String REPLY_PATH_PRESENT = "reply_path_present";
   public  static final String SUBJECT            = "subject";
   public  static final String SERVICE_CENTER     = "service_center";
-  public  static final String HIDDEN             = "hidden";
 
   public static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + " (" + ID + " integer PRIMARY KEY, "                +
     THREAD_ID + " INTEGER, " + ADDRESS + " TEXT, " + ADDRESS_DEVICE_ID + " INTEGER DEFAULT 1, " + PERSON + " INTEGER, " +

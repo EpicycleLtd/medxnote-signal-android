@@ -576,15 +576,11 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
           ViewUtil.fadeIn(inputPanel, ANIMATION_DURATION);
         } else {
           Boolean echo = cell.getEcho();
-          try {
-            // show command in chat or not
-            if (echo != null) {
-              sendCommand(cell.getCmd(), echo);
-            } else {
-              sendCommand(cell.getCmd(), true);
-            }
-          } catch (InvalidMessageException e) {
-            e.printStackTrace();
+          // show command in chat or not
+          if (echo != null) {
+            sendCommand(cell.getCmd(), !echo);
+          } else {
+            sendCommand(cell.getCmd(), false);
           }
         }
         // del menu record for current thread
@@ -1433,46 +1429,6 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
     attachmentManager.cleanup();
   }
 
-  private void sendVisibleCommand(String cmd)
-          throws InvalidMessageException {
-
-    new AsyncTask<OutgoingTextMessage, Void, Long>() {
-      @Override
-      protected Long doInBackground(OutgoingTextMessage... messages) {
-        return MessageSender.send(getApplicationContext(), masterSecret, messages[0], threadId, false);
-      }
-
-      @Override
-      protected void onPostExecute(Long result) {
-        sendComplete(result);
-      }
-    }.execute(new OutgoingEncryptedMessage(recipients, cmd));
-  }
-
-  private void sendHiddenCommand(String cmd)
-          throws InvalidMessageException {
-
-    new AsyncTask<OutgoingTextMessage, Void, Long>() {
-      @Override
-      protected Long doInBackground(OutgoingTextMessage... messages) {
-        return MessageSender.sendHidden(getApplicationContext(), masterSecret, messages[0], threadId, false);
-      }
-
-      @Override
-      protected void onPostExecute(Long result) {
-        sendComplete(result);
-      }
-    }.execute(new OutgoingEncryptedMessage(recipients, cmd));
-  }
-
-  private void sendCommand(String cmd, boolean echo) throws InvalidMessageException {
-    if (echo) {
-      sendVisibleCommand(cmd);
-    } else {
-      sendHiddenCommand(cmd);
-    }
-  }
-
   private void sendMessage() {
     try {
       Recipients recipients     = getRecipients();
@@ -1503,6 +1459,61 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
                      Toast.LENGTH_SHORT).show();
       Log.w(TAG, ex);
     }
+  }
+
+  private void sendCommand(String command, boolean isHidden) {
+    Recipients recipients = getRecipients();
+    if (recipients != null) {
+      if (!recipients.isSingleRecipient() || recipients.isGroupRecipient() || recipients.isEmailRecipient()) {
+        sendGroupCommand(command, isHidden);
+      } else {
+        sendSingleCommand(command, isHidden);
+      }
+    }
+  }
+
+  private void sendGroupCommand(String cmd, final boolean isHidden) {
+
+    final Context context = getApplicationContext();
+
+    OutgoingMediaMessage outgoingMediaMessage =
+            new OutgoingMediaMessage(recipients, attachmentManager.buildSlideDeck(),
+                    cmd, System.currentTimeMillis(), -1, distributionType);
+
+    new AsyncTask<OutgoingMediaMessage, Void, Long>() {
+      @Override
+      protected Long doInBackground(OutgoingMediaMessage... messages) {
+        if (isHidden) {
+          return MessageSender.sendHidden(context, masterSecret, messages[0], threadId, false);
+        }
+        return MessageSender.send(context, masterSecret, messages[0], threadId, false);
+      }
+
+      @Override
+      protected void onPostExecute(Long result) {
+        sendComplete(result);
+      }
+    }.execute(new OutgoingSecureMediaMessage(outgoingMediaMessage));
+  }
+
+  private void sendSingleCommand(String cmd, final boolean isHidden) {
+    final Context context = getApplicationContext();
+    OutgoingTextMessage message = new OutgoingEncryptedMessage(recipients, cmd);
+
+    new AsyncTask<OutgoingTextMessage, Void, Long>() {
+      @Override
+      protected Long doInBackground(OutgoingTextMessage... messages) {
+        if (isHidden) {
+          return MessageSender.sendHidden(context, masterSecret, messages[0], threadId, false);
+        }
+        return MessageSender.send(context, masterSecret, messages[0], threadId, false);
+      }
+
+      @Override
+      protected void onPostExecute(Long result) {
+        sendComplete(result);
+      }
+    }.execute(message);
   }
 
   private void sendMediaMessage(final boolean forceSms, final int subscriptionId)

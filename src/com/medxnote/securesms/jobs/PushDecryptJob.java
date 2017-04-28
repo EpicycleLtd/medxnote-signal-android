@@ -19,6 +19,7 @@ import com.medxnote.securesms.database.NoSuchMessageException;
 import com.medxnote.securesms.database.PushDatabase;
 import com.medxnote.securesms.mms.IncomingMediaMessage;
 import com.medxnote.securesms.notifications.MessageNotifier;
+import com.medxnote.securesms.recipients.Recipient;
 import com.medxnote.securesms.sms.IncomingEncryptedMessage;
 import com.medxnote.securesms.sms.IncomingEndSessionMessage;
 import com.medxnote.securesms.sms.IncomingPreKeyBundleMessage;
@@ -150,7 +151,10 @@ public class PushDecryptJob extends ContextJob {
         else {
           handleTextMessage(masterSecret, envelope, message, smsMessageId);
           if (message.getPredefinedAnswers().isPresent()) {
-            handlePredefinedAnswers(message.getPredefinedAnswers().get(), envelope);
+            handlePredefinedAnswers(message, envelope);
+          } else {
+            long threadId = getThreadIdFromDataMessage(message, envelope);
+            DatabaseFactory.getMenuDatabase(context).delete(threadId);
           }
         }
       } else if (content.getSyncMessage().isPresent()) {
@@ -186,21 +190,39 @@ public class PushDecryptJob extends ContextJob {
     }
   }
 
-  private void handlePredefinedAnswers(PredefinedAnswers predefinedAnswers, SignalServiceEnvelope envelope) {
-    Log.d(TAG, "Incoming data: " + predefinedAnswers.getData() + " from: " + envelope.getSource());
+  private void handlePredefinedAnswers(SignalServiceDataMessage dataMessage, SignalServiceEnvelope envelope) {
+    long threadId = getThreadIdFromDataMessage(dataMessage, envelope);
+      if (dataMessage.getPredefinedAnswers().isPresent()) {
+        PredefinedAnswers mPredefinedAnswers = dataMessage.getPredefinedAnswers().get();
+        if (mPredefinedAnswers.getType() == MENU) {
+          String menu = mPredefinedAnswers.getData();
+          if (threadId != -1) {
+            DatabaseFactory.getMenuDatabase(context).delete(threadId);
+            DatabaseFactory.getMenuDatabase(context).insert(threadId, menu);
+          }
+        }
+      }
+  }
 
-    Recipients recipients = RecipientFactory.getRecipientsFromString(context, envelope.getSource(), false);
-    long threadId  = DatabaseFactory.getThreadDatabase(context).getThreadIdFor(recipients);
-
-    Integer type = predefinedAnswers.getType();
-
-    DatabaseFactory.getMenuDatabase(context).delete(threadId);
-
-    if (type.equals(MENU)) {
-      String menu = predefinedAnswers.getData();
-      Log.d(TAG, "Processing menu... ");
-      DatabaseFactory.getMenuDatabase(getContext()).insert(threadId, menu);
+  private long getThreadIdFromDataMessage(SignalServiceDataMessage dataMessage, SignalServiceEnvelope envelope) {
+    Recipients recipients = null;
+    if (dataMessage.getGroupInfo().isPresent()) {
+      SignalServiceGroup mSignalServiceGroup = dataMessage.getGroupInfo().get();
+      if (mSignalServiceGroup.getGroupId() != null) {
+        String groupId = GroupUtil.getEncodedId(mSignalServiceGroup.getGroupId());
+        if (groupId == null) {
+          recipients = null;
+        } else {
+          recipients = RecipientFactory.getRecipientsFromString(context, groupId, false);
+        }
+      }
     }
+
+    if (recipients == null) {
+      recipients = RecipientFactory.getRecipientsFromString(context, envelope.getSource(), false);
+    }
+
+    return DatabaseFactory.getThreadDatabase(context).getThreadIdFor(recipients);
   }
 
   private void handleEndSessionMessage(@NonNull MasterSecretUnion        masterSecret,
@@ -340,7 +362,8 @@ public class PushDecryptJob extends ContextJob {
     mediaMessage = new OutgoingSecureMediaMessage(mediaMessage);
 
     long threadId  = DatabaseFactory.getThreadDatabase(context).getThreadIdFor(recipients);
-    long messageId = database.insertMessageOutbox(masterSecret, mediaMessage, threadId, false);
+    // todo: hidden field is set to FALSE
+    long messageId = database.insertMessageOutbox(masterSecret, mediaMessage, threadId, false, false);
 
     database.markAsSent(messageId);
     database.markAsPush(messageId);
