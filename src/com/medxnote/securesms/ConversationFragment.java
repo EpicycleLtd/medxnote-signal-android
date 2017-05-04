@@ -382,6 +382,7 @@ public class ConversationFragment extends Fragment
           getListAdapter().setFooterView(null);
         }
         getListAdapter().changeCursor(cursor);
+        ((ConversationLoader)loader).setFirstLoad(false);
       }
     }else if (loader.getId() == CONTACT_ID){
       if (this.cursorFilter != null) {

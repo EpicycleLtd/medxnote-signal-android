@@ -18,6 +18,8 @@ package com.medxnote.securesms.database;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.database.MatrixCursor;
+import android.database.MergeCursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
@@ -25,6 +27,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.medxnote.securesms.R;
 import com.medxnote.securesms.crypto.MasterSecret;
 import com.medxnote.securesms.database.MessagingDatabase.SyncMessageId;
 import com.medxnote.securesms.database.model.MessageRecord;
@@ -87,6 +90,60 @@ public class MmsSmsDatabase extends Database {
     return getConversation(threadId, 0);
   }
 
+  public Cursor getConversationMessages(long threadId, long limit) {
+    String order     = MmsSmsColumns.NORMALIZED_DATE_RECEIVED + " DESC";
+    String selection = MmsSmsColumns.THREAD_ID + " = " + threadId;
+
+    Cursor unreadMsg = getUnread(threadId);
+    int unreadCount = unreadMsg.getCount();
+    Cursor cursor = null;
+    if (unreadCount > 0) {
+      MatrixCursor extras = new MatrixCursor(PROJECTION);
+      String unreadMessage = "";
+      if (unreadCount == 1) {
+        unreadMessage = context.getString(R.string.unread_message);
+      } else {
+        unreadMessage = context.getString(R.string.unread_messages, unreadCount);;
+      }
+      extras.addRow(new String[] {"-1", MmsSmsColumns.UNIQUE_ROW_ID,
+              unreadMessage, SmsDatabase.TYPE,
+              MmsSmsColumns.THREAD_ID,
+              SmsDatabase.ADDRESS, SmsDatabase.ADDRESS_DEVICE_ID, SmsDatabase.SUBJECT,
+              MmsSmsColumns.NORMALIZED_DATE_SENT,
+              MmsSmsColumns.NORMALIZED_DATE_RECEIVED,
+              MmsSmsColumns.NORMALIZED_DATE_RECEIPT_RECEIVED,
+              MmsSmsColumns.NORMALIZED_DATE_READ,
+              MmsDatabase.MESSAGE_TYPE, MmsDatabase.MESSAGE_BOX,
+              SmsDatabase.STATUS, MmsDatabase.PART_COUNT,
+              MmsDatabase.CONTENT_LOCATION, MmsDatabase.TRANSACTION_ID,
+              MmsDatabase.MESSAGE_SIZE, MmsDatabase.EXPIRY,
+              MmsDatabase.STATUS, MmsSmsColumns.RECEIPT_COUNT,
+              MmsSmsColumns.MISMATCHED_IDENTITIES,
+              MmsDatabase.NETWORK_FAILURE,
+              MmsSmsColumns.SUBSCRIPTION_ID, TRANSPORT,
+              AttachmentDatabase.ATTACHMENT_ID_ALIAS,
+              AttachmentDatabase.UNIQUE_ID,
+              AttachmentDatabase.MMS_ID,
+              AttachmentDatabase.SIZE,
+              AttachmentDatabase.DATA,
+              AttachmentDatabase.CONTENT_TYPE,
+              AttachmentDatabase.CONTENT_LOCATION,
+              AttachmentDatabase.CONTENT_DISPOSITION,
+              AttachmentDatabase.NAME,
+              AttachmentDatabase.TRANSFER_STATE});
+
+      Cursor readMsg = getRead(threadId);
+      Cursor[] cursors = { unreadMsg, extras, readMsg };
+      cursor = new MergeCursor(cursors);
+      setNotifyConverationListeners(readMsg, threadId);
+      return cursor;
+    } else {
+      cursor = queryTables(PROJECTION, selection, order, limit > 0 ? String.valueOf(limit) : null);
+      setNotifyConverationListeners(cursor, threadId);
+      return cursor;
+    }
+  }
+
   public Cursor getIdentityConflictMessagesForThread(long threadId) {
     String order           = MmsSmsColumns.NORMALIZED_DATE_RECEIVED + " ASC";
     String selection       = MmsSmsColumns.THREAD_ID + " = " + threadId + " AND " + MmsSmsColumns.MISMATCHED_IDENTITIES + " IS NOT NULL";
@@ -102,6 +159,20 @@ public class MmsSmsDatabase extends Database {
     String selection = MmsSmsColumns.THREAD_ID + " = " + threadId;
 
     return  queryTables(PROJECTION, selection, order, "1");
+  }
+
+  public Cursor getRead(long threadId) {
+    String order           = MmsSmsColumns.NORMALIZED_DATE_RECEIVED + " DESC";
+    String selection       = MmsSmsColumns.READ + " > 0 AND " + MmsSmsColumns.THREAD_ID + " = " + threadId;
+
+    return queryTables(PROJECTION, selection, order, null);
+  }
+
+  public Cursor getUnread(long threadId) {
+    String order           = MmsSmsColumns.NORMALIZED_DATE_RECEIVED + " DESC";
+    String selection       = MmsSmsColumns.READ + " = 0 AND " + MmsSmsColumns.THREAD_ID + " = " + threadId;
+
+    return queryTables(PROJECTION, selection, order, null);
   }
 
   public Cursor getUnread() {

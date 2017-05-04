@@ -70,6 +70,7 @@ public class ConversationAdapter <V extends View & BindableConversationItem>
   public static final int MESSAGE_TYPE_OUTGOING = 0;
   public static final int MESSAGE_TYPE_INCOMING = 1;
   public static final int MESSAGE_TYPE_UPDATE   = 2;
+  public static final int MESSAGE_TYPE_UNREAD   = 3;
 
   private final Set<MessageRecord> batchSelected = Collections.synchronizedSet(new HashSet<MessageRecord>());
 
@@ -150,6 +151,10 @@ public class ConversationAdapter <V extends View & BindableConversationItem>
   @Override
   public void onBindItemViewHolder(ViewHolder viewHolder, @NonNull Cursor cursor) {
     long          id            = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.ID));
+    if (id == -1) {
+      ((ConversationUnreadItem)viewHolder.getView()).bindMessage(cursor.getString(cursor.getColumnIndexOrThrow(SmsDatabase.BODY)));
+      return;
+    }
     String        type          = cursor.getString(cursor.getColumnIndexOrThrow(MmsSmsDatabase.TRANSPORT));
     MessageRecord messageRecord = getMessageRecord(id, cursor, type);
 
@@ -191,6 +196,7 @@ public class ConversationAdapter <V extends View & BindableConversationItem>
     case ConversationAdapter.MESSAGE_TYPE_OUTGOING: return R.layout.conversation_item_sent;
     case ConversationAdapter.MESSAGE_TYPE_INCOMING: return R.layout.conversation_item_received;
     case ConversationAdapter.MESSAGE_TYPE_UPDATE:   return R.layout.conversation_item_update;
+    case ConversationAdapter.MESSAGE_TYPE_UNREAD:   return R.layout.conversation_item_unread;
     default: throw new IllegalArgumentException("unsupported item view type given to ConversationAdapter");
     }
   }
@@ -198,6 +204,9 @@ public class ConversationAdapter <V extends View & BindableConversationItem>
   @Override
   public int getItemViewType(@NonNull Cursor cursor) {
     long          id            = cursor.getLong(cursor.getColumnIndexOrThrow(MmsSmsColumns.ID));
+    if (id == -1) {
+      return MESSAGE_TYPE_UNREAD;
+    }
     String        type          = cursor.getString(cursor.getColumnIndexOrThrow(MmsSmsDatabase.TRANSPORT));
     MessageRecord messageRecord = getMessageRecord(id, cursor, type);
 
