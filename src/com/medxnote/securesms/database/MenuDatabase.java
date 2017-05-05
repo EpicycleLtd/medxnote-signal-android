@@ -75,7 +75,11 @@ public class MenuDatabase extends MessagingDatabase {
 
     public int delete(long threadId) {
         SQLiteDatabase db = databaseHelper.getWritableDatabase();
-        return db.delete(TABLE_NAME, THREAD_ID + " = ?", new String[] {String.valueOf(threadId)});
+        int res = db.delete(TABLE_NAME, THREAD_ID + " = ?", new String[] {String.valueOf(threadId)});
+        if (res > 0) {
+            sendEvent(threadId);
+        }
+        return res;
     }
 
     public Reader readerFor(Cursor cursor) {

@@ -1130,7 +1130,7 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
 
   private void initializeResources() {
     if (recipients != null) recipients.removeListener(this);
-    
+
     recipients       = RecipientFactory.getRecipientsForIds(this, getIntent().getLongArrayExtra(RECIPIENTS_EXTRA), true);
     threadId         = getIntent().getLongExtra(THREAD_ID_EXTRA, -1);
     archived         = getIntent().getBooleanExtra(IS_ARCHIVED_EXTRA, false);
@@ -1429,38 +1429,6 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
     attachmentManager.cleanup();
   }
 
-  private void sendMessage() {
-    try {
-      Recipients recipients     = getRecipients();
-      boolean    forceSms       = sendButton.isManualSelection() && sendButton.getSelectedTransport().isSms();
-      int        subscriptionId = sendButton.getSelectedTransport().getSimSubscriptionId().or(-1);
-
-      Log.w(TAG, "isManual Selection: " + sendButton.isManualSelection());
-      Log.w(TAG, "forceSms: " + forceSms);
-
-      if (recipients == null) {
-        throw new RecipientFormattingException("Badly formatted");
-      }
-
-      if ((!recipients.isSingleRecipient() || recipients.isEmailRecipient()) && !isMmsEnabled) {
-        handleManualMmsRequired();
-      } else if (attachmentManager.isAttachmentPresent() || !recipients.isSingleRecipient() || recipients.isGroupRecipient() || recipients.isEmailRecipient()) {
-        sendMediaMessage(forceSms, subscriptionId);
-      } else {
-        sendTextMessage(forceSms, subscriptionId);
-      }
-    } catch (RecipientFormattingException ex) {
-      Toast.makeText(ConversationActivity.this,
-                     R.string.ConversationActivity_recipient_is_not_a_valid_sms_or_email_address_exclamation,
-                     Toast.LENGTH_LONG).show();
-      Log.w(TAG, ex);
-    } catch (InvalidMessageException ex) {
-      Toast.makeText(ConversationActivity.this, R.string.ConversationActivity_message_is_empty_exclamation,
-                     Toast.LENGTH_SHORT).show();
-      Log.w(TAG, ex);
-    }
-  }
-
   private void sendCommand(String command, boolean isHidden) {
     Recipients recipients = getRecipients();
     if (recipients != null) {
@@ -1514,6 +1482,38 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
         sendComplete(result);
       }
     }.execute(message);
+  }
+
+  private void sendMessage() {
+    try {
+      Recipients recipients     = getRecipients();
+      boolean    forceSms       = sendButton.isManualSelection() && sendButton.getSelectedTransport().isSms();
+      int        subscriptionId = sendButton.getSelectedTransport().getSimSubscriptionId().or(-1);
+
+      Log.w(TAG, "isManual Selection: " + sendButton.isManualSelection());
+      Log.w(TAG, "forceSms: " + forceSms);
+
+      if (recipients == null) {
+        throw new RecipientFormattingException("Badly formatted");
+      }
+
+      if ((!recipients.isSingleRecipient() || recipients.isEmailRecipient()) && !isMmsEnabled) {
+        handleManualMmsRequired();
+      } else if (attachmentManager.isAttachmentPresent() || !recipients.isSingleRecipient() || recipients.isGroupRecipient() || recipients.isEmailRecipient()) {
+        sendMediaMessage(forceSms, subscriptionId);
+      } else {
+        sendTextMessage(forceSms, subscriptionId);
+      }
+    } catch (RecipientFormattingException ex) {
+      Toast.makeText(ConversationActivity.this,
+                     R.string.ConversationActivity_recipient_is_not_a_valid_sms_or_email_address_exclamation,
+                     Toast.LENGTH_LONG).show();
+      Log.w(TAG, ex);
+    } catch (InvalidMessageException ex) {
+      Toast.makeText(ConversationActivity.this, R.string.ConversationActivity_message_is_empty_exclamation,
+                     Toast.LENGTH_SHORT).show();
+      Log.w(TAG, ex);
+    }
   }
 
   private void sendMediaMessage(final boolean forceSms, final int subscriptionId)

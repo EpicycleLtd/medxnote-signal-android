@@ -158,7 +158,7 @@ public class MessageSender {
       }
 
       Recipients recipients = message.getRecipients();
-      long       messageId  = database.insertMessageOutbox(new MasterSecretUnion(masterSecret), message, allocatedThreadId, forceSms, true);
+      long messageId = database.insertMessageOutbox(new MasterSecretUnion(masterSecret), message, allocatedThreadId, forceSms, true);
 
       sendMediaMessage(context, masterSecret, recipients, forceSms, messageId);
 
@@ -248,13 +248,11 @@ public class MessageSender {
   }
 
   private static void sendMediaPush(Context context, Recipients recipients, long messageId) {
-    Log.d(TAG, "sendMediaPush: " + recipients.toShortString());
     JobManager jobManager = ApplicationContext.getInstance(context).getJobManager();
     jobManager.add(new PushMediaSendJob(context, messageId, recipients.getPrimaryRecipient().getNumber()));
   }
 
   private static void sendGroupPush(Context context, Recipients recipients, long messageId, long filterRecipientId) {
-    Log.d(TAG, "sendGroupPush: " + recipients.toShortString());
     JobManager jobManager = ApplicationContext.getInstance(context).getJobManager();
     jobManager.add(new PushGroupSendJob(context, messageId, recipients.getPrimaryRecipient().getNumber(), filterRecipientId));
   }
@@ -265,7 +263,6 @@ public class MessageSender {
   }
 
   private static void sendMms(Context context, long messageId) {
-    Log.d(TAG, "sendMms: " + messageId);
     JobManager jobManager = ApplicationContext.getInstance(context).getJobManager();
     jobManager.add(new MmsSendJob(context, messageId));
   }

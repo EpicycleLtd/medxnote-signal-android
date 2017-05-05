@@ -55,7 +55,7 @@ public class MmsSmsDatabase extends Database {
                                               MmsDatabase.CONTENT_LOCATION, MmsDatabase.TRANSACTION_ID,
                                               MmsDatabase.MESSAGE_SIZE, MmsDatabase.EXPIRY,
                                               MmsDatabase.STATUS, MmsSmsColumns.RECEIPT_COUNT,
-                                              MmsSmsColumns.MISMATCHED_IDENTITIES, MmsSmsColumns.HIDDEN,
+                                              MmsSmsColumns.MISMATCHED_IDENTITIES,
                                               MmsDatabase.NETWORK_FAILURE,
                                               MmsSmsColumns.SUBSCRIPTION_ID, TRANSPORT,
                                               AttachmentDatabase.ATTACHMENT_ID_ALIAS,
@@ -67,7 +67,8 @@ public class MmsSmsDatabase extends Database {
                                               AttachmentDatabase.CONTENT_LOCATION,
                                               AttachmentDatabase.CONTENT_DISPOSITION,
                                               AttachmentDatabase.NAME,
-                                              AttachmentDatabase.TRANSFER_STATE};
+                                              AttachmentDatabase.TRANSFER_STATE,
+                                              MmsSmsColumns.HIDDEN};
 
   public MmsSmsDatabase(Context context, SQLiteOpenHelper databaseHelper) {
     super(context, databaseHelper);
