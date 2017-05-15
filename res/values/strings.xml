@@ -1223,4 +1223,7 @@
     <string name="dialog_message_add_to_contact">Add to contacts</string>
     <string name="dialog_message_copy_to_clipboard">Copy to clipboard</string>
 
+    <string name="unread_message">1 UNREAD MESSAGE</string>
+    <string name="unread_messages">%1$d UNREAD MESSAGES</string>
+
 </resources>
