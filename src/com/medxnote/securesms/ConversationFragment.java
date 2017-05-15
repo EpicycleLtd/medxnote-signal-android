@@ -91,6 +91,7 @@ public class ConversationFragment extends Fragment
   private MasterSecret masterSecret;
   private Recipients recipients;
   private long         threadId;
+  private int          threadUnreadMsg;
   private ActionMode   actionMode;
   private Locale       locale;
   private RecyclerView list;
@@ -166,6 +167,7 @@ public class ConversationFragment extends Fragment
   private void initializeResources() {
     this.recipients = RecipientFactory.getRecipientsForIds(getActivity(), getActivity().getIntent().getLongArrayExtra("recipients"), true);
     this.threadId   = this.getActivity().getIntent().getLongExtra("thread_id", -1);
+    this.threadUnreadMsg   = this.getActivity().getIntent().getIntExtra(ConversationActivity.THREAD_UNREAD_MSG_EXTRA, 0);
   }
 
   private void initializeListAdapter() {
@@ -382,6 +384,9 @@ public class ConversationFragment extends Fragment
           getListAdapter().setFooterView(null);
         }
         getListAdapter().changeCursor(cursor);
+        if (((ConversationLoader)loader).isFirstLoad() && threadUnreadMsg > 0) {
+          ((LinearLayoutManager)list.getLayoutManager()).scrollToPositionWithOffset(threadUnreadMsg, list.getHeight()/2);
+        }
         ((ConversationLoader)loader).setFirstLoad(false);
       }
     }else if (loader.getId() == CONTACT_ID){

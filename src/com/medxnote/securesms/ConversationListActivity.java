@@ -168,6 +168,8 @@ public class ConversationListActivity extends PassphraseRequiredActionBarActivit
     intent.putExtra(ConversationActivity.RECIPIENTS_EXTRA, recipients.getIds());
     intent.putExtra(ConversationActivity.THREAD_ID_EXTRA, threadId);
     intent.putExtra(ConversationActivity.DISTRIBUTION_TYPE_EXTRA, distributionType);
+    int unread_msg = DatabaseFactory.getMmsSmsDatabase(this).getUnreadCount(threadId);
+    intent.putExtra(ConversationActivity.THREAD_UNREAD_MSG_EXTRA, unread_msg);
 
     startActivity(intent);
     overridePendingTransition(R.anim.slide_from_right, R.anim.fade_scale_out);
