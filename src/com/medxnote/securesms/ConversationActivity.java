@@ -175,6 +175,7 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
   public static final String IS_ARCHIVED_EXTRA       = "is_archived";
   public static final String TEXT_EXTRA              = "draft_text";
   public static final String DISTRIBUTION_TYPE_EXTRA = "distribution_type";
+  public static final String THREAD_UNREAD_MSG_EXTRA = "thread_unread_msg";
   private static final int ANIMATION_DURATION        = 500; // 0.5 sec
 
   private static final int PICK_IMAGE        = 1;

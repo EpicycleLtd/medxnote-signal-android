@@ -44,14 +44,17 @@ import com.medxnote.securesms.database.AttachmentDatabase;
 import com.medxnote.securesms.database.DatabaseFactory;
 import com.medxnote.securesms.database.MmsDatabase;
 import com.medxnote.securesms.database.SmsDatabase;
+import com.medxnote.securesms.database.ThreadDatabase;
 import com.medxnote.securesms.database.documents.IdentityKeyMismatch;
 import com.medxnote.securesms.database.model.MediaMmsMessageRecord;
 import com.medxnote.securesms.jobs.SmsSendJob;
 import com.medxnote.securesms.mms.PartAuthority;
 import com.medxnote.securesms.mms.Slide;
 import com.medxnote.securesms.mms.SlideClickListener;
+import com.medxnote.securesms.recipients.RecipientFactory;
 import com.medxnote.securesms.util.DynamicTheme;
 import com.medxnote.securesms.util.TextSecurePreferences;
+import com.medxnote.securesms.util.TextViewClickMovement;
 import com.medxnote.securesms.util.dualsim.SubscriptionInfoCompat;
 import com.medxnote.securesms.components.AudioView;
 import com.medxnote.securesms.components.AvatarImageView;
@@ -67,6 +70,7 @@ import com.medxnote.securesms.recipients.Recipients;
 import com.medxnote.securesms.util.DateUtils;
 import com.medxnote.securesms.util.Util;
 import com.medxnote.securesms.util.dualsim.SubscriptionManagerCompat;
+
 import org.whispersystems.libsignal.util.guava.Optional;
 import com.medxnote.securesms.database.MessagingDatabase.SyncMessageId;
 
@@ -122,6 +126,8 @@ public class ConversationItem extends LinearLayout
   private final MmsPreferencesClickListener mmsPreferencesClickListener = new MmsPreferencesClickListener();
   private final Context                     context;
 
+  private @Nullable TextViewClickMovement.OnTextViewClickMovementListener linkListener;
+
   public ConversationItem(Context context) {
     this(context, null);
   }
@@ -134,6 +140,10 @@ public class ConversationItem extends LinearLayout
   @Override
   public void setOnClickListener(OnClickListener l) {
     super.setOnClickListener(new ClickListener(l));
+  }
+
+  public void setLinkListener(@Nullable TextViewClickMovement.OnTextViewClickMovementListener linkListener) {
+    this.linkListener = linkListener;
   }
 
   @Override
@@ -247,7 +257,7 @@ public class ConversationItem extends LinearLayout
     mediaThumbnail.setFocusable(!shouldInterceptClicks(messageRecord) && batchSelected.isEmpty());
     mediaThumbnail.setClickable(!shouldInterceptClicks(messageRecord) && batchSelected.isEmpty());
     mediaThumbnail.setLongClickable(batchSelected.isEmpty());
-    bodyText.setAutoLinkMask(batchSelected.isEmpty() ? Linkify.ALL : 0);
+//    bodyText.setAutoLinkMask(batchSelected.isEmpty() ? Linkify.ALL : 0);
   }
 
   private boolean isCaptionlessMms(MessageRecord messageRecord) {
@@ -275,6 +285,7 @@ public class ConversationItem extends LinearLayout
     } else {
       bodyText.setText(messageRecord.getDisplayBody());
       bodyText.setVisibility(View.VISIBLE);
+      bodyText.setMovementMethod(new TextViewClickMovement(linkListener, context, messageRecord));
     }
   }
 
@@ -472,7 +483,7 @@ public class ConversationItem extends LinearLayout
   private void setContactPhotoForRecipient(final Recipient recipient) {
     if (contactPhoto == null) return;
 
-    contactPhoto.setAvatar(recipient, true);
+    contactPhoto.setAvatar(recipient, true, groupThread);
     contactPhoto.setVisibility(View.VISIBLE);
   }
 

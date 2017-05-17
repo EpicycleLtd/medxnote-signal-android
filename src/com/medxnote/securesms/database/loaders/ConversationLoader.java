@@ -9,11 +9,13 @@ import com.medxnote.securesms.util.AbstractCursorLoader;
 public class ConversationLoader extends AbstractCursorLoader {
   private final long threadId;
   private       long limit;
+  private       boolean firstLoad;
 
   public ConversationLoader(Context context, long threadId, long limit) {
     super(context);
     this.threadId = threadId;
     this.limit  = limit;
+    this.firstLoad = true;
   }
 
   public boolean hasLimit() {
@@ -22,6 +24,19 @@ public class ConversationLoader extends AbstractCursorLoader {
 
   @Override
   public Cursor getCursor() {
-    return DatabaseFactory.getMmsSmsDatabase(context).getConversation(threadId, limit);
+    if (firstLoad) {
+      return DatabaseFactory.getMmsSmsDatabase(context).getConversationMessages(threadId, limit);
+    } else {
+      return DatabaseFactory.getMmsSmsDatabase(context).getConversation(threadId, limit);
+    }
+
+  }
+
+  public boolean isFirstLoad() {
+    return firstLoad;
+  }
+
+  public void setFirstLoad(boolean firstLoad) {
+    this.firstLoad = firstLoad;
   }
 }
