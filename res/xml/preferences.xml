@@ -17,6 +17,10 @@
     <Preference android:key="preference_category_appearance"
                 android:title="@string/preferences__appearance"
                 android:icon="?pref_ic_appearance"/>
+
+    <Preference android:key="preference_category_about"
+        android:title="@string/preferences__about"
+        android:icon="@drawable/ic_info_black"/>
 <!--
     <Preference android:key="preference_category_chats"
                 android:title="@string/preferences__chats"

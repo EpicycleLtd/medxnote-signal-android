@@ -28,6 +28,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.preference.PreferenceFragment;
 
 import com.medxnote.securesms.crypto.MasterSecret;
+import com.medxnote.securesms.preferences.AboutPreferenceFragment;
 import com.medxnote.securesms.preferences.AppearancePreferenceFragment;
 import com.medxnote.securesms.preferences.NotificationsPreferenceFragment;
 import com.medxnote.securesms.preferences.SmsMmsPreferenceFragment;
@@ -58,6 +59,7 @@ public class ApplicationPreferencesActivity extends PassphraseRequiredActionBarA
   private static final String PREFERENCE_CATEGORY_CHATS          = "preference_category_chats";
   private static final String PREFERENCE_CATEGORY_DEVICES        = "preference_category_devices";
   private static final String PREFERENCE_CATEGORY_ADVANCED       = "preference_category_advanced";
+  private static final String PREFERENCE_CATEGORY_ABOUT          = "preference_category_about";
 
   private final DynamicTheme dynamicTheme    = new DynamicTheme();
   private final DynamicLanguage dynamicLanguage = new DynamicLanguage();
@@ -140,6 +142,8 @@ public class ApplicationPreferencesActivity extends PassphraseRequiredActionBarA
         .setOnPreferenceClickListener(new CategoryClickListener(masterSecret, PREFERENCE_CATEGORY_APP_PROTECTION));
       this.findPreference(PREFERENCE_CATEGORY_APPEARANCE)
         .setOnPreferenceClickListener(new CategoryClickListener(masterSecret, PREFERENCE_CATEGORY_APPEARANCE));
+      this.findPreference(PREFERENCE_CATEGORY_ABOUT)
+              .setOnPreferenceClickListener(new CategoryClickListener(masterSecret, PREFERENCE_CATEGORY_ABOUT));
       //this.findPreference(PREFERENCE_CATEGORY_CHATS)
         //.setOnPreferenceClickListener(new CategoryClickListener(masterSecret, PREFERENCE_CATEGORY_CHATS));
       //this.findPreference(PREFERENCE_CATEGORY_DEVICES)
@@ -203,6 +207,9 @@ public class ApplicationPreferencesActivity extends PassphraseRequiredActionBarA
           break;
         case PREFERENCE_CATEGORY_ADVANCED:
           fragment = new AdvancedPreferenceFragment();
+          break;
+        case PREFERENCE_CATEGORY_ABOUT:
+          fragment = new AboutPreferenceFragment();
           break;
         default:
           throw new AssertionError();
