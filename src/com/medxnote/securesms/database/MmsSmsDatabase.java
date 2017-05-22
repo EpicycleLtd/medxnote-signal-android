@@ -107,32 +107,10 @@ public class MmsSmsDatabase extends Database {
       } else {
         unreadMessage = context.getString(R.string.unread_messages, unreadCount);;
       }
-      extras.addRow(new String[] {"-1", MmsSmsColumns.UNIQUE_ROW_ID,
-              unreadMessage, SmsDatabase.TYPE,
-              MmsSmsColumns.THREAD_ID,
-              SmsDatabase.ADDRESS, SmsDatabase.ADDRESS_DEVICE_ID, SmsDatabase.SUBJECT,
-              MmsSmsColumns.NORMALIZED_DATE_SENT,
-              MmsSmsColumns.NORMALIZED_DATE_RECEIVED,
-              MmsSmsColumns.NORMALIZED_DATE_RECEIPT_RECEIVED,
-              MmsSmsColumns.NORMALIZED_DATE_READ,
-              MmsDatabase.MESSAGE_TYPE, MmsDatabase.MESSAGE_BOX,
-              SmsDatabase.STATUS, MmsDatabase.PART_COUNT,
-              MmsDatabase.CONTENT_LOCATION, MmsDatabase.TRANSACTION_ID,
-              MmsDatabase.MESSAGE_SIZE, MmsDatabase.EXPIRY,
-              MmsDatabase.STATUS, MmsSmsColumns.RECEIPT_COUNT,
-              MmsSmsColumns.MISMATCHED_IDENTITIES,
-              MmsDatabase.NETWORK_FAILURE,
-              MmsSmsColumns.SUBSCRIPTION_ID, TRANSPORT,
-              AttachmentDatabase.ATTACHMENT_ID_ALIAS,
-              AttachmentDatabase.UNIQUE_ID,
-              AttachmentDatabase.MMS_ID,
-              AttachmentDatabase.SIZE,
-              AttachmentDatabase.DATA,
-              AttachmentDatabase.CONTENT_TYPE,
-              AttachmentDatabase.CONTENT_LOCATION,
-              AttachmentDatabase.CONTENT_DISPOSITION,
-              AttachmentDatabase.NAME,
-              AttachmentDatabase.TRANSFER_STATE});
+      String[] newRow = PROJECTION.clone();
+      newRow[0] = "-1";
+      newRow[2] = unreadMessage;
+      extras.addRow(newRow);
 
       Cursor readMsg = getRead(threadId);
       Cursor[] cursors = { unreadMsg, extras, readMsg };
