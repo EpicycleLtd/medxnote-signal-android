@@ -114,7 +114,8 @@ public class MmsDatabase extends MessagingDatabase {
     "ct_cls" + " INTEGER, " + "resp_txt" + " TEXT, " + "d_tm" + " INTEGER, "     +
     RECEIPT_COUNT + " INTEGER DEFAULT 0, " + MISMATCHED_IDENTITIES + " TEXT DEFAULT NULL, "     +
     NETWORK_FAILURE + " TEXT DEFAULT NULL," + "d_rpt" + " INTEGER, " +
-    SUBSCRIPTION_ID + " INTEGER DEFAULT -1, " + HIDDEN + " INTEGER DEFAULT 0);";
+    SUBSCRIPTION_ID + " INTEGER DEFAULT -1, " + HIDDEN + " INTEGER DEFAULT 0, " +
+    EDIT + " INTEGER DEFAULT 0);";
 
   public static final String[] CREATE_INDEXS = {
     "CREATE INDEX IF NOT EXISTS mms_thread_id_index ON " + TABLE_NAME + " (" + THREAD_ID + ");",
@@ -136,7 +137,8 @@ public class MmsDatabase extends MessagingDatabase {
       CONTENT_LOCATION, EXPIRY, MESSAGE_TYPE,
       MESSAGE_SIZE, STATUS, TRANSACTION_ID,
       BODY, PART_COUNT, ADDRESS, ADDRESS_DEVICE_ID,
-      RECEIPT_COUNT, MISMATCHED_IDENTITIES, NETWORK_FAILURE, SUBSCRIPTION_ID, HIDDEN,
+      RECEIPT_COUNT, MISMATCHED_IDENTITIES,
+      NETWORK_FAILURE, SUBSCRIPTION_ID, HIDDEN, EDIT,
       AttachmentDatabase.TABLE_NAME + "." + AttachmentDatabase.ROW_ID + " AS " + AttachmentDatabase.ATTACHMENT_ID_ALIAS,
       AttachmentDatabase.UNIQUE_ID,
       AttachmentDatabase.MMS_ID,
@@ -347,6 +349,18 @@ public class MmsDatabase extends MessagingDatabase {
     return cursor;
   }
 
+  public MessageRecord getMessageByTimestamp(MasterSecret masterSecret, long timestamp) {
+    String where = DATE_SENT + " = ?";
+    Cursor cursor = rawQuery(where, new String[] {String.valueOf(timestamp)});
+    return readerFor(masterSecret, cursor).getNext();
+  }
+
+  public boolean hasMessage(long timestamp) {
+    String where = DATE_SENT + " = ?";
+    Cursor cursor = rawQuery(where, new String[] {String.valueOf(timestamp)});
+    return cursor != null && cursor.getCount() != 0;
+  }
+
   public Reader getDecryptInProgressMessages(MasterSecret masterSecret) {
     String where = MESSAGE_BOX + " & " + (Types.ENCRYPTION_ASYMMETRIC_BIT) + " != 0";
     return readerFor(masterSecret, rawQuery(where, null));
@@ -396,6 +410,18 @@ public class MmsDatabase extends MessagingDatabase {
     long threadId = getThreadIdForMessage(messageId);
     updateMailboxBitmask(messageId, Types.BASE_TYPE_MASK, Types.BASE_SENT_TYPE, Optional.of(threadId));
     notifyConversationListeners(threadId);
+  }
+
+  public void markAsEdit(long messageId) {
+    SQLiteDatabase db = databaseHelper.getWritableDatabase();
+
+    ContentValues contentValues = new ContentValues(1);
+    contentValues.put(EDIT, 1);
+
+    long threadId = getThreadIdForMessage(messageId);
+    notifyConversationListeners(threadId);
+
+    db.update(TABLE_NAME, contentValues, ID_WHERE, new String[]{String.valueOf(messageId)});
   }
 
   public void markAsRead(SyncMessageId messageId) {
@@ -612,6 +638,23 @@ public class MmsDatabase extends MessagingDatabase {
     }
 
     updateMessageBodyAndType(messageId, body, Types.ENCRYPTION_MASK, type);
+  }
+
+  public void updateMessageBody(MasterSecretUnion masterSecret, long messageId, long threadId, String body) {
+    updateMessageBody(messageId, threadId, getEncryptedBody(masterSecret, body));
+  }
+
+  private Pair<Long, Long> updateMessageBody(long messageId, long threadId, String body) {
+    SQLiteDatabase db = databaseHelper.getWritableDatabase();
+    db.execSQL("UPDATE " + TABLE_NAME + " SET " + BODY + " = ? " +
+                    "WHERE " + ID + " = ?",
+            new String[] {body, messageId + ""});
+
+    DatabaseFactory.getThreadDatabase(context).update(threadId, true);
+    notifyConversationListeners(threadId);
+    notifyConversationListListeners();
+
+    return new Pair<>(messageId, threadId);
   }
 
   private Pair<Long, Long> updateMessageBodyAndType(long messageId, String body, long maskOff, long maskOn) {
@@ -1009,14 +1052,19 @@ public class MmsDatabase extends MessagingDatabase {
   }
 
   public boolean delete(long messageId) {
-    long               threadId           = getThreadIdForMessage(messageId);
-    MmsAddressDatabase addrDatabase       = DatabaseFactory.getMmsAddressDatabase(context);
+    long threadId = getThreadIdForMessage(messageId);
+    MmsAddressDatabase addrDatabase = DatabaseFactory.getMmsAddressDatabase(context);
+      addrDatabase.deleteAddressesForId(messageId);
+
     AttachmentDatabase attachmentDatabase = DatabaseFactory.getAttachmentDatabase(context);
-    attachmentDatabase.deleteAttachmentsForMessage(messageId);
-    addrDatabase.deleteAddressesForId(messageId);
+      attachmentDatabase.deleteAttachmentsForMessage(messageId);
+
+    EditDatabase editDatabase = DatabaseFactory.getEditDatabase(context);
+      editDatabase.delete(messageId, MmsSmsDatabase.MMS_TRANSPORT);
 
     SQLiteDatabase database = databaseHelper.getWritableDatabase();
     database.delete(TABLE_NAME, ID_WHERE, new String[] {messageId+""});
+
     boolean threadDeleted = DatabaseFactory.getThreadDatabase(context).update(threadId, false);
     notifyConversationListeners(threadId);
     return threadDeleted;
@@ -1083,6 +1131,7 @@ public class MmsDatabase extends MessagingDatabase {
   public void deleteAllThreads() {
     DatabaseFactory.getAttachmentDatabase(context).deleteAllAttachments();
     DatabaseFactory.getMmsAddressDatabase(context).deleteAllAddresses();
+    DatabaseFactory.getEditDatabase(context).delete();
 
     SQLiteDatabase database = databaseHelper.getWritableDatabase();
     database.delete(TABLE_NAME, null, null);
@@ -1219,6 +1268,7 @@ public class MmsDatabase extends MessagingDatabase {
       String mismatchDocument = cursor.getString(cursor.getColumnIndexOrThrow(MmsDatabase.MISMATCHED_IDENTITIES));
       String networkDocument  = cursor.getString(cursor.getColumnIndexOrThrow(MmsDatabase.NETWORK_FAILURE));
       int subscriptionId      = cursor.getInt(cursor.getColumnIndexOrThrow(MmsDatabase.SUBSCRIPTION_ID));
+      boolean isEdit          = cursor.getInt(cursor.getColumnIndexOrThrow(MmsSmsColumns.EDIT)) == 1;
 
       Recipients                recipients      = getRecipientsFor(address);
       List<IdentityKeyMismatch> mismatches      = getMismatchedIdentities(mismatchDocument);
@@ -1228,7 +1278,7 @@ public class MmsDatabase extends MessagingDatabase {
       return new MediaMmsMessageRecord(context, id, recipients, recipients.getPrimaryRecipient(),
                                        addressDeviceId, dateSent, dateReceived, dateRead, receiptCount,
                                        threadId, body, slideDeck, partCount, box, mismatches,
-                                       networkFailures, subscriptionId);
+                                       networkFailures, subscriptionId, isEdit);
     }
 
     private Recipients getRecipientsFor(String address) {

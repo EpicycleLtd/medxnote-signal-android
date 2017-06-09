@@ -27,7 +27,6 @@ import android.util.Log;
 
 import com.medxnote.securesms.crypto.MasterSecret;
 import com.medxnote.securesms.notifications.MessageNotifier;
-import com.medxnote.securesms.recipients.Recipient;
 import com.medxnote.securesms.DatabaseUpgradeActivity;
 import com.medxnote.securesms.contacts.ContactsDatabase;
 import com.medxnote.securesms.crypto.DecryptingPartInputStream;
@@ -79,7 +78,10 @@ public class DatabaseFactory {
   private static final int INTRODUCED_MENU_DATABASE                        = 31;
   private static final int INTRODUCED_HIDDEN_MESSAGE                       = 32;
   private static final int INTRODUCED_HIDDEN_MESSAGE_MMS                   = 33;
-  private static final int DATABASE_VERSION                                = 33;
+  private static final int INTRODUCED_EDIT_MESSAGE                         = 34;
+  private static final int INTRODUCED_SMS_EDIT_FIELD                       = 35;
+  private static final int INTRODUCED_MMS_EDIT_FIELD                       = 36;
+  private static final int DATABASE_VERSION                                = 36;
 
   private static final String DATABASE_NAME    = "messages.db";
   private static final Object lock             = new Object();
@@ -105,6 +107,7 @@ public class DatabaseFactory {
   private final ContactsDatabase contactsDatabase;
   private final ReceiptDatabase receiptDatabase;
   private final MenuDatabase menuDatabase;
+  private final EditDatabase editDatabase;
 
   public static DatabaseFactory getInstance(Context context) {
     synchronized (lock) {
@@ -183,6 +186,10 @@ public class DatabaseFactory {
     return getInstance(context).menuDatabase;
   }
 
+  public static EditDatabase getEditDatabase(Context context) {
+    return getInstance(context).editDatabase;
+  }
+
   private DatabaseFactory(Context context) {
     this.databaseHelper              = new DatabaseHelper(context, DATABASE_NAME, null, DATABASE_VERSION);
     this.sms                         = new SmsDatabase(context, databaseHelper);
@@ -202,6 +209,7 @@ public class DatabaseFactory {
     this.contactsDatabase            = new ContactsDatabase(context);
     this.receiptDatabase             = new ReceiptDatabase(context, databaseHelper);
     this.menuDatabase                = new MenuDatabase(context, databaseHelper);
+    this.editDatabase                = new EditDatabase(context, databaseHelper);
   }
 
   public void reset(Context context) {
@@ -222,6 +230,7 @@ public class DatabaseFactory {
     this.recipientPreferenceDatabase.reset(databaseHelper);
     this.receiptDatabase.reset(databaseHelper);
     this.menuDatabase.reset(databaseHelper);
+    this.editDatabase.reset(databaseHelper);
     old.close();
 
     this.address.reset(context);
@@ -535,6 +544,7 @@ public class DatabaseFactory {
       db.execSQL(RecipientPreferenceDatabase.CREATE_TABLE);
       db.execSQL(ReceiptDatabase.CREATE_TABLE);
       db.execSQL(MenuDatabase.CREATE_TABLE);
+      db.execSQL(EditDatabase.CREATE_TABLE);
 
       executeStatements(db, SmsDatabase.CREATE_INDEXS);
       executeStatements(db, MmsDatabase.CREATE_INDEXS);
@@ -543,6 +553,7 @@ public class DatabaseFactory {
       executeStatements(db, MmsAddressDatabase.CREATE_INDEXS);
       executeStatements(db, DraftDatabase.CREATE_INDEXS);
       executeStatements(db, GroupDatabase.CREATE_INDEXS);
+      executeStatements(db, EditDatabase.CREATE_INDEXS);
     }
 
     @Override
@@ -869,10 +880,6 @@ public class DatabaseFactory {
         db.execSQL("ALTER TABLE mms ADD COLUMN hidden INTEGER DEFAULT 0;");
       }
 
-      if (oldVersion < INTRODUCED_MENU_DATABASE) {
-        db.execSQL(MenuDatabase.CREATE_TABLE);
-      }
-
       if (oldVersion < INTRODUCED_HIDDEN_MESSAGE_MMS){
         Cursor cursor = db.rawQuery(
           "SELECT * FROM mms LIMIT 0,1;",
@@ -881,6 +888,21 @@ public class DatabaseFactory {
         if (cursor.getColumnIndex("hidden") < 0){
           db.execSQL("ALTER TABLE mms ADD COLUMN hidden INTEGER DEFAULT 0;");
         }
+      }
+      if (oldVersion < INTRODUCED_MENU_DATABASE) {
+        db.execSQL(MenuDatabase.CREATE_TABLE);
+      }
+
+      if (oldVersion < INTRODUCED_EDIT_MESSAGE) {
+        db.execSQL(EditDatabase.CREATE_TABLE);
+      }
+
+      if (oldVersion < INTRODUCED_SMS_EDIT_FIELD) {
+        db.execSQL("ALTER TABLE sms ADD COLUMN edit INTEGER DEFAULT 0;");
+      }
+
+      if (oldVersion < INTRODUCED_MMS_EDIT_FIELD) {
+        db.execSQL("ALTER TABLE mms ADD COLUMN edit INTEGER DEFAULT 0;");
       }
 
       db.setTransactionSuccessful();

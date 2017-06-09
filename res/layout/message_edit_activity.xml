@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:weightSum="1">
+
+    <FrameLayout
+        android:id="@+id/container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"/>
+
+        <TextView
+            android:id="@+id/edit_history_is_empty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Edit history is empty"
+            android:visibility="gone"
+            android:gravity="center"
+            style="@style/Base.TextAppearance.AppCompat.Title"/>
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"/>
+
+    </FrameLayout>
+
+    <LinearLayout android:id="@+id/compose_bubble"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:clipChildren="false"
+        android:padding="5dp"
+        android:clipToPadding="false"
+        android:gravity="bottom">
+
+        <com.medxnote.securesms.components.ComposeText
+            android:background="@drawable/sent_bubble"
+            style="@style/ComposeEditText"
+            android:id="@+id/embedded_text_editor"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:minHeight="37dp"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            tools:visibility="invisible"
+            android:paddingRight="5dp"
+            android:paddingEnd="5dp"
+            android:paddingLeft="5dp"
+            android:paddingStart="5dp" />
+
+        <com.medxnote.securesms.components.SendButton
+            android:id="@+id/send_button"
+            android:layout_width="50dp"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/conversation_activity__send"
+            android:nextFocusLeft="@+id/embedded_text_editor"
+            android:src="?conversation_transport_sms_indicator"
+            android:background="@drawable/circle_touch_highlight_background" />
+
+    </LinearLayout>
+
+</LinearLayout>

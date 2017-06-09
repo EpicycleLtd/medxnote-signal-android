@@ -28,6 +28,9 @@ import com.medxnote.securesms.database.EncryptingSmsDatabase;
 import com.medxnote.securesms.database.MmsDatabase;
 import com.medxnote.securesms.database.NotInDirectoryException;
 import com.medxnote.securesms.database.TextSecureDirectory;
+import com.medxnote.securesms.jobs.PushEditedGroupJob;
+import com.medxnote.securesms.jobs.PushEditedMediaSendJob;
+import com.medxnote.securesms.jobs.PushEditedTextJob;
 import com.medxnote.securesms.jobs.PushGroupSendJob;
 import com.medxnote.securesms.jobs.PushMediaSendJob;
 import com.medxnote.securesms.jobs.PushTextSendJob;
@@ -194,6 +197,19 @@ public class MessageSender {
     }
   }
 
+  public static void sendEditedMessage(Context context, MessageRecord messageRecord) {
+    long       messageId   = messageRecord.getId();
+    boolean    keyExchange = messageRecord.isKeyExchange();
+
+    if (messageRecord.isMms()) {
+      Recipients recipients = DatabaseFactory.getMmsAddressDatabase(context).getRecipientsForId(messageId);
+      sendEditedMediaMessage(context, recipients, messageId);
+    } else {
+      Recipients recipients  = messageRecord.getRecipients();
+      sendEditedTextMessage(context, recipients, keyExchange, messageId);
+    }
+  }
+
   private static void sendMediaMessage(Context context, MasterSecret masterSecret,
                                        Recipients recipients, boolean forceSms, long messageId)
       throws MmsException
@@ -206,6 +222,20 @@ public class MessageSender {
       sendMediaPush(context, recipients, messageId);
     } else {
       sendMms(context, messageId);
+    }
+  }
+
+  private static void sendEditedMediaMessage(Context context, Recipients recipients, long messageId) {
+    if (isGroupPushSend(recipients)) {
+      sendGroupEditedPush(context, recipients, messageId, -1);
+    } else if (isPushMediaSend(context, recipients)) {
+      sendMediaEditedPush(context, recipients, messageId);
+    }
+  }
+
+  private static void sendEditedTextMessage(Context context, Recipients recipients, boolean isKeyExchange, long messageId) {
+    if (isPushTextSend(context, recipients, isKeyExchange)) {
+      sendTextEditedPush(context, recipients, messageId);
     }
   }
 
@@ -242,9 +272,24 @@ public class MessageSender {
     database.markAsPush(newMessageId);
   }
 
+  private static void sendTextEditedPush(Context context, Recipients recipients, long messageId) {
+    JobManager jobManager = ApplicationContext.getInstance(context).getJobManager();
+    jobManager.add(new PushEditedTextJob(context, messageId, recipients.getPrimaryRecipient().getNumber()));
+  }
+
+  private static void sendGroupEditedPush(Context context, Recipients recipients, long messageId, long filterRecipientId) {
+    JobManager jobManager = ApplicationContext.getInstance(context).getJobManager();
+    jobManager.add(new PushEditedGroupJob(context, messageId, recipients.getPrimaryRecipient().getNumber(), filterRecipientId));
+  }
+
   private static void sendTextPush(Context context, Recipients recipients, long messageId) {
     JobManager jobManager = ApplicationContext.getInstance(context).getJobManager();
     jobManager.add(new PushTextSendJob(context, messageId, recipients.getPrimaryRecipient().getNumber()));
+  }
+
+  private static void sendMediaEditedPush(Context context, Recipients recipients, long messageId) {
+    JobManager jobManager = ApplicationContext.getInstance(context).getJobManager();
+    jobManager.add(new PushEditedMediaSendJob(context, messageId, recipients.getPrimaryRecipient().getNumber()));
   }
 
   private static void sendMediaPush(Context context, Recipients recipients, long messageId) {

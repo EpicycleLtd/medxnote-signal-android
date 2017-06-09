@@ -155,6 +155,15 @@ public class EncryptingSmsDatabase extends SmsDatabase {
     updateMessageBodyAndType(messageId, body, Types.ENCRYPTION_MASK, type);
   }
 
+  public void updateMessageBody(MasterSecretUnion masterSecret, long messageId, long threadId, String body) {
+    if (masterSecret.getMasterSecret().isPresent()) {
+      body = getEncryptedBody(masterSecret.getMasterSecret().get(), body);
+    } else {
+      body = getAsymmetricEncryptedBody(masterSecret.getAsymmetricMasterSecret().get(), body);
+    }
+    updateMessageBody(messageId, threadId, body);
+  }
+
   public Reader getMessages(MasterSecret masterSecret, int skip, int limit) {
     Cursor cursor = super.getMessages(skip, limit);
     return new DecryptingReader(masterSecret, cursor);
@@ -173,6 +182,17 @@ public class EncryptingSmsDatabase extends SmsDatabase {
     reader.close();
 
     if (record == null) throw new NoSuchMessageException("No message for ID: " + messageId);
+    else                return record;
+  }
+
+  public SmsMessageRecord getMessageByTimestamp(MasterSecret masterSecret, long timestamp) throws NoSuchMessageException {
+    Cursor           cursor = super.getMessageByTimestamp(timestamp);
+    DecryptingReader reader = new DecryptingReader(masterSecret, cursor);
+    SmsMessageRecord record = reader.getNext();
+
+    reader.close();
+
+    if (record == null) throw new NoSuchMessageException("No message for TIMESTAMP: " + timestamp);
     else                return record;
   }
 

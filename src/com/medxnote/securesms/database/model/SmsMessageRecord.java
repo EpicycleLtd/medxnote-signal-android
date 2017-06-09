@@ -49,6 +49,21 @@ public class SmsMessageRecord extends MessageRecord {
                           int receiptCount,
                           long type, long threadId,
                           int status, List<IdentityKeyMismatch> mismatches,
+                          int subscriptionId, boolean isEdit) {
+    super(context, id, body, recipients, individualRecipient, recipientDeviceId,
+            dateSent, dateReceived, dateRead, threadId, status, receiptCount, type,
+            mismatches, new LinkedList<NetworkFailure>(), subscriptionId, isEdit);
+  }
+
+  public SmsMessageRecord(Context context, long id,
+                          Body body, Recipients recipients,
+                          Recipient individualRecipient,
+                          int recipientDeviceId,
+                          long dateSent, long dateReceived,
+                          long dateRead,
+                          int receiptCount,
+                          long type, long threadId,
+                          int status, List<IdentityKeyMismatch> mismatches,
                           int subscriptionId){
     super(context, id, body, recipients, individualRecipient, recipientDeviceId,
             dateSent, dateReceived, dateRead, threadId, status, receiptCount, type,

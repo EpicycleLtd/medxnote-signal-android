@@ -188,6 +188,7 @@
   <string name="ConversationFragment_sms">SMS</string>
   <string name="ConversationFragment_deleting">Удаление</string>
   <string name="ConversationFragment_deleting_messages">Удаляем сообщения...</string>
+  <string name="ConversationFragment__selected">Выделено </string>
   <!--ConversationListActivity-->
   <string name="ConversationListActivity_search">Поиск...</string>
   <!--ConversationListFragment-->

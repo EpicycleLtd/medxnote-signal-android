@@ -129,7 +129,7 @@
               android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize">
         <meta-data
             android:name="android.support.PARENT_ACTIVITY"
-            android:value="PsiClass:ConversationListActivity" />
+            android:value="ConversationListActivity" />
     </activity>
 
     <activity android:name=".PromptMmsActivity"
@@ -194,7 +194,7 @@
               android:parentActivityName=".ConversationListActivity">
         <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="PsiClass:ConversationListActivity" />
+                android:value="ConversationListActivity" />
     </activity>
 
     <activity android:name=".ConversationActivity"
@@ -204,7 +204,7 @@
               android:parentActivityName=".ConversationListActivity">
         <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="PsiClass:ConversationListActivity" />
+                android:value="ConversationListActivity" />
     </activity>
 
     <activity android:name=".ConversationPopupActivity"
@@ -373,6 +373,10 @@
 
     <activity android:name=".QrCodeScannerActivity"
               android:screenOrientation="portrait" />
+
+    <activity android:name=".MessageEditActivity"
+        android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"
+        android:windowSoftInputMode="adjustResize" />
 
     <service android:enabled="true" android:name="com.medxnote.redphone.RedPhoneService"/>
 

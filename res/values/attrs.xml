@@ -68,6 +68,8 @@
     <attr name="conversation_item_sent_text_indicator_tab_color" format="reference|color"/>
     <attr name="conversation_item_sent_indicator_text_background" format="reference" />
 
+    <attr name="conversation_item_edited" format="reference" />
+
     <attr name="dialog_info_icon" format="reference" />
     <attr name="dialog_alert_icon" format="reference" />
 
@@ -90,6 +92,7 @@
 
     <attr name="reminder_header_background" format="color"/>
 
+    <attr name="menu_edit_message_icon" format="reference" />
     <attr name="menu_new_conversation_icon" format="reference" />
     <attr name="menu_search_icon" format="reference" />
     <attr name="menu_call_icon" format="reference" />

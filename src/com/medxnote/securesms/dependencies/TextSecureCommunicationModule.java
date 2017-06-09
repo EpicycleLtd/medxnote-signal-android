@@ -12,6 +12,9 @@ import com.medxnote.securesms.jobs.DeliveryReadJob;
 import com.medxnote.securesms.jobs.DeliveryReceiptJob;
 import com.medxnote.securesms.jobs.MultiDeviceContactUpdateJob;
 import com.medxnote.securesms.jobs.MultiDeviceReadUpdateJob;
+import com.medxnote.securesms.jobs.PushEditedGroupJob;
+import com.medxnote.securesms.jobs.PushEditedMediaSendJob;
+import com.medxnote.securesms.jobs.PushEditedTextJob;
 import com.medxnote.securesms.jobs.PushMediaSendJob;
 import com.medxnote.securesms.jobs.PushNotificationReceiveJob;
 import com.medxnote.securesms.jobs.RefreshAttributesJob;
@@ -40,6 +43,9 @@ import dagger.Provides;
                                      DeliveryReceiptJob.class,
                                      PushGroupSendJob.class,
                                      PushTextSendJob.class,
+                                     PushEditedTextJob.class,
+                                     PushEditedMediaSendJob.class,
+                                     PushEditedGroupJob.class,
                                      PushMediaSendJob.class,
                                      AttachmentDownloadJob.class,
                                      RefreshPreKeysJob.class,
@@ -89,8 +95,8 @@ public class TextSecureCommunicationModule {
                                          BuildConfig.USER_AGENT);
   }
 
-  public static interface TextSecureMessageSenderFactory {
-    public SignalServiceMessageSender create();
+  public interface TextSecureMessageSenderFactory {
+    SignalServiceMessageSender create();
   }
 
   private static class DynamicCredentialsProvider implements CredentialsProvider {

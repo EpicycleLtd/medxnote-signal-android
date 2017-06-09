@@ -108,6 +108,7 @@ public class ConversationItem extends LinearLayout
   private AvatarImageView    contactPhoto;
   private DeliveryStatusView deliveryStatusIndicator;
   private AlertView alertView;
+  private ImageView messageEditStatus;
 
   private @NonNull  Set<MessageRecord>  batchSelected = new HashSet<>();
   private @Nullable Recipients          conversationRecipients;
@@ -156,6 +157,7 @@ public class ConversationItem extends LinearLayout
     this.bodyBubble              =                      findViewById(R.id.body_bubble);
     this.mediaThumbnail          = (ThumbnailView)      findViewById(R.id.image_view);
     this.audioView               = (AudioView)          findViewById(R.id.audio_view);
+    this.messageEditStatus       = (ImageView)          findViewById(R.id.message_edit_status);
 
     setOnClickListener(new ClickListener(null));
     PassthroughClickListener        passthroughClickListener = new PassthroughClickListener();
@@ -200,6 +202,7 @@ public class ConversationItem extends LinearLayout
     setMinimumWidth();
     setMediaAttributes(messageRecord);
     setSimInfo(messageRecord);
+    setEditStatus(messageRecord);
   }
 
   private void initializeAttributes() {
@@ -224,6 +227,10 @@ public class ConversationItem extends LinearLayout
   }
 
   /// MessageRecord Attribute Parsers
+
+  private void setEditStatus(MessageRecord messageRecord) {
+      messageEditStatus.setVisibility(messageRecord.isEdit() ? VISIBLE : GONE);
+  }
 
   private void setBubbleState(MessageRecord messageRecord, Recipient recipient) {
     if (messageRecord.isOutgoing()) {

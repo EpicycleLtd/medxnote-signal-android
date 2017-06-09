@@ -186,6 +186,7 @@
     <string name="ConversationFragment_sms">SMS</string>
     <string name="ConversationFragment_deleting">Deleting</string>
     <string name="ConversationFragment_deleting_messages">Deleting messages...</string>
+    <string name="ConversationFragment__selected">Selected </string>
 
     <!-- ConversationListActivity -->
     <string name="ConversationListActivity_search">Search...</string>
@@ -1073,6 +1074,7 @@
     <string name="conversation_callable_secure__menu_call">Medxnote call</string>
 
     <!-- conversation_context -->
+    <string name="conversation_context__menu_edit_message">Edit message</string>
     <string name="conversation_context__menu_message_details">Message details</string>
     <string name="conversation_context__menu_copy_text">Copy text</string>
     <string name="conversation_context__menu_delete_message">Delete message</string>
@@ -1217,6 +1219,9 @@
     <string name="QrCodeScannerActivity__title">Scan barcode</string>
     <string name="AttachmentTypeSelectorAdapter_qr_code">QR Code</string>
     <string name="preferences__automatically_delete_older_messages_once_a_conversation_exceeds_a_specified_length">Automatically delete older messages once a conversation exceeds a specified length</string>
+
+    <!-- MessageEditActivity -->
+    <string name="MessageEditActivity__edit_message">Edit message</string>
     <!-- EOF -->
 
 </resources>

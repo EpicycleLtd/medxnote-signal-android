@@ -76,6 +76,7 @@ public class ConversationFragment extends Fragment
 
   private ConversationFragmentListener listener;
 
+  private ConversationAdapter mConversationAdapter;
   private MasterSecret masterSecret;
   private Recipients recipients;
   private long         threadId;
@@ -129,8 +130,8 @@ public class ConversationFragment extends Fragment
   public void onResume() {
     super.onResume();
 
-    if (list.getAdapter() != null) {
-      list.getAdapter().notifyDataSetChanged();
+    if (mConversationAdapter != null) {
+      mConversationAdapter.notifyDataSetChanged();
     }
   }
 
@@ -158,7 +159,8 @@ public class ConversationFragment extends Fragment
 
   private void initializeListAdapter() {
     if (this.recipients != null && this.threadId != -1) {
-      list.setAdapter(new ConversationAdapter(getActivity(), masterSecret, locale, selectionClickListener, null, this.recipients));
+      mConversationAdapter = new ConversationAdapter(getActivity(), masterSecret, locale, selectionClickListener, null, this.recipients);
+      list.setAdapter(mConversationAdapter);
       getLoaderManager().restartLoader(0, Bundle.EMPTY, this);
       list.getItemAnimator().setSupportsChangeAnimations(false);
       list.getItemAnimator().setMoveDuration(120);
@@ -166,20 +168,26 @@ public class ConversationFragment extends Fragment
   }
 
   private void setCorrectMenuVisibility(Menu menu) {
-    Set<MessageRecord> messageRecords = getListAdapter().getSelectedItems();
+    Set<MessageRecord> messageRecords = mConversationAdapter.getSelectedItems();
 
     if (actionMode != null && messageRecords.size() == 0) {
       actionMode.finish();
       return;
     }
 
+    int selectedItems = mConversationAdapter.getSelectedItems().size();
+    if (actionMode != null && selectedItems != 0) {
+      actionMode.setTitle(getString(R.string.ConversationFragment__selected) + "(" + selectedItems + ")");
+    }
+
     if (messageRecords.size() > 1) {
+      menu.findItem(R.id.menu_context_edit_message).setVisible(false);
       menu.findItem(R.id.menu_context_forward).setVisible(false);
       menu.findItem(R.id.menu_context_details).setVisible(false);
 //      menu.findItem(R.id.menu_context_save_attachment).setVisible(false);
       menu.findItem(R.id.menu_context_resend).setVisible(false);
     } else {
-      MessageRecord messageRecord = messageRecords.iterator().next();
+      MessageRecord messageRecord = getSelectedMessageRecord();
 
       menu.findItem(R.id.menu_context_resend).setVisible(messageRecord.isFailed());
 //      menu.findItem(R.id.menu_context_save_attachment).setVisible(messageRecord.isMms()              &&
@@ -189,15 +197,12 @@ public class ConversationFragment extends Fragment
       menu.findItem(R.id.menu_context_forward).setVisible(true);
       menu.findItem(R.id.menu_context_details).setVisible(true);
       menu.findItem(R.id.menu_context_copy).setVisible(true);
+      menu.findItem(R.id.menu_context_edit_message).setVisible(true);
     }
   }
 
-  private ConversationAdapter getListAdapter() {
-    return (ConversationAdapter) list.getAdapter();
-  }
-
   private MessageRecord getSelectedMessageRecord() {
-    Set<MessageRecord> messageRecords = getListAdapter().getSelectedItems();
+    Set<MessageRecord> messageRecords = mConversationAdapter.getSelectedItems();
 
     if (messageRecords.size() == 1) return messageRecords.iterator().next();
     else                            throw new AssertionError();
@@ -253,6 +258,52 @@ public class ConversationFragment extends Fragment
         clipboard.setText(result);
   }
 
+  private void handleEditMessage(MessageRecord message) {
+    Intent intent = new Intent(getActivity(), MessageEditActivity.class);
+      intent.putExtra(MessageEditActivity.MESSAGE_ID_EXTRA, message.getId());
+      intent.putExtra(MessageEditActivity.MESSAGE_TRANSPORT_EXTRA, message.isMms() ? MmsSmsDatabase.MMS_TRANSPORT : MmsSmsDatabase.SMS_TRANSPORT);
+      intent.putExtra(MessageEditActivity.THREAD_ID_EXTRA, threadId);
+      intent.putExtra(MessageEditActivity.MESSAGE_OUTGOING_EXTRA, message.isOutgoing());
+      intent.putExtra(ConversationActivity.RECIPIENTS_EXTRA, recipients.getIds());
+    startActivityForResult(intent, 1);
+  }
+
+  @Override
+  public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+    if (requestCode == 1) {
+      if (resultCode == Activity.RESULT_OK) {
+        handleSendEditedMessage(data.getLongExtra(MessageEditActivity.MESSAGE_ID_EXTRA, -1),
+                data.getStringExtra(MessageEditActivity.MESSAGE_TRANSPORT_EXTRA));
+      }
+    }
+  }
+
+  private void handleSendEditedMessage(long messageId, final String type) {
+    final Context context = getActivity().getApplicationContext();
+    new AsyncTask<Long, Void, Void>() {
+      @Override
+      protected Void doInBackground(Long... id) {
+        long messageId = id[0];
+        MessageRecord messageRecord;
+        switch (type) {
+          case MmsSmsDatabase.SMS_TRANSPORT:
+            messageRecord = DatabaseFactory.getEncryptingSmsDatabase(context).readerFor(
+                    DatabaseFactory.getEncryptingSmsDatabase(context).getMessage(messageId)).getNext();
+            break;
+          case MmsSmsDatabase.MMS_TRANSPORT:
+            messageRecord = DatabaseFactory.getMmsDatabase(context).readerFor(masterSecret,
+                    DatabaseFactory.getMmsDatabase(context).getMessage(messageId)).getNext();
+            break;
+          default:
+            throw new AssertionError("Unknown transport type.");
+        }
+        MessageSender.sendEditedMessage(context, messageRecord);
+        return null;
+      }
+    }.execute(messageId);
+  }
+
   private void handleDeleteMessages(final Set<MessageRecord> messageRecords) {
     int                 messagesCount = messageRecords.size();
     AlertDialog.Builder builder       = new AlertDialog.Builder(getActivity());
@@ -299,11 +350,11 @@ public class ConversationFragment extends Fragment
 
   private void handleDisplayDetails(MessageRecord message) {
     Intent intent = new Intent(getActivity(), MessageDetailsActivity.class);
-    intent.putExtra(MessageDetailsActivity.MASTER_SECRET_EXTRA, masterSecret);
-    intent.putExtra(MessageDetailsActivity.MESSAGE_ID_EXTRA, message.getId());
-    intent.putExtra(MessageDetailsActivity.THREAD_ID_EXTRA, threadId);
-    intent.putExtra(MessageDetailsActivity.TYPE_EXTRA, message.isMms() ? MmsSmsDatabase.MMS_TRANSPORT : MmsSmsDatabase.SMS_TRANSPORT);
-    intent.putExtra(MessageDetailsActivity.RECIPIENTS_IDS_EXTRA, recipients.getIds());
+      intent.putExtra(MessageDetailsActivity.MASTER_SECRET_EXTRA, masterSecret);
+      intent.putExtra(MessageDetailsActivity.MESSAGE_ID_EXTRA, message.getId());
+      intent.putExtra(MessageDetailsActivity.THREAD_ID_EXTRA, threadId);
+      intent.putExtra(MessageDetailsActivity.TYPE_EXTRA, message.isMms() ? MmsSmsDatabase.MMS_TRANSPORT : MmsSmsDatabase.SMS_TRANSPORT);
+      intent.putExtra(MessageDetailsActivity.RECIPIENTS_IDS_EXTRA, recipients.getIds());
     startActivity(intent);
   }
 
@@ -326,7 +377,11 @@ public class ConversationFragment extends Fragment
     new AsyncTask<MessageRecord, Void, Void>() {
       @Override
       protected Void doInBackground(MessageRecord... messageRecords) {
-        MessageSender.resend(context, masterSecret, messageRecords[0]);
+        MessageRecord messageRecord = messageRecords[0];
+        if (messageRecord.getRecipients().isGroupRecipient()) {
+          MessageSender.resendGroupMessage(context, masterSecret, messageRecord, messageRecord.getIdentityKeyMismatches().get(0).getRecipientId());
+        }
+        MessageSender.resend(context, masterSecret, messageRecord);
         return null;
       }
     }.execute(message);
@@ -358,20 +413,20 @@ public class ConversationFragment extends Fragment
 
   @Override
   public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-    if (list.getAdapter() != null) {
+    if (mConversationAdapter != null) {
       if (cursor.getCount() >= PARTIAL_CONVERSATION_LIMIT && ((ConversationLoader)loader).hasLimit()) {
-        getListAdapter().setFooterView(loadMoreView);
+        mConversationAdapter.setFooterView(loadMoreView);
       } else {
-        getListAdapter().setFooterView(null);
+        mConversationAdapter.setFooterView(null);
       }
-      getListAdapter().changeCursor(cursor);
+      mConversationAdapter.changeCursor(cursor);
     }
   }
 
   @Override
   public void onLoaderReset(Loader<Cursor> arg0) {
-    if (list.getAdapter() != null) {
-      getListAdapter().changeCursor(null);
+    if (mConversationAdapter != null) {
+      mConversationAdapter.changeCursor(null);
     }
   }
 
@@ -385,8 +440,8 @@ public class ConversationFragment extends Fragment
     public void onItemClick(ConversationItem item) {
       if (actionMode != null) {
         MessageRecord messageRecord = item.getMessageRecord();
-        ((ConversationAdapter) list.getAdapter()).toggleSelection(messageRecord);
-        list.getAdapter().notifyDataSetChanged();
+        mConversationAdapter.toggleSelection(messageRecord);
+        mConversationAdapter.notifyDataSetChanged();
 
         setCorrectMenuVisibility(actionMode.getMenu());
       }
@@ -395,11 +450,13 @@ public class ConversationFragment extends Fragment
     @Override
     public void onItemLongClick(ConversationItem item) {
       if (actionMode == null) {
-        ((ConversationAdapter) list.getAdapter()).toggleSelection(item.getMessageRecord());
-        list.getAdapter().notifyDataSetChanged();
+        mConversationAdapter.toggleSelection(item.getMessageRecord());
+        mConversationAdapter.notifyDataSetChanged();
 
         actionMode = ((AppCompatActivity)getActivity()).startSupportActionMode(actionModeCallback);
       }
+
+      setCorrectMenuVisibility(actionMode.getMenu());
     }
   }
 
@@ -429,8 +486,8 @@ public class ConversationFragment extends Fragment
 
     @Override
     public void onDestroyActionMode(ActionMode mode) {
-      ((ConversationAdapter)list.getAdapter()).clearSelection();
-      list.getAdapter().notifyDataSetChanged();
+      mConversationAdapter.clearSelection();
+      mConversationAdapter.notifyDataSetChanged();
 
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
         getActivity().getWindow().setStatusBarColor(statusBarColor);
@@ -443,11 +500,15 @@ public class ConversationFragment extends Fragment
     public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
       switch(item.getItemId()) {
         case R.id.menu_context_copy:
-          handleCopyMessage(getListAdapter().getSelectedItems());
+          handleCopyMessage(mConversationAdapter.getSelectedItems());
           actionMode.finish();
           return true;
         case R.id.menu_context_delete_message:
-          handleDeleteMessages(getListAdapter().getSelectedItems());
+          handleDeleteMessages(mConversationAdapter.getSelectedItems());
+          actionMode.finish();
+          return true;
+        case R.id.menu_context_edit_message:
+          handleEditMessage(getSelectedMessageRecord());
           actionMode.finish();
           return true;
         case R.id.menu_context_details:

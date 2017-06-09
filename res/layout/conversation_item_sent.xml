@@ -102,6 +102,16 @@
                           android:paddingRight="4dp"
                           android:layout_gravity="right">
 
+                <ImageView
+                    android:id="@+id/message_edit_status"
+                    android:src="?conversation_item_edited"
+                    android:visibility="gone"
+                    android:layout_width="13dp"
+                    android:layout_height="13dp"
+                    android:layout_marginRight="3dp"
+                    android:layout_marginEnd="3dp"
+                    android:layout_gravity="center" />
+
                 <TextView android:id="@+id/group_message_status"
                           android:layout_width="wrap_content"
                           android:layout_height="wrap_content"
@@ -126,7 +136,8 @@
                           android:textSize="@dimen/conversation_item_date_text_size"
                           android:paddingTop="1dip"
                           android:paddingBottom="2dp"
-                          tools:text="30 mins" />
+                          tools:text="30 mins"
+                          android:gravity="center_vertical" />
 
                 <TextView android:id="@+id/sim_info"
                           android:autoLink="none"
@@ -145,7 +156,8 @@
                           android:paddingStart="4dp"
                           android:visibility="gone"
                           tools:visibility="visible"
-                          tools:text="to SIM1"/>
+                          tools:text="to SIM1"
+                          android:gravity="center_vertical" />
 
                 <com.medxnote.securesms.components.DeliveryStatusView
                         android:id="@+id/delivery_status"

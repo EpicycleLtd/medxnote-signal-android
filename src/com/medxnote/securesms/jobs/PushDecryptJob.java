@@ -17,6 +17,8 @@ import com.medxnote.securesms.database.EncryptingSmsDatabase;
 import com.medxnote.securesms.database.MmsDatabase;
 import com.medxnote.securesms.database.NoSuchMessageException;
 import com.medxnote.securesms.database.PushDatabase;
+import com.medxnote.securesms.database.model.MessageRecord;
+import com.medxnote.securesms.database.model.SmsMessageRecord;
 import com.medxnote.securesms.mms.IncomingMediaMessage;
 import com.medxnote.securesms.notifications.MessageNotifier;
 import com.medxnote.securesms.recipients.Recipient;
@@ -74,7 +76,7 @@ import ws.com.google.android.mms.MmsException;
 
 public class PushDecryptJob extends ContextJob {
 
-  private static final Long    serialVersionUID = 2L;
+  private static final Long serialVersionUID = 2L;
   private static final int BUBBLES = 1;
   private static final int MENU  = 2;
 
@@ -151,7 +153,9 @@ public class PushDecryptJob extends ContextJob {
         else {
           handleTextMessage(masterSecret, envelope, message, smsMessageId);
           long threadId = getThreadIdFromDataMessage(message, envelope);
-          handlePredefinedAnswers(message, threadId);
+          if (message.getPredefinedAnswers().isPresent()) {
+            handlePredefinedAnswers(message, threadId);
+          }
         }
       } else if (content.getSyncMessage().isPresent()) {
         SignalServiceSyncMessage syncMessage = content.getSyncMessage().get();
@@ -194,7 +198,6 @@ public class PushDecryptJob extends ContextJob {
       int type = mPredefinedAnswers.getType();
       switch (type) {
         case MENU:
-          Log.d(TAG, "handlePredefinedAnswers: " + data);
           if (threadId != -1) {
             DatabaseFactory.getMenuDatabase(context).insert(threadId, data);
           }
@@ -330,8 +333,8 @@ public class PushDecryptJob extends ContextJob {
                                   @NonNull Optional<Long> smsMessageId)
           throws MmsException
   {
-    MmsDatabase          database     = DatabaseFactory.getMmsDatabase(context);
-    String               localNumber  = TextSecurePreferences.getLocalNumber(context);
+    MmsDatabase database = DatabaseFactory.getMmsDatabase(context);
+    String localNumber = TextSecurePreferences.getLocalNumber(context);
     IncomingMediaMessage mediaMessage = new IncomingMediaMessage(masterSecret, envelope.getSource(),
             localNumber, message.getTimestamp(), -1,
             Optional.fromNullable(envelope.getRelay()),
@@ -339,21 +342,33 @@ public class PushDecryptJob extends ContextJob {
             message.getGroupInfo(),
             message.getAttachments());
 
-    Pair<Long, Long>         messageAndThreadId = database.insertSecureDecryptedMessageInbox(masterSecret, mediaMessage, -1);
-    List<DatabaseAttachment> attachments        = DatabaseFactory.getAttachmentDatabase(context).getAttachmentsForMessage(messageAndThreadId.first);
+    MessageRecord messageRecord = database.getMessageByTimestamp(masterSecret.getMasterSecret().get(),
+            mediaMessage.getSentTimeMillis());
 
-    for (DatabaseAttachment attachment : attachments) {
-      ApplicationContext.getInstance(context)
-              .getJobManager()
-              .add(new AttachmentDownloadJob(context, messageAndThreadId.first,
-                      attachment.getAttachmentId()));
+    if (messageRecord != null) {
+      long messageId = messageRecord.getId();
+      database.updateMessageBody(masterSecret, messageId, mediaMessage.getBody());
+
+      database.markAsEdit(messageId);
+
+      DatabaseFactory.getEditDatabase(context).insert(masterSecret, messageRecord);
+    } else {
+      Pair<Long, Long> messageAndThreadId = database.insertSecureDecryptedMessageInbox(masterSecret, mediaMessage, -1);
+      List<DatabaseAttachment> attachments = DatabaseFactory.getAttachmentDatabase(context).getAttachmentsForMessage(messageAndThreadId.first);
+
+      for (DatabaseAttachment attachment : attachments) {
+        ApplicationContext.getInstance(context)
+                .getJobManager()
+                .add(new AttachmentDownloadJob(context, messageAndThreadId.first,
+                        attachment.getAttachmentId()));
+      }
+
+      if (smsMessageId.isPresent()) {
+        DatabaseFactory.getSmsDatabase(context).deleteMessage(smsMessageId.get());
+      }
+
+      MessageNotifier.updateNotification(context, masterSecret.getMasterSecret().orNull(), messageAndThreadId.second);
     }
-
-    if (smsMessageId.isPresent()) {
-      DatabaseFactory.getSmsDatabase(context).deleteMessage(smsMessageId.get());
-    }
-
-    MessageNotifier.updateNotification(context, masterSecret.getMasterSecret().orNull(), messageAndThreadId.second);
   }
 
   private long handleSynchronizeSentMediaMessage(@NonNull MasterSecretUnion masterSecret,
@@ -396,23 +411,41 @@ public class PushDecryptJob extends ContextJob {
     EncryptingSmsDatabase database = DatabaseFactory.getEncryptingSmsDatabase(context);
     String                body     = message.getBody().isPresent() ? message.getBody().get() : "";
 
-    Pair<Long, Long> messageAndThreadId;
+    Pair<Long, Long> messageAndThreadId = null;
+    IncomingTextMessage textMessage;
 
     if (smsMessageId.isPresent() && !message.getGroupInfo().isPresent()) {
       messageAndThreadId = database.updateBundleMessageBody(masterSecret, smsMessageId.get(), body);
     } else {
-      IncomingTextMessage textMessage = new IncomingTextMessage(envelope.getSource(),
+      textMessage = new IncomingTextMessage(envelope.getSource(),
               envelope.getSourceDevice(),
               message.getTimestamp(), body,
               message.getGroupInfo());
 
       textMessage = new IncomingEncryptedMessage(textMessage, body);
-      messageAndThreadId = database.insertMessageInbox(masterSecret, textMessage);
 
-      if (smsMessageId.isPresent()) database.deleteMessage(smsMessageId.get());
+      if (smsMessageId.isPresent()) {
+        database.deleteMessage(smsMessageId.get());
+      }
+
+      try {
+        SmsMessageRecord smsMessage = database.getMessageByTimestamp(masterSecret.getMasterSecret().get(), message.getTimestamp());
+
+          long id = smsMessage.getId();
+          database.updateMessageBody(masterSecret, id, smsMessage.getThreadId(), body);
+
+          DatabaseFactory.getSmsDatabase(context).markAsEdit(id);
+          DatabaseFactory.getEditDatabase(context).insert(masterSecret, smsMessage);
+
+      } catch (NoSuchMessageException e) {
+        e.printStackTrace();
+        messageAndThreadId = database.insertMessageInbox(masterSecret, textMessage);
+      }
+
     }
-
-    MessageNotifier.updateNotification(context, masterSecret.getMasterSecret().orNull(), messageAndThreadId.second);
+    if (messageAndThreadId != null) {
+      MessageNotifier.updateNotification(context, masterSecret.getMasterSecret().orNull(), messageAndThreadId.second);
+    }
   }
 
   private long handleSynchronizeSentTextMessage(@NonNull MasterSecretUnion masterSecret,

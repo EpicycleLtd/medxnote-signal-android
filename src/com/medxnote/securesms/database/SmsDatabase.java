@@ -82,7 +82,8 @@ public class SmsDatabase extends MessagingDatabase {
     DATE_SENT + " INTEGER, " + DATE_READ + " INTEGER, " + PROTOCOL + " INTEGER, " + READ + " INTEGER DEFAULT 0, " +
     STATUS + " INTEGER DEFAULT -1," + TYPE + " INTEGER, " + REPLY_PATH_PRESENT + " INTEGER, " +
     RECEIPT_COUNT + " INTEGER DEFAULT 0," + SUBJECT + " TEXT, " + BODY + " TEXT, " +
-    MISMATCHED_IDENTITIES + " TEXT DEFAULT NULL, " + SERVICE_CENTER + " TEXT, " + SUBSCRIPTION_ID + " INTEGER DEFAULT -1, " + HIDDEN + " INTEGER DEFAULT 0);";
+    MISMATCHED_IDENTITIES + " TEXT DEFAULT NULL, " + SERVICE_CENTER + " TEXT, " +
+    SUBSCRIPTION_ID + " INTEGER DEFAULT -1, " + HIDDEN + " INTEGER DEFAULT 0, " + EDIT + " INTEGER DEFAULT 0);";
 
   public static final String[] CREATE_INDEXS = {
     "CREATE INDEX IF NOT EXISTS sms_thread_id_index ON " + TABLE_NAME + " (" + THREAD_ID + ");",
@@ -102,7 +103,7 @@ public class SmsDatabase extends MessagingDatabase {
       DATE_READ + " AS " + NORMALIZED_DATE_READ,
       PROTOCOL, READ, STATUS, TYPE,
       REPLY_PATH_PRESENT, SUBJECT, BODY, SERVICE_CENTER, RECEIPT_COUNT,
-      MISMATCHED_IDENTITIES, SUBSCRIPTION_ID, HIDDEN
+      MISMATCHED_IDENTITIES, SUBSCRIPTION_ID, HIDDEN, EDIT
   };
 
   private static final EarlyReceiptCache earlyReceiptCache = new EarlyReceiptCache();
@@ -337,6 +338,18 @@ public class SmsDatabase extends MessagingDatabase {
     updateTypeBitmask(id, Types.BASE_TYPE_MASK, Types.BASE_SENT_FAILED_TYPE);
   }
 
+  public void markAsEdit(long messageId) {
+    SQLiteDatabase db = databaseHelper.getWritableDatabase();
+
+    ContentValues contentValues = new ContentValues(1);
+      contentValues.put(EDIT, 1);
+
+    long threadId = getThreadIdForMessage(messageId);
+    notifyConversationListeners(threadId);
+
+    db.update(TABLE_NAME, contentValues, ID_WHERE, new String[]{String.valueOf(messageId)});
+  }
+
   public void incrementDeliveryReceiptCount(SyncMessageId messageId) {
     SQLiteDatabase database     = databaseHelper.getWritableDatabase();
     Cursor         cursor       = null;
@@ -469,6 +482,17 @@ public class SmsDatabase extends MessagingDatabase {
 
     long threadId = getThreadIdForMessage(messageId);
 
+    DatabaseFactory.getThreadDatabase(context).update(threadId, true);
+    notifyConversationListeners(threadId);
+    notifyConversationListListeners();
+
+    return new Pair<>(messageId, threadId);
+  }
+
+  protected Pair<Long, Long> updateMessageBody(long messageId, long threadId, String body) {
+    SQLiteDatabase db = databaseHelper.getWritableDatabase();
+      db.execSQL("UPDATE " +
+              TABLE_NAME + " SET " + BODY + " = ? WHERE " + ID + " = ?", new String[]{body, String.valueOf(messageId)});
     DatabaseFactory.getThreadDatabase(context).update(threadId, true);
     notifyConversationListeners(threadId);
     notifyConversationListListeners();
@@ -724,11 +748,21 @@ public class SmsDatabase extends MessagingDatabase {
     return cursor;
   }
 
+  public Cursor getMessageByTimestamp(long timestamp) {
+    SQLiteDatabase db = databaseHelper.getReadableDatabase();
+    return db.query(TABLE_NAME, MESSAGE_PROJECTION,
+            DATE_SENT + " = ?", new String[]{timestamp + ""}, null, null, null);
+  }
+
   public boolean deleteMessage(long messageId) {
     Log.w("MessageDatabase", "Deleting: " + messageId);
     SQLiteDatabase db = databaseHelper.getWritableDatabase();
     long threadId     = getThreadIdForMessage(messageId);
     db.delete(TABLE_NAME, ID_WHERE, new String[] {messageId+""});
+
+    EditDatabase editDatabase = DatabaseFactory.getEditDatabase(context);
+      editDatabase.delete(messageId, MmsSmsDatabase.SMS_TRANSPORT);
+
     boolean threadDeleted = DatabaseFactory.getThreadDatabase(context).update(threadId, false);
     notifyConversationListeners(threadId);
     return threadDeleted;
@@ -846,6 +880,7 @@ public class SmsDatabase extends MessagingDatabase {
       int receiptCount        = cursor.getInt(cursor.getColumnIndexOrThrow(SmsDatabase.RECEIPT_COUNT));
       String mismatchDocument = cursor.getString(cursor.getColumnIndexOrThrow(SmsDatabase.MISMATCHED_IDENTITIES));
       int subscriptionId      = cursor.getInt(cursor.getColumnIndexOrThrow(SmsDatabase.SUBSCRIPTION_ID));
+      boolean isEdit          = cursor.getInt(cursor.getColumnIndexOrThrow(SmsDatabase.EDIT)) == 1;
 
       List<IdentityKeyMismatch> mismatches = getMismatches(mismatchDocument);
       Recipients                recipients = getRecipientsFor(address);
@@ -855,7 +890,7 @@ public class SmsDatabase extends MessagingDatabase {
                                   recipients.getPrimaryRecipient(),
                                   addressDeviceId,
                                   dateSent, dateReceived, dateRead, receiptCount, type,
-                                  threadId, status, mismatches, subscriptionId);
+                                  threadId, status, mismatches, subscriptionId, isEdit);
     }
 
     private Recipients getRecipientsFor(String address) {

@@ -44,6 +44,7 @@ public abstract class DisplayRecord {
   private final Body       body;
   private final int        deliveryStatus;
   private final int        receiptCount;
+  private final boolean    isEdit;
 
   public DisplayRecord(Context context, Body body, Recipients recipients, long dateSent,
                        long dateReceived, long dateRead, long threadId, int deliveryStatus, int receiptCount, long type) {
@@ -57,6 +58,7 @@ public abstract class DisplayRecord {
     this.receiptCount = receiptCount;
     this.deliveryStatus = deliveryStatus;
     this.dateRead = dateRead;
+    this.isEdit = false;
   }
 
   public DisplayRecord(Context context, Body body, Recipients recipients, long dateSent,
@@ -72,6 +74,26 @@ public abstract class DisplayRecord {
     this.receiptCount         = receiptCount;
     this.deliveryStatus       = deliveryStatus;
     this.dateRead             = dateReceived;
+    this.isEdit               = false;
+  }
+
+  public DisplayRecord(Context context, Body body, Recipients recipients, long dateSent,
+                       long dateReceived, long dateRead, long threadId, int deliveryStatus, int receiptCount, long type, boolean isEdit) {
+    this.context = context.getApplicationContext();
+    this.threadId = threadId;
+    this.recipients = recipients;
+    this.dateSent = dateSent;
+    this.dateReceived = dateReceived;
+    this.type = type;
+    this.body = body;
+    this.receiptCount = receiptCount;
+    this.deliveryStatus = deliveryStatus;
+    this.dateRead = dateRead;
+    this.isEdit = isEdit;
+  }
+
+  public boolean isEdit() {
+    return isEdit;
   }
 
   public Body getBody() {
@@ -91,6 +113,10 @@ public abstract class DisplayRecord {
 
   public boolean isOutgoing() {
     return MmsSmsColumns.Types.isOutgoingMessageType(type);
+  }
+
+  public boolean isIncoming() {
+    return MmsSmsColumns.Types.isInboxType(type);
   }
 
   public abstract SpannableString getDisplayBody();

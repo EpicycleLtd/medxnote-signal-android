@@ -402,6 +402,7 @@ public class ThreadDatabase extends Database {
     DatabaseFactory.getSmsDatabase(context).deleteThread(threadId);
     DatabaseFactory.getMmsDatabase(context).deleteThread(threadId);
     DatabaseFactory.getDraftDatabase(context).clearDrafts(threadId);
+    DatabaseFactory.getEditDatabase(context).deleteThread(threadId);
     deleteThread(threadId);
     notifyConversationListeners(threadId);
     notifyConversationListListeners();
@@ -413,6 +414,7 @@ public class ThreadDatabase extends Database {
     DatabaseFactory.getMmsDatabase(context).deleteThreads(selectedConversations);
 
     DatabaseFactory.getDraftDatabase(context).clearDrafts(selectedConversations);
+    DatabaseFactory.getEditDatabase(context).delete(selectedConversations);
     deleteThreads(selectedConversations);
     notifyConversationListeners(selectedConversations);
     notifyConversationListListeners();
