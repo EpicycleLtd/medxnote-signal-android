@@ -7,7 +7,7 @@
 
     <uses-sdk tools:overrideLibrary="com.amulyakhare.textdrawable,com.astuetz.pagerslidingtabstrip,pl.tajchert.waitingdots,com.h6ah4i.android.multiselectlistpreferencecompat"/>
 
-    <permission android:name="com.medxnote.securesms.ACCESS_SECRETS"
+    <permission android:name="${applicationId}.ACCESS_SECRETS"
                 android:label="Access to TextSecure Secrets"
                 android:protectionLevel="signature" />
 
@@ -29,7 +29,7 @@
     <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
     <uses-feature android:name="android.hardware.telephony" android:required="false"/>
 
-    <uses-permission android:name="com.medxnote.securesms.ACCESS_SECRETS"/>
+    <uses-permission android:name="${applicationId}.ACCESS_SECRETS"/>
     <uses-permission android:name="android.permission.READ_PROFILE"/>
     <uses-permission android:name="android.permission.WRITE_PROFILE"/>
     <uses-permission android:name="android.permission.BROADCAST_WAP_PUSH"
@@ -93,9 +93,9 @@
     <uses-permission android:name="android.permission.READ_LOGS"/>
     <uses-permission android:name="android.permission.WRITE_CALL_LOG"/>
 
-    <permission android:name="com.medxnote.securesms.permission.C2D_MESSAGE"
+    <permission android:name="${applicationId}.permission.C2D_MESSAGE"
                 android:protectionLevel="signature" />
-    <uses-permission android:name="com.medxnote.securesms.permission.C2D_MESSAGE" />
+    <uses-permission android:name="${applicationId}.permission.C2D_MESSAGE" />
 
     <application android:name=".ApplicationContext"
                  android:icon="@drawable/ic_launcher"
@@ -437,7 +437,7 @@
     <receiver android:name=".service.SmsDeliveryListener"
               android:exported="true">
         <intent-filter>
-            <action android:name="com.medxnote.securesms.services.MESSAGE_SENT"/>
+            <action android:name="${applicationId}.services.MESSAGE_SENT"/>
         </intent-filter>
     </receiver>
 
@@ -459,7 +459,7 @@
               android:enabled="true"
               android:exported="true">
         <intent-filter>
-            <action android:name="com.medxnote.securesms.notifications.CLEAR"/>
+            <action android:name="${applicationId}.notifications.CLEAR"/>
         </intent-filter>
     </receiver>
 
@@ -467,7 +467,7 @@
               android:enabled="true"
               android:exported="false">
         <intent-filter>
-            <action android:name="com.medxnote.securesms.notifications.WEAR_REPLY"/>
+            <action android:name="${applicationId}.notifications.WEAR_REPLY"/>
         </intent-filter>
     </receiver>
 
@@ -484,7 +484,7 @@
     <receiver android:name=".service.RegistrationNotifier"
               android:exported="false">
         <intent-filter>
-            <action android:name="com.medxnote.securesms.REGISTRATION_EVENT" />
+            <action android:name="${applicationId}.REGISTRATION_EVENT" />
         </intent-filter>
     </receiver>
 
@@ -497,13 +497,13 @@
 
     <receiver android:name=".notifications.MessageNotifier$ReminderReceiver">
         <intent-filter>
-            <action android:name="com.medxnote.securesms.MessageNotifier.REMINDER_ACTION"/>
+            <action android:name="${applicationId}.MessageNotifier.REMINDER_ACTION"/>
         </intent-filter>
     </receiver>
 
     <receiver android:name=".notifications.MessageNotifier$DeleteReceiver">
         <intent-filter>
-            <action android:name="com.medxnote.securesms.MessageNotifier.DELETE_REMINDER_ACTION"/>
+            <action android:name="${applicationId}.MessageNotifier.DELETE_REMINDER_ACTION"/>
         </intent-filter>
     </receiver>
 

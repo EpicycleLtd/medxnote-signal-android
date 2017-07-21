@@ -234,6 +234,26 @@ android {
         }
     }
 
+    productFlavors {
+        main {
+            resValue "string", "account_type", "com.medxnote.securesms"
+            buildConfigField "String", "PROVIDER", "\"com.medxnote.provider.securesms\""
+        }
+        uk {
+            applicationIdSuffix ".uk"
+            resValue "string", "account_type", "com.medxnote.securesms.uk"
+            buildConfigField "String", "PROVIDER", "\"com.medxnote.provider.securesms.uk\""
+
+            buildConfigField "String", "TEXTSECURE_URL", "\"https://uk.textsecure.medx.im\""
+            buildConfigField "String", "REDPHONE_MASTER_URL", "\"https://uk.textsecure.medx.im\""
+            buildConfigField "String", "REDPHONE_RELAY_HOST", "\"uk.textsecure.medx.im\""
+            buildConfigField "String", "REDPHONE_PREFIX_NAME", "\".medx.im\""
+        }
+
+
+    }
+
+
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'

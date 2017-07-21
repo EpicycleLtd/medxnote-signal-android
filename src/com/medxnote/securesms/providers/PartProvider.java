@@ -26,6 +26,7 @@ import android.os.ParcelFileDescriptor;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.medxnote.securesms.BuildConfig;
 import com.medxnote.securesms.crypto.MasterSecret;
 import com.medxnote.securesms.attachments.AttachmentId;
 import com.medxnote.securesms.database.DatabaseFactory;
@@ -41,7 +42,7 @@ import java.io.InputStream;
 public class PartProvider extends ContentProvider {
   private static final String TAG = PartProvider.class.getSimpleName();
 
-  private static final String CONTENT_URI_STRING = "content://com.medxnote.provider.securesms/part";
+  private static final String CONTENT_URI_STRING = "content://"+BuildConfig.PROVIDER+"/part";
   private static final Uri    CONTENT_URI        = Uri.parse(CONTENT_URI_STRING);
   private static final int    SINGLE_ROW         = 1;
 
@@ -49,7 +50,7 @@ public class PartProvider extends ContentProvider {
 
   static {
     uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-    uriMatcher.addURI("com.medxnote.provider.securesms", "part/*/#", SINGLE_ROW);
+    uriMatcher.addURI(BuildConfig.PROVIDER, "part/*/#", SINGLE_ROW);
   }
 
   @Override

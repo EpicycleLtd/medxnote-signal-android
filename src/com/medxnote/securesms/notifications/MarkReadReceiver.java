@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.medxnote.securesms.ApplicationContext;
+import com.medxnote.securesms.BuildConfig;
 import com.medxnote.securesms.crypto.MasterSecret;
 import com.medxnote.securesms.database.DatabaseFactory;
 import com.medxnote.securesms.jobs.MultiDeviceReadUpdateJob;
@@ -19,7 +20,7 @@ import java.util.List;
 public class MarkReadReceiver extends MasterSecretBroadcastReceiver {
 
   private static final String TAG              = MarkReadReceiver.class.getSimpleName();
-  public static final  String CLEAR_ACTION     = "com.medxnote.securesms.notifications.CLEAR";
+  public static final  String CLEAR_ACTION     = BuildConfig.APPLICATION_ID+".notifications.CLEAR";
   public static final  String THREAD_IDS_EXTRA = "thread_ids";
 
   @Override

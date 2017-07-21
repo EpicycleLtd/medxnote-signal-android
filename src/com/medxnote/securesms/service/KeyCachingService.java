@@ -34,6 +34,7 @@ import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.medxnote.securesms.ApplicationContext;
+import com.medxnote.securesms.BuildConfig;
 import com.medxnote.securesms.ConversationListActivity;
 import com.medxnote.securesms.DatabaseUpgradeActivity;
 import com.medxnote.securesms.DummyActivity;
@@ -58,7 +59,7 @@ public class KeyCachingService extends Service {
 
   public static final int SERVICE_RUNNING_ID = 4141;
 
-  public  static final String KEY_PERMISSION           = "com.medxnote.securesms.ACCESS_SECRETS";
+  public  static final String KEY_PERMISSION           = BuildConfig.APPLICATION_ID+".ACCESS_SECRETS";
   public  static final String NEW_KEY_EVENT            = "com.medxnote.securesms.service.action.NEW_KEY_EVENT";
   public  static final String CLEAR_KEY_EVENT          = "com.medxnote.securesms.service.action.CLEAR_KEY_EVENT";
   private static final String PASSPHRASE_EXPIRED_EVENT = "com.medxnote.securesms.service.action.PASSPHRASE_EXPIRED_EVENT";

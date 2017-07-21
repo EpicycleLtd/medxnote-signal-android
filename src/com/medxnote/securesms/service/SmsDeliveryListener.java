@@ -7,6 +7,7 @@ import android.telephony.SmsMessage;
 import android.util.Log;
 
 import com.medxnote.securesms.ApplicationContext;
+import com.medxnote.securesms.BuildConfig;
 import com.medxnote.securesms.jobs.SmsSentJob;
 
 import org.whispersystems.jobqueue.JobManager;
@@ -15,8 +16,8 @@ public class SmsDeliveryListener extends BroadcastReceiver {
 
   private static final String TAG = SmsDeliveryListener.class.getSimpleName();
 
-  public static final String SENT_SMS_ACTION      = "com.medxnote.securesms.SendReceiveService.SENT_SMS_ACTION";
-  public static final String DELIVERED_SMS_ACTION = "com.medxnote.securesms.SendReceiveService.DELIVERED_SMS_ACTION";
+  public static final String SENT_SMS_ACTION      = BuildConfig.APPLICATION_ID+".SendReceiveService.SENT_SMS_ACTION";
+  public static final String DELIVERED_SMS_ACTION = BuildConfig.APPLICATION_ID+".SendReceiveService.DELIVERED_SMS_ACTION";
 
   @Override
   public void onReceive(Context context, Intent intent) {

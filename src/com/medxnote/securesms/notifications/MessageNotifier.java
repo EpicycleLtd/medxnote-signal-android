@@ -39,6 +39,7 @@ import android.text.style.StyleSpan;
 import android.util.Log;
 
 import com.medxnote.securesms.ApplicationContext;
+import com.medxnote.securesms.BuildConfig;
 import com.medxnote.securesms.ConversationActivity;
 import com.medxnote.securesms.R;
 import com.medxnote.securesms.crypto.MasterSecret;
@@ -437,7 +438,7 @@ public class MessageNotifier {
 
   public static class ReminderReceiver extends BroadcastReceiver {
 
-    public static final String REMINDER_ACTION = "com.medxnote.securesms.MessageNotifier.REMINDER_ACTION";
+    public static final String REMINDER_ACTION = BuildConfig.APPLICATION_ID+".MessageNotifier.REMINDER_ACTION";
 
     @Override
     public void onReceive(final Context context, final Intent intent) {
@@ -456,7 +457,7 @@ public class MessageNotifier {
 
   public static class DeleteReceiver extends BroadcastReceiver {
 
-    public static final String DELETE_REMINDER_ACTION = "com.medxnote.securesms.MessageNotifier.DELETE_REMINDER_ACTION";
+    public static final String DELETE_REMINDER_ACTION = BuildConfig.APPLICATION_ID+".MessageNotifier.DELETE_REMINDER_ACTION";
 
     @Override
     public void onReceive(Context context, Intent intent) {

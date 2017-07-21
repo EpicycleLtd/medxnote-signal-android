@@ -12,6 +12,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 import android.util.Pair;
 
+import com.medxnote.securesms.BuildConfig;
 import com.medxnote.securesms.R;
 import com.medxnote.securesms.crypto.MasterSecret;
 import com.medxnote.securesms.crypto.SessionUtil;
@@ -232,7 +233,7 @@ public class DirectoryHelper {
 
   private static Optional<Account> getOrCreateAccount(Context context) {
     AccountManager accountManager = AccountManager.get(context);
-    Account[]      accounts       = accountManager.getAccountsByType("com.medxnote.securesms");
+    Account[]      accounts       = accountManager.getAccountsByType(BuildConfig.APPLICATION_ID);
 
     Optional<Account> account;
 
@@ -248,7 +249,7 @@ public class DirectoryHelper {
 
   private static Optional<Account> createAccount(Context context) {
     AccountManager accountManager = AccountManager.get(context);
-    Account        account        = new Account(context.getString(R.string.app_name), "com.medxnote.securesms");
+    Account        account        = new Account(context.getString(R.string.app_name), BuildConfig.APPLICATION_ID);
 
     if (accountManager.addAccountExplicitly(account, null, null)) {
       Log.w(TAG, "Created new account...");
