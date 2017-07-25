@@ -30,6 +30,7 @@ public abstract class PassphraseRequiredActionBarActivity extends BaseActionBarA
   private static final int STATE_UPGRADE_DATABASE         = 3;
   private static final int STATE_PROMPT_PUSH_REGISTRATION = 4;
   private static final int STATE_EXPERIENCE_UPGRADE       = 5;
+  private static final int STATE_INITIAL_PASSPHRASE       = 6;
 
   private BroadcastReceiver clearKeyReceiver;
   private boolean           isVisible;
@@ -130,17 +131,20 @@ public abstract class PassphraseRequiredActionBarActivity extends BaseActionBarA
     Log.w(TAG, "routeApplicationState(), state: " + state);
 
     switch (state) {
-    case STATE_CREATE_PASSPHRASE:        return getCreatePassphraseIntent();
-    case STATE_PROMPT_PASSPHRASE:        return getPromptPassphraseIntent();
-    case STATE_UPGRADE_DATABASE:         return getUpgradeDatabaseIntent(masterSecret);
-    case STATE_PROMPT_PUSH_REGISTRATION: return getPushRegistrationIntent(masterSecret);
-    case STATE_EXPERIENCE_UPGRADE:       return getExperienceUpgradeIntent();
-    default:                             return null;
+      case STATE_INITIAL_PASSPHRASE:       return getInitialPassphraseIntent();
+      case STATE_CREATE_PASSPHRASE:        return getCreatePassphraseIntent();
+      case STATE_PROMPT_PASSPHRASE:        return getPromptPassphraseIntent();
+      case STATE_UPGRADE_DATABASE:         return getUpgradeDatabaseIntent(masterSecret);
+      case STATE_PROMPT_PUSH_REGISTRATION: return getPushRegistrationIntent(masterSecret);
+      case STATE_EXPERIENCE_UPGRADE:       return getExperienceUpgradeIntent();
+      default:                             return null;
     }
   }
 
   private int getApplicationState(MasterSecret masterSecret) {
-    if (!MasterSecretUtil.isPassphraseInitialized(this)) {
+    if (masterSecret == null & !MasterSecretUtil.isPassphraseInitialized(this)) {
+      return STATE_INITIAL_PASSPHRASE;
+    } else if (!MasterSecretUtil.isPassphraseInitialized(this)) {
       return STATE_CREATE_PASSPHRASE;
     } else if (ExperienceUpgradeActivity.isUpdate(this)) {
       return STATE_EXPERIENCE_UPGRADE;
@@ -157,6 +161,10 @@ public abstract class PassphraseRequiredActionBarActivity extends BaseActionBarA
 
   private Intent getCreatePassphraseIntent() {
     return getRoutedIntent(PassphraseCreateActivity.class, getIntent(), null);
+  }
+
+  private Intent getInitialPassphraseIntent() {
+    return getRoutedIntent(PassphraseInitialActivity.class, getIntent(), null);
   }
 
   private Intent getPromptPassphraseIntent() {
