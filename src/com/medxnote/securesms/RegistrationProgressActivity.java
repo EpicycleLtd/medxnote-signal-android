@@ -32,6 +32,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.medxnote.securesms.crypto.MasterSecret;
+import com.medxnote.securesms.crypto.MasterSecretUtil;
 import com.medxnote.securesms.service.RegistrationService;
 import com.medxnote.securesms.util.Dialogs;
 import com.medxnote.securesms.util.TextSecurePreferences;
@@ -344,6 +345,9 @@ public class RegistrationProgressActivity extends BaseActionBarActivity {
     }
 
     shutdownService();
+    if (BuildConfig.APPLICATION_ID.contains("uk")) {
+        MasterSecretUtil.changePassphraseInitialized(this);
+    }
     startActivity(new Intent(this, ConversationListActivity.class));
     finish();
   }

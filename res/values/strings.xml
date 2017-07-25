@@ -386,6 +386,15 @@
     <string name="PassphraseChangeActivity_incorrect_old_passphrase_exclamation">Incorrect old passphrase!</string>
     <string name="PassphraseChangeActivity_enter_new_passphrase_exclamation">Enter new passphrase!</string>
 
+    <!-- PassphraseCreateActivity -->
+    <string name="PassphraseCreateActivity_passphrase_explanation">Please choose your passphrase. You will need it to open app after some period of inactivity.</string>
+    <string name="PassphraseCreateActivity_passphrase_progress">Please wait to generate and store passphrase.</string>
+    <string name="PassphraseCreateActivity_passphrases_dont_match_exclamation">Passphrases don\'t match!</string>
+    <string name="PassphraseCreateActivity_you_must_specify_a_password">You need to enter passprase</string>
+    <string name="PassphraseCreateActivity_submit_button">Submit passphrase</string>
+    <string name="PassphraseCreateActivity_enter_passphrase">Enter passphrase!</string>
+    <string name="PassphraseCreateActivity_retype_passphrase">Retype passphrase!</string>
+
     <!-- DeviceProvisioningActivity -->
     <string name="DeviceProvisioningActivity_link_this_device">Link this device?</string>
     <string name="DeviceProvisioningActivity_cancel">CANCEL</string>

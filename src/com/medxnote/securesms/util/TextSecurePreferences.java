@@ -408,8 +408,12 @@ public class TextSecurePreferences {
     return getBooleanPreference(context, PASSPHRASE_TIMEOUT_PREF, false);
   }
 
+  public static void setPassphraseTimeoutEnabled(Context context) {
+    setBooleanPreference(context, PASSPHRASE_TIMEOUT_PREF, true);
+  }
+
   public static int getPassphraseTimeoutInterval(Context context) {
-    return getIntegerPreference(context, PASSPHRASE_TIMEOUT_INTERVAL_PREF, 5 * 60);
+    return getIntegerPreference(context, PASSPHRASE_TIMEOUT_INTERVAL_PREF, 30);
   }
 
   public static void setPassphraseTimeoutInterval(Context context, int interval) {

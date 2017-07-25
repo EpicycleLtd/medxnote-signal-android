@@ -199,6 +199,11 @@ public class MasterSecretUtil {
     return preferences.getBoolean("passphrase_initialized", false);
   }
 
+  // Added for UK Version
+  public static void changePassphraseInitialized(Context context) {
+      save(context, "passphrase_initialized", false);
+  }
+
   private static void save(Context context, String key, int value) {
     if (!context.getSharedPreferences(PREFERENCES_NAME, 0)
                 .edit()
