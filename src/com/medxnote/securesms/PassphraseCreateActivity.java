@@ -86,6 +86,11 @@ public class PassphraseCreateActivity extends PassphraseActivity {
         String passphrase       = this.passphraseEdit.getText().toString();
         String passphraseRepeat = this.passphraseRepeatEdit.getText().toString();
 
+        if (BuildConfig.APPLICATION_ID.contains("uk") && passphrase.length() < 4) {
+            Toast.makeText(this, R.string.PassphraseCreateActivity_minimum_length, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         if (!passphrase.equals(passphraseRepeat)) {
             Toast.makeText(this, R.string.PassphraseCreateActivity_passphrases_dont_match_exclamation, Toast.LENGTH_SHORT).show();
             this.passphraseEdit.setText("");
