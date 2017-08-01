@@ -24,6 +24,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+import android.content.Context;
+import android.util.Log;
 
 import com.medxnote.securesms.crypto.IdentityKeyUtil;
 import com.medxnote.securesms.crypto.MasterSecret;
@@ -31,6 +33,7 @@ import com.medxnote.securesms.crypto.MasterSecretUtil;
 import com.medxnote.securesms.util.TextSecurePreferences;
 import com.medxnote.securesms.util.Util;
 import com.medxnote.securesms.util.VersionTracker;
+import com.medxnote.securesms.crypto.InvalidPassphraseException;
 
 /**
  * Activity for creating a user's local encryption passphrase.
@@ -98,8 +101,51 @@ public class PassphraseCreateActivity extends PassphraseActivity {
             return;
         }
 
-        new SecretGenerator().execute(passphrase);
+        String original = MasterSecretUtil.UNENCRYPTED_PASSPHRASE;
+        new ChangePassphraseTask(this).execute(original, passphrase);
+        //new SecretGenerator().execute(passphrase);
     }
+
+
+
+    private class ChangePassphraseTask extends AsyncTask<String, Void, MasterSecret> {
+        private final Context context;
+
+        public ChangePassphraseTask(Context context) {
+            this.context = context;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            okButton.setEnabled(false);
+        }
+
+        @Override
+        protected MasterSecret doInBackground(String... params) {
+            try {
+                MasterSecret masterSecret = MasterSecretUtil.changeMasterSecretPassphrase(context, params[0], params[1]);
+                TextSecurePreferences.setPasswordDisabled(context, false);
+
+                return masterSecret;
+
+            } catch (InvalidPassphraseException e) {
+                Log.w(PassphraseChangeActivity.class.getSimpleName(), e);
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(MasterSecret masterSecret) {
+            okButton.setEnabled(true);
+
+            if (masterSecret != null) {
+                setMasterSecret(masterSecret);
+            }
+        }
+    }
+
+
+
 
   private class SecretGenerator extends AsyncTask<String, Void, Void> {
     private MasterSecret masterSecret;
