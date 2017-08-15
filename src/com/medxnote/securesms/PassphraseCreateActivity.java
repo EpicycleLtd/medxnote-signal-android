@@ -103,7 +103,6 @@ public class PassphraseCreateActivity extends PassphraseActivity {
 
         String original = MasterSecretUtil.UNENCRYPTED_PASSPHRASE;
         new ChangePassphraseTask(this).execute(original, passphrase);
-        //new SecretGenerator().execute(passphrase);
     }
 
 
@@ -117,7 +116,8 @@ public class PassphraseCreateActivity extends PassphraseActivity {
 
         @Override
         protected void onPreExecute() {
-            okButton.setEnabled(false);
+            createLayout.setVisibility(View.GONE);
+            progressLayout.setVisibility(View.VISIBLE);
         }
 
         @Override
@@ -125,6 +125,7 @@ public class PassphraseCreateActivity extends PassphraseActivity {
             try {
                 MasterSecret masterSecret = MasterSecretUtil.changeMasterSecretPassphrase(context, params[0], params[1]);
                 TextSecurePreferences.setPasswordDisabled(context, false);
+                TextSecurePreferences.setPassphraseTimeoutEnabled(PassphraseCreateActivity.this);
 
                 return masterSecret;
 
@@ -136,47 +137,14 @@ public class PassphraseCreateActivity extends PassphraseActivity {
 
         @Override
         protected void onPostExecute(MasterSecret masterSecret) {
-            okButton.setEnabled(true);
+            createLayout.setVisibility(View.VISIBLE);
+            progressLayout.setVisibility(View.GONE);
 
             if (masterSecret != null) {
                 setMasterSecret(masterSecret);
             }
         }
     }
-
-
-
-
-  private class SecretGenerator extends AsyncTask<String, Void, Void> {
-    private MasterSecret masterSecret;
-
-    @Override
-    protected void onPreExecute() {
-        createLayout.setVisibility(View.GONE);
-        progressLayout.setVisibility(View.VISIBLE);
-    }
-
-    @Override
-    protected Void doInBackground(String... params) {
-      String passphrase = params[0];
-      masterSecret      = MasterSecretUtil.generateMasterSecret(PassphraseCreateActivity.this,
-                                                                passphrase);
-
-      MasterSecretUtil.generateAsymmetricMasterSecret(PassphraseCreateActivity.this, masterSecret);
-      IdentityKeyUtil.generateIdentityKeys(PassphraseCreateActivity.this);
-      VersionTracker.updateLastSeenVersion(PassphraseCreateActivity.this);
-      TextSecurePreferences.setLastExperienceVersionCode(PassphraseCreateActivity.this, Util.getCurrentApkReleaseVersion(PassphraseCreateActivity.this));
-      TextSecurePreferences.setPasswordDisabled(PassphraseCreateActivity.this, false);
-        TextSecurePreferences.setPassphraseTimeoutEnabled(PassphraseCreateActivity.this);
-
-      return null;
-    }
-
-    @Override
-    protected void onPostExecute(Void param) {
-      setMasterSecret(masterSecret);
-    }
-  }
 
   @Override
   protected void cleanup() {
