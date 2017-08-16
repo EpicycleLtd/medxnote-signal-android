@@ -16,6 +16,7 @@ import android.widget.Toast;
 import com.doomonafireball.betterpickers.hmspicker.HmsPickerBuilder;
 import com.doomonafireball.betterpickers.hmspicker.HmsPickerDialogFragment;
 import com.medxnote.securesms.ApplicationPreferencesActivity;
+import com.medxnote.securesms.BuildConfig;
 import com.medxnote.securesms.PassphraseChangeActivity;
 import com.medxnote.securesms.R;
 import com.medxnote.securesms.crypto.MasterSecret;
@@ -39,7 +40,12 @@ public class AppProtectionPreferenceFragment extends PreferenceFragment {
     addPreferencesFromResource(R.xml.preferences_app_protection);
 
     masterSecret      = getArguments().getParcelable("master_secret");
+
     disablePassphrase = (CheckBoxPreference) this.findPreference("pref_enable_passphrase_temporary");
+    if (disablePassphrase != null) {
+      disablePassphrase
+              .setOnPreferenceChangeListener(new DisablePassphraseClickListener());
+    }
 
     this.findPreference(TextSecurePreferences.CHANGE_PASSPHRASE_PREF)
         .setOnPreferenceClickListener(new ChangePassphraseClickListener());
@@ -47,8 +53,7 @@ public class AppProtectionPreferenceFragment extends PreferenceFragment {
         .setOnPreferenceClickListener(new PassphraseIntervalClickListener());
 //    this.findPreference(PREFERENCE_CATEGORY_BLOCKED)
 //        .setOnPreferenceClickListener(new BlockedContactsClickListener());
-    disablePassphrase
-        .setOnPreferenceChangeListener(new DisablePassphraseClickListener());
+
   }
 
   @Override
@@ -59,7 +64,9 @@ public class AppProtectionPreferenceFragment extends PreferenceFragment {
     initializePlatformSpecificOptions();
     initializeTimeoutSummary();
 
-    disablePassphrase.setChecked(!TextSecurePreferences.isPasswordDisabled(getActivity()));
+    if (disablePassphrase != null) {
+      disablePassphrase.setChecked(!TextSecurePreferences.isPasswordDisabled(getActivity()));
+    }
   }
 
   private void initializePlatformSpecificOptions() {
@@ -125,6 +132,12 @@ public class AppProtectionPreferenceFragment extends PreferenceFragment {
       int timeoutMinutes = Math.max((int)TimeUnit.HOURS.toMinutes(hours) +
                                     minutes                         +
                                     (int)TimeUnit.SECONDS.toMinutes(seconds), 1);
+      if (BuildConfig.APPLICATION_ID.contains("uk")) {
+        if (timeoutMinutes > 30 || timeoutMinutes < 1) {
+          Toast.makeText(getActivity(), R.string.app_protection_fragment_timeout_minimum, Toast.LENGTH_LONG).show();
+          return;
+        }
+      }
 
       TextSecurePreferences.setPassphraseTimeoutInterval(getActivity(), timeoutMinutes);
       initializeTimeoutSummary();

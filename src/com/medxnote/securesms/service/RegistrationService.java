@@ -63,14 +63,14 @@ import java.util.concurrent.Executors;
 
 public class RegistrationService extends Service {
 
-  public static final String REGISTER_NUMBER_ACTION = "com.medxnote.securesms.RegistrationService.REGISTER_NUMBER";
-  public static final String VOICE_REQUESTED_ACTION = "com.medxnote.securesms.RegistrationService.VOICE_REQUESTED";
-  public static final String VOICE_REGISTER_ACTION  = "com.medxnote.securesms.RegistrationService.VOICE_REGISTER";
+  public static final String REGISTER_NUMBER_ACTION = BuildConfig.APPLICATION_ID+".RegistrationService.REGISTER_NUMBER";
+  public static final String VOICE_REQUESTED_ACTION = BuildConfig.APPLICATION_ID+".RegistrationService.VOICE_REQUESTED";
+  public static final String VOICE_REGISTER_ACTION  = BuildConfig.APPLICATION_ID+".RegistrationService.VOICE_REGISTER";
 
-  public static final String NOTIFICATION_TITLE     = "com.medxnote.securesms.NOTIFICATION_TITLE";
-  public static final String NOTIFICATION_TEXT      = "com.medxnote.securesms.NOTIFICATION_TEXT";
-  public static final String CHALLENGE_EVENT        = "com.medxnote.securesms.CHALLENGE_EVENT";
-  public static final String REGISTRATION_EVENT     = "com.medxnote.securesms.REGISTRATION_EVENT";
+  public static final String NOTIFICATION_TITLE     = BuildConfig.APPLICATION_ID+".NOTIFICATION_TITLE";
+  public static final String NOTIFICATION_TEXT      = BuildConfig.APPLICATION_ID+".NOTIFICATION_TEXT";
+  public static final String CHALLENGE_EVENT        = BuildConfig.APPLICATION_ID+".CHALLENGE_EVENT";
+  public static final String REGISTRATION_EVENT     = BuildConfig.APPLICATION_ID+".REGISTRATION_EVENT";
 
   public static final String CHALLENGE_EXTRA        = "CAAChallenge";
 

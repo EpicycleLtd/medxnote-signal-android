@@ -26,6 +26,8 @@ import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
+import com.medxnote.securesms.BuildConfig;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -33,7 +35,7 @@ import java.io.OutputStream;
 
 public class MmsBodyProvider extends ContentProvider {
   private static final String TAG                = MmsBodyProvider.class.getSimpleName();
-  private static final String CONTENT_URI_STRING = "content://com.medxnote.provider.securesms.mms/mms";
+  private static final String CONTENT_URI_STRING = "content://"+BuildConfig.PROVIDER+".mms/mms";
   public  static final Uri    CONTENT_URI        = Uri.parse(CONTENT_URI_STRING);
   private static final int    SINGLE_ROW         = 1;
 
@@ -41,7 +43,7 @@ public class MmsBodyProvider extends ContentProvider {
 
   static {
     uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-    uriMatcher.addURI("com.medxnote.provider.securesms.mms", "mms/#", SINGLE_ROW);
+    uriMatcher.addURI(BuildConfig.PROVIDER+".mms", "mms/#", SINGLE_ROW);
   }
 
   @Override

@@ -19,13 +19,21 @@ package com.medxnote.securesms;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.Toast;
+import android.content.Context;
+import android.util.Log;
 
-import com.medxnote.securesms.crypto.MasterSecret;
-import com.medxnote.securesms.util.TextSecurePreferences;
 import com.medxnote.securesms.crypto.IdentityKeyUtil;
+import com.medxnote.securesms.crypto.MasterSecret;
 import com.medxnote.securesms.crypto.MasterSecretUtil;
+import com.medxnote.securesms.util.TextSecurePreferences;
 import com.medxnote.securesms.util.Util;
 import com.medxnote.securesms.util.VersionTracker;
+import com.medxnote.securesms.crypto.InvalidPassphraseException;
 
 /**
  * Activity for creating a user's local encryption passphrase.
@@ -35,7 +43,14 @@ import com.medxnote.securesms.util.VersionTracker;
 
 public class PassphraseCreateActivity extends PassphraseActivity {
 
-  public PassphraseCreateActivity() { }
+    private LinearLayout createLayout;
+    private LinearLayout progressLayout;
+
+    private EditText passphraseEdit;
+    private EditText passphraseRepeatEdit;
+    private Button okButton;
+
+    public PassphraseCreateActivity() { }
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -50,36 +65,86 @@ public class PassphraseCreateActivity extends PassphraseActivity {
     getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
     getSupportActionBar().setCustomView(R.layout.centered_app_title);
 
-    new SecretGenerator().execute(MasterSecretUtil.UNENCRYPTED_PASSPHRASE);
+      this.createLayout         = (LinearLayout)findViewById(R.id.create_layout);
+      this.progressLayout       = (LinearLayout)findViewById(R.id.progress_layout);
+      this.passphraseEdit       = (EditText)    findViewById(R.id.passphrase_edit);
+      this.passphraseRepeatEdit = (EditText)    findViewById(R.id.passphrase_edit_repeat);
+      this.okButton             = (Button)      findViewById(R.id.ok_button);
+
+
+      this.okButton.setOnClickListener(new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+              verifyAndSavePassphrases();
+          }
+      });
   }
 
-  private class SecretGenerator extends AsyncTask<String, Void, Void> {
-    private MasterSecret masterSecret;
+    private void verifyAndSavePassphrases() {
+        if (Util.isEmpty(this.passphraseEdit) || Util.isEmpty(this.passphraseRepeatEdit)) {
+            Toast.makeText(this, R.string.PassphraseCreateActivity_you_must_specify_a_password, Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-    @Override
-    protected void onPreExecute() {
+        String passphrase       = this.passphraseEdit.getText().toString();
+        String passphraseRepeat = this.passphraseRepeatEdit.getText().toString();
+
+        if (BuildConfig.APPLICATION_ID.contains("uk") && passphrase.length() < 4) {
+            Toast.makeText(this, R.string.PassphraseCreateActivity_minimum_length, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!passphrase.equals(passphraseRepeat)) {
+            Toast.makeText(this, R.string.PassphraseCreateActivity_passphrases_dont_match_exclamation, Toast.LENGTH_SHORT).show();
+            this.passphraseEdit.setText("");
+            this.passphraseRepeatEdit.setText("");
+            return;
+        }
+
+        String original = MasterSecretUtil.UNENCRYPTED_PASSPHRASE;
+        new ChangePassphraseTask(this).execute(original, passphrase);
     }
 
-    @Override
-    protected Void doInBackground(String... params) {
-      String passphrase = params[0];
-      masterSecret      = MasterSecretUtil.generateMasterSecret(PassphraseCreateActivity.this,
-                                                                passphrase);
 
-      MasterSecretUtil.generateAsymmetricMasterSecret(PassphraseCreateActivity.this, masterSecret);
-      IdentityKeyUtil.generateIdentityKeys(PassphraseCreateActivity.this);
-      VersionTracker.updateLastSeenVersion(PassphraseCreateActivity.this);
-      TextSecurePreferences.setLastExperienceVersionCode(PassphraseCreateActivity.this, Util.getCurrentApkReleaseVersion(PassphraseCreateActivity.this));
-      TextSecurePreferences.setPasswordDisabled(PassphraseCreateActivity.this, true);
 
-      return null;
+    private class ChangePassphraseTask extends AsyncTask<String, Void, MasterSecret> {
+        private final Context context;
+
+        public ChangePassphraseTask(Context context) {
+            this.context = context;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            createLayout.setVisibility(View.GONE);
+            progressLayout.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        protected MasterSecret doInBackground(String... params) {
+            try {
+                MasterSecret masterSecret = MasterSecretUtil.changeMasterSecretPassphrase(context, params[0], params[1]);
+                TextSecurePreferences.setPasswordDisabled(context, false);
+                TextSecurePreferences.setPassphraseTimeoutEnabled(PassphraseCreateActivity.this);
+
+                return masterSecret;
+
+            } catch (InvalidPassphraseException e) {
+                Log.w(PassphraseChangeActivity.class.getSimpleName(), e);
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(MasterSecret masterSecret) {
+            createLayout.setVisibility(View.VISIBLE);
+            progressLayout.setVisibility(View.GONE);
+
+            if (masterSecret != null) {
+                setMasterSecret(masterSecret);
+            }
+        }
     }
-
-    @Override
-    protected void onPostExecute(Void param) {
-      setMasterSecret(masterSecret);
-    }
-  }
 
   @Override
   protected void cleanup() {

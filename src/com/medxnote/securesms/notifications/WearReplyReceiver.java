@@ -24,6 +24,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.RemoteInput;
 
+import com.medxnote.securesms.BuildConfig;
 import com.medxnote.securesms.attachments.Attachment;
 import com.medxnote.securesms.crypto.MasterSecret;
 import com.medxnote.securesms.database.DatabaseFactory;
@@ -48,7 +49,7 @@ import java.util.List;
 public class WearReplyReceiver extends MasterSecretBroadcastReceiver {
 
   public static final String TAG                 = WearReplyReceiver.class.getSimpleName();
-  public static final String REPLY_ACTION        = "com.medxnote.securesms.notifications.WEAR_REPLY";
+  public static final String REPLY_ACTION        = BuildConfig.APPLICATION_ID+".notifications.WEAR_REPLY";
   public static final String RECIPIENT_IDS_EXTRA = "recipient_ids";
 
   @Override

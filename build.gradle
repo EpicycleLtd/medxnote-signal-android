@@ -173,6 +173,9 @@ android {
         minSdkVersion 9
         targetSdkVersion 22
 
+        versionCode 222
+        versionName "3.20.14"
+
         buildConfigField "long", "BUILD_TIMESTAMP", getLastCommitTimestamp() + "L"
         buildConfigField "String", "TEXTSECURE_URL", "\"https://global2.textsecure.medx.im\""
         buildConfigField "String", "USER_AGENT", "\"OWA\""
@@ -233,6 +236,30 @@ android {
                         }
         }
     }
+
+    productFlavors {
+        main {
+            resValue "string", "account_type", "com.medxnote.securesms"
+            buildConfigField "String", "PROVIDER", "\"com.medxnote.provider.securesms\""
+        }
+        uk {
+            applicationIdSuffix ".uk"
+
+            versionCode 3
+            versionName "3.20.17"
+
+            resValue "string", "account_type", "com.medxnote.securesms.uk"
+            buildConfigField "String", "PROVIDER", "\"com.medxnote.provider.securesms.uk\""
+
+            buildConfigField "String", "TEXTSECURE_URL", "\"https://uk.textsecure.medx.im\""
+            buildConfigField "String", "REDPHONE_MASTER_URL", "\"https://uk.textsecure.medx.im\""
+            buildConfigField "String", "REDPHONE_RELAY_HOST", "\"uk.textsecure.medx.im\""
+            buildConfigField "String", "REDPHONE_PREFIX_NAME", "\".medx.im\""
+        }
+
+
+    }
+
 
     sourceSets {
         main {
