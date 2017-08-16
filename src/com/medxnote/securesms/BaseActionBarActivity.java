@@ -1,6 +1,7 @@
 package com.medxnote.securesms;
 
 import android.annotation.TargetApi;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Build.VERSION_CODES;
@@ -8,6 +9,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -16,6 +18,7 @@ import android.view.ViewConfiguration;
 import android.view.WindowManager;
 
 import com.medxnote.securesms.util.TextSecurePreferences;
+import com.scottyab.rootbeer.RootBeer;
 
 import java.lang.reflect.Field;
 
@@ -35,6 +38,20 @@ public abstract class BaseActionBarActivity extends AppCompatActivity {
   protected void onResume() {
     super.onResume();
     initializeScreenshotSecurity();
+    RootBeer rootBeer = new RootBeer(this);
+    if (rootBeer.isRooted()) {
+      //we found indication of root
+      AlertDialog.Builder builder = new AlertDialog.Builder(this);
+      builder.setCancelable(false);
+      builder.setMessage(R.string.root_dialog_message);
+      builder.setPositiveButton(R.string.root_dialog_close_app, new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+          finish();
+        }
+      });
+      builder.show();
+    }
   }
 
   @Override

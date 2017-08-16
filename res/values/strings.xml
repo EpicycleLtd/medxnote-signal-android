@@ -5,6 +5,8 @@
     <string name="no">No</string>
     <string name="delete">Delete</string>
     <string name="please_wait">Please wait...</string>
+    <string name="root_dialog_message">This app is only supported on unmodified versions of Android.</string>
+    <string name="root_dialog_close_app">Close app</string>
 
     <!-- ApplicationPreferencesActivity -->
     <string name="ApplicationPreferencesActivity_currently_s">Currently: %s</string>

@@ -3,7 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.medxnote.securesms">
 
-    <uses-sdk tools:overrideLibrary="com.amulyakhare.textdrawable,com.astuetz.pagerslidingtabstrip,pl.tajchert.waitingdots,com.h6ah4i.android.multiselectlistpreferencecompat" />
+    <uses-sdk tools:overrideLibrary="com.amulyakhare.textdrawable,com.astuetz.pagerslidingtabstrip,
+        pl.tajchert.waitingdots,com.h6ah4i.android.multiselectlistpreferencecompat,com.scottyab.rootbeer" />
 
     <permission
         android:name="${applicationId}.ACCESS_SECRETS"

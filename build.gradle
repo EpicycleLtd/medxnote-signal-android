@@ -85,6 +85,10 @@ dependencies {
     //compile 'org.whispersystems:signal-service-android:2.1.1'
     compile 'com.h6ah4i.android.compat:mulsellistprefcompat:1.0.0'
     compile 'com.google.zxing:core:3.2.1'
+    compile ('com.scottyab:rootbeer-lib:0.0.6') {
+        exclude group: 'com.android.support', module: 'appcompat-v7'
+        exclude group: 'com.android.support', module: 'support-annotations'
+    }
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.assertj:assertj-core:1.7.1'
@@ -153,6 +157,7 @@ dependencyVerification {
             'com.fasterxml.jackson.core:jackson-databind:835097bcdd11f5bc8a08378c70d4c8054dfa4b911691cc2752063c75534d198d',
             'org.whispersystems:curve25519-android:d6a3ef3a70622af4c728b7fe5f8fdfc9e6cd39b1d39b2c77e7a2add9d876bc23',
             //'org.whispersystems:signal-protocol-java:d518d52eeb3c44210e0b6c687360848a87afbaee0bdf42e2a8dd9974d54fdb3a',
+            'com.scottyab:rootbeer-lib:5b3da82f1fc17f9f0670acb2d3a11712b09131afda59d65d26130599b4778a4b',
             'com.squareup.okio:okio:5e1098bd3fdee4c3347f5ab815b40ba851e4ab1b348c5e49a5b0362f0ce6e978',
             'com.fasterxml.jackson.core:jackson-annotations:0ca408c24202a7626ec8b861e99d85eca5e38b73311dd6dd12e3e9deecc3fe94',
             'com.fasterxml.jackson.core:jackson-core:cbf4604784b4de226262845447a1ad3bb38a6728cebe86562e2c5afada8be2c0',
