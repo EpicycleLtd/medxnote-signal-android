@@ -1,11 +1,11 @@
 package com.medxnote.securesms.database;
 
-
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
@@ -28,6 +28,7 @@ import java.security.SecureRandom;
 import java.util.LinkedList;
 import java.util.List;
 
+
 public class GroupDatabase extends Database {
 
   public static final String DATABASE_UPDATE_ACTION = "com.medxnote.securesms.database.GroupDatabase.UPDATE";
@@ -46,23 +47,27 @@ public class GroupDatabase extends Database {
   private static final String AVATAR_RELAY        = "avatar_relay";
   private static final String TIMESTAMP           = "timestamp";
   private static final String ACTIVE              = "active";
+  private static final String ADMIN               = "admin";
+  private static final String VERSION             = "version";
 
   public static final String CREATE_TABLE =
-      "CREATE TABLE " + TABLE_NAME +
-          " (" + ID + " INTEGER PRIMARY KEY, " +
-          GROUP_ID + " TEXT, " +
-          TITLE + " TEXT, " +
-          MEMBERS + " TEXT, " +
-          AVATAR + " BLOB, " +
-          AVATAR_ID + " INTEGER, " +
-          AVATAR_KEY + " BLOB, " +
-          AVATAR_CONTENT_TYPE + " TEXT, " +
-          AVATAR_RELAY + " TEXT, " +
-          TIMESTAMP + " INTEGER, " +
-          ACTIVE + " INTEGER DEFAULT 1);";
+          "CREATE TABLE " + TABLE_NAME +
+                  " (" + ID + " INTEGER PRIMARY KEY, " +
+                  GROUP_ID + " TEXT, " +
+                  TITLE + " TEXT, " +
+                  MEMBERS + " TEXT, " +
+                  AVATAR + " BLOB, " +
+                  AVATAR_ID + " INTEGER, " +
+                  AVATAR_KEY + " BLOB, " +
+                  AVATAR_CONTENT_TYPE + " TEXT, " +
+                  AVATAR_RELAY + " TEXT, " +
+                  TIMESTAMP + " INTEGER, " +
+                  ACTIVE + " INTEGER DEFAULT 1, " +
+                  ADMIN + " TEXT, " +
+                  VERSION + " INTEGER DEFAULT 0);";
 
   public static final String[] CREATE_INDEXS = {
-      "CREATE UNIQUE INDEX IF NOT EXISTS group_id_index ON " + TABLE_NAME + " (" + GROUP_ID + ");",
+          "CREATE UNIQUE INDEX IF NOT EXISTS group_id_index ON " + TABLE_NAME + " (" + GROUP_ID + ");",
   };
 
   public GroupDatabase(Context context, SQLiteOpenHelper databaseHelper) {
@@ -72,8 +77,8 @@ public class GroupDatabase extends Database {
   public @Nullable GroupRecord getGroup(byte[] groupId) {
     @SuppressLint("Recycle")
     Cursor cursor = databaseHelper.getReadableDatabase().query(TABLE_NAME, null, GROUP_ID + " = ?",
-                                                               new String[] {GroupUtil.getEncodedId(groupId)},
-                                                               null, null, null);
+            new String[] {GroupUtil.getEncodedId(groupId)},
+            null, null, null);
 
     Reader      reader = new Reader(cursor);
     GroupRecord record = reader.getNext();
@@ -84,15 +89,22 @@ public class GroupDatabase extends Database {
 
   public Reader getGroupsFilteredByTitle(String constraint) {
     Cursor cursor = databaseHelper.getReadableDatabase().query(TABLE_NAME, null, TITLE + " LIKE ?",
-                                                               new String[]{"%" + constraint + "%"},
-                                                               null, null, null);
+            new String[]{"%" + constraint + "%"},
+            null, null, null);
+    Reader reader = new Reader(cursor);
+    cursor.close();
 
-    return new Reader(cursor);
+    return reader;
   }
 
   public Reader getGroups() {
-    Cursor cursor = databaseHelper.getReadableDatabase().query(TABLE_NAME, null, null, null, null, null, null);
-    return new Reader(cursor);
+    Cursor cursor = databaseHelper.getReadableDatabase().query(TABLE_NAME, null, null, null,
+            null, null, null);
+
+    Reader reader = new Reader(cursor);
+    cursor.close();
+
+    return reader;
   }
 
   public @NonNull Recipients getGroupMembers(byte[] groupId, boolean includeSelf) {
@@ -105,10 +117,35 @@ public class GroupDatabase extends Database {
         continue;
 
       recipients.addAll(RecipientFactory.getRecipientsFromString(context, member, false)
-                                        .getRecipientsList());
+              .getRecipientsList());
     }
 
     return RecipientFactory.getRecipientsFor(context, recipients, false);
+  }
+
+  public String getAdmin(byte[] groupId) {
+    SQLiteDatabase database = databaseHelper.getReadableDatabase();
+
+    String where = GROUP_ID + " = ?";
+    String[] args = {GroupUtil.getEncodedId(groupId)};
+
+    Cursor cursor = null;
+
+    try {
+      cursor = database.query(TABLE_NAME, new String[] {ADMIN}, where, args, null, null, null);
+
+      if (cursor != null && cursor.moveToFirst()) {
+        return cursor.getString(0);
+      }
+
+    } catch (SQLException e) {
+      return null;
+    } finally {
+      if (cursor != null) {
+        cursor.close();
+      }
+    }
+    return "";
   }
 
   public @NonNull List<String> getGroupMembersList(byte[] groupId, boolean includeSelf) {
@@ -127,7 +164,7 @@ public class GroupDatabase extends Database {
 
 
   public void create(byte[] groupId, String title, List<String> members,
-                     SignalServiceAttachmentPointer avatar, String relay)
+                     SignalServiceAttachmentPointer avatar, String relay, String admin)
   {
     ContentValues contentValues = new ContentValues();
     contentValues.put(GROUP_ID, GroupUtil.getEncodedId(groupId));
@@ -143,6 +180,10 @@ public class GroupDatabase extends Database {
     contentValues.put(AVATAR_RELAY, relay);
     contentValues.put(TIMESTAMP, System.currentTimeMillis());
     contentValues.put(ACTIVE, 1);
+    if (admin != null && !admin.isEmpty()) {
+      contentValues.put(ADMIN, admin);
+      contentValues.put(VERSION, 1);
+    }
 
     databaseHelper.getWritableDatabase().insert(TABLE_NAME, null, contentValues);
   }
@@ -158,8 +199,8 @@ public class GroupDatabase extends Database {
     }
 
     databaseHelper.getWritableDatabase().update(TABLE_NAME, contentValues,
-                                                GROUP_ID + " = ?",
-                                                new String[] {GroupUtil.getEncodedId(groupId)});
+            GROUP_ID + " = ?",
+            new String[] {GroupUtil.getEncodedId(groupId)});
 
     RecipientFactory.clearCache();
     notifyDatabaseListeners();
@@ -169,7 +210,7 @@ public class GroupDatabase extends Database {
     ContentValues contentValues = new ContentValues();
     contentValues.put(TITLE, title);
     databaseHelper.getWritableDatabase().update(TABLE_NAME, contentValues, GROUP_ID +  " = ?",
-                                                new String[] {GroupUtil.getEncodedId(groupId)});
+            new String[] {GroupUtil.getEncodedId(groupId)});
 
     RecipientFactory.clearCache();
     notifyDatabaseListeners();
@@ -184,7 +225,18 @@ public class GroupDatabase extends Database {
     contentValues.put(AVATAR, avatar);
 
     databaseHelper.getWritableDatabase().update(TABLE_NAME, contentValues, GROUP_ID +  " = ?",
-                                                new String[] {GroupUtil.getEncodedId(groupId)});
+            new String[] {GroupUtil.getEncodedId(groupId)});
+
+    RecipientFactory.clearCache();
+    notifyDatabaseListeners();
+  }
+
+  public void updateAdmin(byte[] groupId, String admin) {
+    ContentValues values = new ContentValues();
+    values.put(ADMIN, admin);
+
+    databaseHelper.getWritableDatabase().update(TABLE_NAME, values, GROUP_ID + " = ?",
+            new String[]{GroupUtil.getEncodedId(groupId)});
 
     RecipientFactory.clearCache();
     notifyDatabaseListeners();
@@ -196,7 +248,7 @@ public class GroupDatabase extends Database {
     contents.put(ACTIVE, 1);
 
     databaseHelper.getWritableDatabase().update(TABLE_NAME, contents, GROUP_ID + " = ?",
-                                                new String[] {GroupUtil.getEncodedId(id)});
+            new String[] {GroupUtil.getEncodedId(id)});
   }
 
   public void remove(byte[] id, String source) {
@@ -207,7 +259,7 @@ public class GroupDatabase extends Database {
     contents.put(MEMBERS, Util.join(currentMembers, ","));
 
     databaseHelper.getWritableDatabase().update(TABLE_NAME, contents, GROUP_ID + " = ?",
-                                                new String[] {GroupUtil.getEncodedId(id)});
+            new String[] {GroupUtil.getEncodedId(id)});
   }
 
   private List<String> getCurrentMembers(byte[] id) {
@@ -215,9 +267,9 @@ public class GroupDatabase extends Database {
 
     try {
       cursor = databaseHelper.getReadableDatabase().query(TABLE_NAME, new String[] {MEMBERS},
-                                                          GROUP_ID + " = ?",
-                                                          new String[] {GroupUtil.getEncodedId(id)},
-                                                          null, null, null);
+              GROUP_ID + " = ?",
+              new String[] {GroupUtil.getEncodedId(id)},
+              null, null, null);
 
       if (cursor != null && cursor.moveToFirst()) {
         return Util.split(cursor.getString(cursor.getColumnIndexOrThrow(MEMBERS)), ",");
@@ -240,6 +292,7 @@ public class GroupDatabase extends Database {
     ContentValues  values   = new ContentValues();
     values.put(ACTIVE, active ? 1 : 0);
     database.update(TABLE_NAME, values, GROUP_ID + " = ?", new String[] {GroupUtil.getEncodedId(id)});
+    notifyDatabaseListeners();
   }
 
 
@@ -272,14 +325,16 @@ public class GroupDatabase extends Database {
       }
 
       return new GroupRecord(cursor.getString(cursor.getColumnIndexOrThrow(GROUP_ID)),
-                             cursor.getString(cursor.getColumnIndexOrThrow(TITLE)),
-                             cursor.getString(cursor.getColumnIndexOrThrow(MEMBERS)),
-                             cursor.getBlob(cursor.getColumnIndexOrThrow(AVATAR)),
-                             cursor.getLong(cursor.getColumnIndexOrThrow(AVATAR_ID)),
-                             cursor.getBlob(cursor.getColumnIndexOrThrow(AVATAR_KEY)),
-                             cursor.getString(cursor.getColumnIndexOrThrow(AVATAR_CONTENT_TYPE)),
-                             cursor.getString(cursor.getColumnIndexOrThrow(AVATAR_RELAY)),
-                             cursor.getInt(cursor.getColumnIndexOrThrow(ACTIVE)) == 1);
+              cursor.getString(cursor.getColumnIndexOrThrow(TITLE)),
+              cursor.getString(cursor.getColumnIndexOrThrow(MEMBERS)),
+              cursor.getBlob(cursor.getColumnIndexOrThrow(AVATAR)),
+              cursor.getLong(cursor.getColumnIndexOrThrow(AVATAR_ID)),
+              cursor.getBlob(cursor.getColumnIndexOrThrow(AVATAR_KEY)),
+              cursor.getString(cursor.getColumnIndexOrThrow(AVATAR_CONTENT_TYPE)),
+              cursor.getString(cursor.getColumnIndexOrThrow(AVATAR_RELAY)),
+              cursor.getInt(cursor.getColumnIndexOrThrow(ACTIVE)) == 1,
+              cursor.getString(cursor.getColumnIndexOrThrow(ADMIN)),
+              cursor.getInt(cursor.getColumnIndexOrThrow(VERSION)));
     }
 
     public void close() {
@@ -299,11 +354,12 @@ public class GroupDatabase extends Database {
     private final String       avatarContentType;
     private final String       relay;
     private final boolean      active;
+    private final String       admin;
+    private final int          version;
 
     public GroupRecord(String id, String title, String members, byte[] avatar,
                        long avatarId, byte[] avatarKey, String avatarContentType,
-                       String relay, boolean active)
-    {
+                       String relay, boolean active, String admin, int version) {
       this.id                = id;
       this.title             = title;
       this.members           = Util.split(members, ",");
@@ -313,6 +369,8 @@ public class GroupDatabase extends Database {
       this.avatarContentType = avatarContentType;
       this.relay             = relay;
       this.active            = active;
+      this.admin             = admin;
+      this.version           = version;
     }
 
     public byte[] getId() {
@@ -321,6 +379,16 @@ public class GroupDatabase extends Database {
       } catch (IOException ioe) {
         throw new AssertionError(ioe);
       }
+    }
+
+    public boolean isAdminUpdate(String initiator) {
+      List<String> admins = Util.split(admin, ",");
+      for (String admin : admins) {
+        if (admin.equals(initiator)) {
+          return true;
+        }
+      }
+      return false;
     }
 
     public String getEncodedId() {
@@ -357,6 +425,14 @@ public class GroupDatabase extends Database {
 
     public boolean isActive() {
       return active;
+    }
+
+    public String getAdmin() {
+      return admin;
+    }
+
+    public int getVersion() {
+      return version;
     }
   }
 }

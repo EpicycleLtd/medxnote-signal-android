@@ -113,6 +113,8 @@ public abstract class MessageRecord extends DisplayRecord {
       return emphasisAdded(context.getString(R.string.MessageRecord_left_group));
     } else if (isGroupQuit()) {
       return emphasisAdded(context.getString(R.string.ConversationItem_group_action_left, getIndividualRecipient().toShortString()));
+    } else if (isGroupKick()) {
+      return emphasisAdded(GroupUtil.getDescription(context, getBody().getBody()).toString());
     } else if (isIncomingCall()) {
       return emphasisAdded(context.getString(R.string.MessageRecord_s_called_you, getIndividualRecipient().toShortString()));
     } else if (isOutgoingCall()) {

@@ -24,6 +24,7 @@ import com.medxnote.securesms.recipients.Recipients;
 import com.medxnote.securesms.sms.MessageSender;
 import com.medxnote.securesms.util.BitmapUtil;
 import com.medxnote.securesms.util.Util;
+
 import org.whispersystems.signalservice.api.util.InvalidNumberException;
 import org.whispersystems.signalservice.internal.push.SignalServiceProtos.GroupContext;
 
@@ -36,31 +37,33 @@ import ws.com.google.android.mms.ContentType;
 
 public class GroupManager {
   public static @NonNull GroupActionResult createGroup(@NonNull  Context        context,
-                                                       @NonNull MasterSecret masterSecret,
+                                                       @NonNull  MasterSecret   masterSecret,
                                                        @NonNull  Set<Recipient> members,
                                                        @Nullable Bitmap         avatar,
                                                        @Nullable String         name)
-      throws InvalidNumberException
+          throws InvalidNumberException
   {
     final byte[]        avatarBytes       = BitmapUtil.toByteArray(avatar);
     final GroupDatabase groupDatabase     = DatabaseFactory.getGroupDatabase(context);
     final byte[]        groupId           = groupDatabase.allocateGroupId();
     final Set<String>   memberE164Numbers = getE164Numbers(context, members);
+          String        localNumber       = TextSecurePreferences.getLocalNumber(context);
 
-    memberE164Numbers.add(TextSecurePreferences.getLocalNumber(context));
-    groupDatabase.create(groupId, name, new LinkedList<>(memberE164Numbers), null, null);
+    memberE164Numbers.add(localNumber);
+    groupDatabase.create(groupId, name, new LinkedList<>(memberE164Numbers), null, null, localNumber);
     groupDatabase.updateAvatar(groupId, avatarBytes);
-    return sendGroupUpdate(context, masterSecret, groupId, memberE164Numbers, name, avatarBytes);
+    return sendGroupUpdate(context, masterSecret, groupId, memberE164Numbers, new HashSet<String>(), name, avatarBytes, localNumber);
   }
 
   private static Set<String> getE164Numbers(Context context, Collection<Recipient> recipients)
-      throws InvalidNumberException
+          throws InvalidNumberException
   {
     final Set<String> results = new HashSet<>();
-    for (Recipient recipient : recipients) {
-      results.add(Util.canonicalizeNumber(context, recipient.getNumber()));
+    if (recipients != null) {
+      for (Recipient recipient : recipients) {
+        results.add(Util.canonicalizeNumber(context, recipient.getNumber()));
+      }
     }
-
     return results;
   }
 
@@ -68,44 +71,67 @@ public class GroupManager {
                                               @NonNull  MasterSecret   masterSecret,
                                               @NonNull  byte[]         groupId,
                                               @NonNull  Set<Recipient> members,
+                                              @Nullable Set<Recipient> kickMembers,
                                               @Nullable Bitmap         avatar,
-                                              @Nullable String         name)
-      throws InvalidNumberException
+                                              @Nullable String         name,
+                                              @Nullable Recipient      newAdmin)
+          throws InvalidNumberException
   {
     final GroupDatabase groupDatabase     = DatabaseFactory.getGroupDatabase(context);
     final Set<String>   memberE164Numbers = getE164Numbers(context, members);
+    final Set<String>   kickE164Numbers   = getE164Numbers(context, kickMembers);
     final byte[]        avatarBytes       = BitmapUtil.toByteArray(avatar);
+
+    String admin;
+    if (newAdmin == null) {
+      admin = groupDatabase.getAdmin(groupId);
+    } else {
+      admin = newAdmin.getNumber();
+    }
 
     memberE164Numbers.add(TextSecurePreferences.getLocalNumber(context));
     groupDatabase.updateMembers(groupId, new LinkedList<>(memberE164Numbers));
     groupDatabase.updateTitle(groupId, name);
     groupDatabase.updateAvatar(groupId, avatarBytes);
+    groupDatabase.updateAdmin(groupId, admin);
 
-    return sendGroupUpdate(context, masterSecret, groupId, memberE164Numbers, name, avatarBytes);
+    return sendGroupUpdate(context, masterSecret, groupId, memberE164Numbers,
+            kickE164Numbers, name, avatarBytes, admin);
   }
 
   private static GroupActionResult sendGroupUpdate(@NonNull  Context      context,
                                                    @NonNull  MasterSecret masterSecret,
                                                    @NonNull  byte[]       groupId,
                                                    @NonNull  Set<String>  e164numbers,
+                                                   @NonNull  Set<String>  kickE164numbers,
                                                    @Nullable String       groupName,
-                                                   @Nullable byte[]       avatar)
+                                                   @Nullable byte[]       avatar,
+                                                   @Nullable String       admin)
   {
     Attachment avatarAttachment = null;
     String     groupRecipientId = GroupUtil.getEncodedId(groupId);
     Recipients groupRecipient   = RecipientFactory.getRecipientsFromString(context, groupRecipientId, false);
 
     GroupContext.Builder groupContextBuilder = GroupContext.newBuilder()
-                                                           .setId(ByteString.copyFrom(groupId))
-                                                           .setType(GroupContext.Type.UPDATE)
-                                                           .addAllMembers(e164numbers);
-    if (groupName != null) groupContextBuilder.setName(groupName);
-    GroupContext groupContext = groupContextBuilder.build();
+            .setId(ByteString.copyFrom(groupId))
+            .setAdmin(admin)
+            .addAllMembers(e164numbers);
+    if (groupName != null) {
+      groupContextBuilder.setName(groupName);
+    }
 
     if (avatar != null) {
       Uri avatarUri = SingleUseBlobProvider.getInstance().createUri(avatar);
       avatarAttachment = new UriAttachment(avatarUri, ContentType.IMAGE_PNG, AttachmentDatabase.TRANSFER_PROGRESS_DONE, avatar.length);
     }
+
+    if (!kickE164numbers.isEmpty()) {
+      groupContextBuilder.addAllKick(kickE164numbers);
+      groupContextBuilder.setType(GroupContext.Type.KICK);
+    } else {
+      groupContextBuilder.setType(GroupContext.Type.UPDATE);
+    }
+    GroupContext groupContext = groupContextBuilder.build();
 
     OutgoingGroupMediaMessage outgoingMessage = new OutgoingGroupMediaMessage(groupRecipient, groupContext, avatarAttachment, System.currentTimeMillis());
     long                      threadId        = MessageSender.send(context, masterSecret, outgoingMessage, -1, false);

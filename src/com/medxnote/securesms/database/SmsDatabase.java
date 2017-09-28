@@ -552,8 +552,14 @@ public class SmsDatabase extends MessagingDatabase {
       type |= Types.SECURE_MESSAGE_BIT;
     } else if (message.isGroup()) {
       type |= Types.SECURE_MESSAGE_BIT;
-      if      (((IncomingGroupMessage)message).isUpdate()) type |= Types.GROUP_UPDATE_BIT;
-      else if (((IncomingGroupMessage)message).isQuit())   type |= Types.GROUP_QUIT_BIT;
+      IncomingGroupMessage groupMessage = (IncomingGroupMessage) message;
+      if (groupMessage.isUpdate()) {
+        type |= Types.GROUP_UPDATE_BIT;
+      } else if (groupMessage.isQuit()) {
+        type |= Types.GROUP_QUIT_BIT;
+      } else if (groupMessage.isKick()) {
+        type |= Types.GROUP_KICK_BIT;
+      }
     } else if (message.isEndSession()) {
       type |= Types.SECURE_MESSAGE_BIT;
       type |= Types.END_SESSION_BIT;
@@ -654,12 +660,19 @@ public class SmsDatabase extends MessagingDatabase {
   }
 
   protected long insertMessageOutbox(long threadId, OutgoingTextMessage message,
-                                     long type, boolean forceSms, long date, boolean hidden)
-  {
-    if      (message.isKeyExchange())   type |= Types.KEY_EXCHANGE_BIT;
-    else if (message.isSecureMessage()) type |= Types.SECURE_MESSAGE_BIT;
-    else if (message.isEndSession())    type |= Types.END_SESSION_BIT;
-    if      (forceSms)                  type |= Types.MESSAGE_FORCE_SMS_BIT;
+                                     long type, boolean forceSms, long date,
+                                     boolean hidden) {
+    if (message.isKeyExchange()) {
+      type |= Types.KEY_EXCHANGE_BIT;
+    } else if (message.isSecureMessage()) {
+      type |= Types.SECURE_MESSAGE_BIT;
+    } else if (message.isEndSession()) {
+      type |= Types.END_SESSION_BIT;
+    }
+
+    if (forceSms) {
+      type |= Types.MESSAGE_FORCE_SMS_BIT;
+    }
 
     String address = message.getRecipients().getPrimaryRecipient().getNumber();
 

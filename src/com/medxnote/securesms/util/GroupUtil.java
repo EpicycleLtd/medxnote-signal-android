@@ -6,12 +6,18 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.medxnote.securesms.R;
+import com.medxnote.securesms.database.DatabaseFactory;
+import com.medxnote.securesms.recipients.Recipient;
 import com.medxnote.securesms.recipients.RecipientFactory;
 import com.medxnote.securesms.recipients.Recipients;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static org.whispersystems.signalservice.internal.push.SignalServiceProtos.GroupContext;
+import org.whispersystems.signalservice.internal.push.SignalServiceProtos.GroupContext.Type;
 
 public class GroupUtil {
 
@@ -48,6 +54,28 @@ public class GroupUtil {
     }
   }
 
+  public static Set<Recipient> getMembers(@NonNull Context context, @NonNull List<String> numbers) {
+    if (!numbers.isEmpty()) {
+      Set<Recipient> recipientSet = new HashSet<>();
+
+      for (String number : numbers) {
+        Recipient recipient = RecipientFactory.getRecipientsFromString(context, number, false)
+                .getPrimaryRecipient();
+
+        recipientSet.add(recipient);
+      }
+      return recipientSet;
+    }
+    return null;
+  }
+
+  public static boolean isAdmin(@NonNull Context context,
+                                @NonNull byte[] groupId) {
+    String admin = DatabaseFactory.getGroupDatabase(context).getAdmin(groupId);
+    String localNumber = TextSecurePreferences.getLocalNumber(context);
+    return admin != null && admin.equals(localNumber);
+  }
+
   public static class GroupDescription {
 
     @NonNull  private final Context         context;
@@ -72,21 +100,50 @@ public class GroupUtil {
 
       StringBuilder description = new StringBuilder();
       String        title       = groupContext.getName();
+      Type          type        = groupContext.getType();
 
-      if (members != null) {
-        description.append(context.getResources().getQuantityString(R.plurals.GroupUtil_joined_the_group,
-                members.getRecipientsList().size(), members.toShortString()));
+      if (type.equals(Type.KICK)) {
+        addKickDescription(description, groupContext.getKickList());
       }
 
-      if (title != null && !title.trim().isEmpty()) {
-        if (description.length() > 0) description.append(" ");
-        description.append(context.getString(R.string.GroupUtil_group_name_is_now, title));
+      if (type.equals(Type.UPDATE)) {
+        if (members != null) {
+          description.append(context.getResources().getQuantityString(R.plurals.GroupUtil_joined_the_group,
+                  members.getRecipientsList().size(), members.toShortString()));
+        }
+        if (title != null && !title.trim().isEmpty()) {
+          if (description.length() > 0) description.append(" ");
+          description.append(context.getString(R.string.GroupUtil_group_name_is_now, title));
+        }
+
       }
 
       if (description.length() > 0) {
         return description.toString();
       } else {
         return context.getString(R.string.GroupUtil_group_updated);
+      }
+    }
+
+    private void addKickDescription(StringBuilder description, List<String> kickMembers) {
+      if (!kickMembers.isEmpty()) {
+          int index = 0;
+          int lastIndex = kickMembers.size() - 1;
+          for (String number : kickMembers) {
+            Recipient recipient = RecipientFactory.getRecipientsFromString(context, number, false)
+                    .getPrimaryRecipient();
+            if (recipient != null) {
+              description.append(recipient.toShortString());
+            } else {
+              description.append(number);
+            }
+            if (index != lastIndex) {
+              description.append(", ");
+            } else {
+              description.append(" ");
+            }
+          }
+          description.append(context.getString(R.string.GroupUtil_kicked_out_of_the_group));
       }
     }
 

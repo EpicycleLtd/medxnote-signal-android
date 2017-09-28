@@ -221,6 +221,7 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
   private boolean    isSecureText;
   private boolean    isSecureVoice;
   private boolean    isMmsEnabled = true;
+  private String     admin;
 
   private DynamicTheme dynamicTheme    = new DynamicTheme();
   private DynamicLanguage dynamicLanguage = new DynamicLanguage();
@@ -413,6 +414,9 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
         }
       } else if (isActiveGroup()) {
         inflater.inflate(R.menu.conversation_push_group_options, menu);
+        if (!TextSecurePreferences.getLocalNumber(this).equals(admin)) {
+          menu.findItem(R.id.menu_edit_group).setVisible(false);
+        }
       }
     }
 
@@ -585,7 +589,13 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
           }
         }
         // del menu record for current thread
-        DatabaseFactory.getMenuDatabase(this).delete(threadId);
+        new AsyncTask<Long,Void,Void>() {
+          @Override
+          protected Void doInBackground(Long... longs) {
+            DatabaseFactory.getMenuDatabase(ConversationActivity.this).delete(longs[0]);
+            return null;
+          }
+        }.execute(threadId);
 
         // restart menu's loader
         getSupportLoaderManager().restartLoader(MenuLoader.ID, Bundle.EMPTY, this).forceLoad();
@@ -728,6 +738,17 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
       return;
     }
 
+    try {
+      byte[] groupId = GroupUtil.getDecodedId(getRecipients().getPrimaryRecipient().getNumber());
+      if (GroupUtil.isAdmin(this, groupId)) {
+        Toast.makeText(this, R.string.ConversationActivity__set_new_administrator_before_you_leave_this_group, Toast.LENGTH_SHORT)
+                .show();
+        return;
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
     AlertDialog.Builder builder = new AlertDialog.Builder(this);
     builder.setTitle(getString(R.string.ConversationActivity_leave_group));
     builder.setIconAttribute(R.attr.dialog_info_icon);
@@ -826,7 +847,9 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
   }
 
   private void handleDisplayGroupRecipients() {
-    new GroupMembersDialog(this, getRecipients()).display();
+    Intent groupMembers = new Intent(this, GroupMembersActivity.class);
+      groupMembers.putExtra("groupId", getRecipients().getPrimaryRecipient().getNumber());
+    startActivity(groupMembers);
   }
 
   private void handleAddToContacts() {
@@ -1144,6 +1167,7 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
     }
 
     recipients.addListener(this);
+    initializeAdministrator();
   }
 
   @Override
@@ -1178,6 +1202,9 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
           recipients = RecipientFactory.getRecipientsForIds(context, ids, true);
           recipients.addListener(ConversationActivity.this);
           titleView.setTitle(recipients);
+          initializeAdministrator();
+          supportInvalidateOptionsMenu();
+          initializeEnabledCheck();
         }
       }
     };
@@ -1209,6 +1236,17 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
       attachmentManager.capturePhoto(this, TAKE_PHOTO); break;
     case AttachmentTypeSelectorAdapter.QR_CODE_SCAN:
       AttachmentManager.scanQrCode(this, QR_CODE_SCAN); break;
+    }
+  }
+
+  private void initializeAdministrator() {
+    if (recipients.isGroupRecipient()) {
+      try {
+        admin = DatabaseFactory.getGroupDatabase(ConversationActivity.this)
+                .getAdmin(GroupUtil.getDecodedId(recipients.getPrimaryRecipient().getNumber()));
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
   }
 

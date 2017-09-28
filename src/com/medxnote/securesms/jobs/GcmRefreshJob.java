@@ -29,6 +29,7 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.medxnote.redphone.signaling.RedPhoneAccountManager;
 import com.medxnote.redphone.signaling.UnauthorizedException;
+import com.medxnote.securesms.BuildConfig;
 import com.medxnote.securesms.PlayServicesProblemActivity;
 import com.medxnote.securesms.R;
 import com.medxnote.securesms.dependencies.InjectableType;
@@ -45,8 +46,6 @@ import javax.inject.Inject;
 public class GcmRefreshJob extends ContextJob implements InjectableType {
 
   private static final String TAG = GcmRefreshJob.class.getSimpleName();
-
-  public static final String REGISTRATION_ID = "108428513090";
 
   @Inject transient SignalServiceAccountManager textSecureAccountManager;
   @Inject transient RedPhoneAccountManager redPhoneAccountManager;
@@ -69,7 +68,7 @@ public class GcmRefreshJob extends ContextJob implements InjectableType {
       if (result != ConnectionResult.SUCCESS) {
         notifyGcmFailure();
       } else {
-        String gcmId = GoogleCloudMessaging.getInstance(context).register(REGISTRATION_ID);
+        String gcmId = GoogleCloudMessaging.getInstance(context).register(BuildConfig.GCM_ID);
         textSecureAccountManager.setGcmId(Optional.of(gcmId));
 
         try {

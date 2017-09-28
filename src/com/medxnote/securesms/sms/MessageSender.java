@@ -173,7 +173,7 @@ public class MessageSender {
     if (!messageRecord.isMms()) throw new AssertionError("Not Group");
 
     Recipients recipients = DatabaseFactory.getMmsAddressDatabase(context).getRecipientsForId(messageRecord.getId());
-    sendGroupPush(context, recipients, messageRecord.getId(), filterRecipientId);
+    sendGroupPush(context, recipients, messageRecord.getId(), filterRecipientId, true);
   }
 
   public static void resend(Context context, MasterSecret masterSecret, MessageRecord messageRecord) {
@@ -201,7 +201,7 @@ public class MessageSender {
     if (!forceSms && isSelfSend(context, recipients)) {
       sendMediaSelf(context, masterSecret, messageId);
     } else if (isGroupPushSend(recipients)) {
-      sendGroupPush(context, recipients, messageId, -1);
+      sendGroupPush(context, recipients, messageId, -1, false);
     } else if (!forceSms && isPushMediaSend(context, recipients)) {
       sendMediaPush(context, recipients, messageId);
     } else {
@@ -252,9 +252,9 @@ public class MessageSender {
     jobManager.add(new PushMediaSendJob(context, messageId, recipients.getPrimaryRecipient().getNumber()));
   }
 
-  private static void sendGroupPush(Context context, Recipients recipients, long messageId, long filterRecipientId) {
+  private static void sendGroupPush(Context context, Recipients recipients, long messageId, long filterRecipientId, boolean resend) {
     JobManager jobManager = ApplicationContext.getInstance(context).getJobManager();
-    jobManager.add(new PushGroupSendJob(context, messageId, recipients.getPrimaryRecipient().getNumber(), filterRecipientId));
+    jobManager.add(new PushGroupSendJob(context, messageId, recipients.getPrimaryRecipient().getNumber(), filterRecipientId, resend));
   }
 
   private static void sendSms(Context context, Recipients recipients, long messageId) {

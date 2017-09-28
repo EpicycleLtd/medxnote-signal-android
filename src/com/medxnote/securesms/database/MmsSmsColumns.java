@@ -68,6 +68,7 @@ public interface MmsSmsColumns {
     // Group Message Information
     protected static final long GROUP_UPDATE_BIT = 0x10000;
     protected static final long GROUP_QUIT_BIT   = 0x20000;
+    protected static final long GROUP_KICK_BIT   = 0x30000;
 
     // Encrypted Storage Information
     protected static final long ENCRYPTION_MASK                  = 0xFF000000;
@@ -194,6 +195,10 @@ public interface MmsSmsColumns {
 
     public static boolean isGroupQuit(long type) {
       return (type & GROUP_QUIT_BIT) != 0;
+    }
+
+    public static boolean isGroupKick(long type) {
+      return (type & GROUP_KICK_BIT) != 0;
     }
 
     public static boolean isSymmetricEncryption(long type) {

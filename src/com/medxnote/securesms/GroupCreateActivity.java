@@ -107,6 +107,7 @@ public class GroupCreateActivity extends PassphraseRequiredActionBarActivity
   private TextView     creatingText;
   private MasterSecret masterSecret;
   private Bitmap       avatarBmp;
+  private Set<Recipient> kickRecipients = new HashSet<>();
 
   @NonNull private Optional<GroupData> groupToUpdate = Optional.absent();
 
@@ -252,6 +253,7 @@ public class GroupCreateActivity extends PassphraseRequiredActionBarActivity
 
   @Override
   public void onRecipientDeleted(Recipient recipient) {
+    kickRecipients.add(recipient);
     getAdapter().remove(recipient);
     updateViewState();
   }
@@ -275,8 +277,17 @@ public class GroupCreateActivity extends PassphraseRequiredActionBarActivity
   }
 
   private void handleGroupUpdate() {
+    Set<Recipient> recipients = getAdapter().getRecipients();
+
+    for (Recipient recipient : kickRecipients) {
+      if (recipients.contains(recipient)) {
+        kickRecipients.remove(recipient);
+      }
+    }
+    recipients.addAll(kickRecipients);
+
     new UpdateSignalGroupTask(this, masterSecret, groupToUpdate.get().id, avatarBmp,
-                              getGroupName(), getAdapter().getRecipients()).execute();
+            getGroupName(), recipients, kickRecipients, getAdapter().getAdministrator()).execute();
   }
 
   private void handleOpenConversation(long threadId, Recipients recipients) {
@@ -318,13 +329,13 @@ public class GroupCreateActivity extends PassphraseRequiredActionBarActivity
         break;
       case Crop.REQUEST_CROP:
         Glide.with(this).load(Crop.getOutput(data)).asBitmap().skipMemoryCache(true)
-             .centerCrop().override(AVATAR_SIZE, AVATAR_SIZE)
-             .into(new SimpleTarget<Bitmap>() {
-               @Override
-               public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
-                 setAvatar(Crop.getOutput(data), resource);
-               }
-             });
+                .centerCrop().override(AVATAR_SIZE, AVATAR_SIZE)
+                .into(new SimpleTarget<Bitmap>() {
+                  @Override
+                  public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+                    setAvatar(Crop.getOutput(data), resource);
+                  }
+                });
     }
   }
 
@@ -441,19 +452,24 @@ public class GroupCreateActivity extends PassphraseRequiredActionBarActivity
 
   private static class UpdateSignalGroupTask extends SignalGroupTask {
     private byte[] groupId;
+    private Set<Recipient> kick;
+    private Recipient admin;
 
     public UpdateSignalGroupTask(GroupCreateActivity activity,
                                  MasterSecret masterSecret, byte[] groupId, Bitmap avatar, String name,
-                                 Set<Recipient> members)
+                                 Set<Recipient> members, Set<Recipient> kick, Recipient newAdmin)
     {
       super(activity, masterSecret, avatar, name, members);
       this.groupId = groupId;
+      this.kick = kick;
+      this.admin = newAdmin;
     }
 
     @Override
     protected Optional<GroupActionResult> doInBackground(Void... aVoid) {
       try {
-        return Optional.of(GroupManager.updateGroup(activity, masterSecret, groupId, members, avatar, name));
+        return Optional.of(GroupManager.updateGroup(activity, masterSecret, groupId,
+                members, kick, avatar, name, admin));
       } catch (InvalidNumberException e) {
         return Optional.absent();
       }
@@ -549,7 +565,7 @@ public class GroupCreateActivity extends PassphraseRequiredActionBarActivity
     @Override
     protected Optional<GroupData> doInBackground(byte[]... groupIds) {
       final GroupDatabase   db               = DatabaseFactory.getGroupDatabase(activity);
-      final Recipients      recipients       = db.getGroupMembers(groupIds[0], false);
+      final Recipients      recipients       = db.getGroupMembers(groupIds[0], true);
       final GroupRecord     group            = db.getGroup(groupIds[0]);
       final Set<Recipient>  existingContacts = new HashSet<>(recipients.getRecipientsList().size());
       existingContacts.addAll(recipients.getRecipientsList());
@@ -559,7 +575,8 @@ public class GroupCreateActivity extends PassphraseRequiredActionBarActivity
                                          existingContacts,
                                          BitmapUtil.fromByteArray(group.getAvatar()),
                                          group.getAvatar(),
-                                         group.getTitle()));
+                                         group.getTitle(),
+                                         group.getAdmin()));
       } else {
         return Optional.absent();
       }
@@ -576,7 +593,9 @@ public class GroupCreateActivity extends PassphraseRequiredActionBarActivity
         if (group.get().avatarBmp != null) {
           activity.setAvatar(group.get().avatarBytes, group.get().avatarBmp);
         }
-        SelectedRecipientsAdapter adapter = new SelectedRecipientsAdapter(activity, group.get().recipients);
+        Recipient admin = RecipientFactory.getRecipientsFromString(activity, group.get().admin, false)
+                .getPrimaryRecipient();
+        SelectedRecipientsAdapter adapter = new SelectedRecipientsAdapter(activity, group.get().recipients, admin);
         adapter.setOnRecipientDeletedListener(activity);
         activity.lv.setAdapter(adapter);
         activity.updateViewState();
@@ -599,13 +618,15 @@ public class GroupCreateActivity extends PassphraseRequiredActionBarActivity
     Bitmap         avatarBmp;
     byte[]         avatarBytes;
     String         name;
+    String         admin;
 
-    public GroupData(byte[] id, Set<Recipient> recipients, Bitmap avatarBmp, byte[] avatarBytes, String name) {
+    public GroupData(byte[] id, Set<Recipient> recipients, Bitmap avatarBmp, byte[] avatarBytes, String name, String admin) {
       this.id          = id;
       this.recipients  = recipients;
       this.avatarBmp   = avatarBmp;
       this.avatarBytes = avatarBytes;
       this.name        = name;
+      this.admin       = admin;
     }
   }
 }

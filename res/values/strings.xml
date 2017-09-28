@@ -125,6 +125,7 @@
         <item quantity="one">1 member</item>
         <item quantity="other">%d members</item>
     </plurals>
+    <string name="ConversationActivity__set_new_administrator_before_you_leave_this_group">Please promote someone to admin before leave the group.</string>
     <string name="ConversationActivity_saved_draft">Saved draft</string>
     <string name="ConversationActivity_invalid_recipient">Invalid recipient!</string>
     <string name="ConversationActivity_calls_not_supported">Calls not supported</string>
@@ -283,8 +284,11 @@
     <string name="GroupCreateActivity_loading_group_details">Loading group details...</string>
     <string name="GroupCreateActivity_youre_already_in_the_group">You\'re already in the group.</string>
 
-    <!-- GroupMembersDialog -->
-    <string name="GroupMembersDialog_me">Me</string>
+    <!--GroupMembersActivity-->
+    <string name="GroupMembersActivity__group_members">Group members</string>
+
+    <!--GroupMembersListItem-->
+    <string name="GroupMembersListItem_me">Me</string>
 
     <!-- ImportExportActivity -->
     <string name="ImportExportActivity_import">Import</string>
@@ -778,6 +782,7 @@
     </plurals>
     <string name="GroupUtil_group_updated">Group updated.</string>
     <string name="GroupUtil_group_name_is_now">Group name is now \'%1$s\'.</string>
+    <string name="GroupUtil_kicked_out_of_the_group">kicked out of the group.</string>
 
     <!-- prompt_passphrase_activity -->
     <string name="prompt_passphrase_activity__unlock">Unlock</string>
@@ -1236,5 +1241,7 @@
 
     <string name="unread_message">1 UNREAD MESSAGE</string>
     <string name="unread_messages">%1$d UNREAD MESSAGES</string>
+    <string name="app_protection_fragment_timeout_minimum">Min timeout</string>
+    <string name="GroupMemberActivity__group_admin">Group Admin</string>
 
 </resources>

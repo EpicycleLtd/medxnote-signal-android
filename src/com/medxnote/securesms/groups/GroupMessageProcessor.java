@@ -24,6 +24,7 @@ import com.medxnote.securesms.jobs.AvatarDownloadJob;
 import com.medxnote.securesms.recipients.RecipientFactory;
 import com.medxnote.securesms.recipients.Recipients;
 import com.medxnote.securesms.sms.IncomingGroupMessage;
+import com.medxnote.securesms.util.TextSecurePreferences;
 
 import org.whispersystems.libsignal.util.guava.Optional;
 import org.whispersystems.signalservice.api.messages.SignalServiceAttachment;
@@ -62,16 +63,26 @@ public class GroupMessageProcessor {
     byte[]             id       = group.getGroupId();
     GroupRecord        record   = database.getGroup(id);
 
-    if (record != null && group.getType() == SignalServiceGroup.Type.UPDATE) {
-      return handleGroupUpdate(context, masterSecret, envelope, group, record, outgoing);
-    } else if (record == null && group.getType() == SignalServiceGroup.Type.UPDATE) {
-      return handleGroupCreate(context, masterSecret, envelope, group, outgoing);
-    } else if (record != null && group.getType() == SignalServiceGroup.Type.QUIT) {
-      return handleGroupLeave(context, masterSecret, envelope, group, record, outgoing);
-    } else {
-      Log.w(TAG, "Received unknown type, ignoring...");
+    if (record != null) {
+      if (group.getType() == SignalServiceGroup.Type.UPDATE) {
+        if (record.getVersion() == 0 || record.isAdminUpdate(envelope.getSource())) {
+          return handleGroupUpdate(context, masterSecret, envelope, group, record, outgoing);
+        }
+      } else if (group.getType() == SignalServiceGroup.Type.KICK) {
+        if (record.getVersion() == 0 || record.isAdminUpdate(envelope.getSource())) {
+          return handleGroupKick(context, masterSecret, envelope, group, record);
+        }
+      } else if (group.getType() == SignalServiceGroup.Type.QUIT) {
+        return handleGroupLeave(context, masterSecret, envelope, group, record, outgoing);
+      }
       return null;
+    } else {
+      if (group.getType() == SignalServiceGroup.Type.UPDATE) {
+        return handleGroupCreate(context, masterSecret, envelope, group, outgoing);
+      }
     }
+    Log.w(TAG, "Received unknown type, ignoring...");
+    return null;
   }
 
   private static @Nullable Long handleGroupCreate(@NonNull Context context,
@@ -88,10 +99,60 @@ public class GroupMessageProcessor {
     SignalServiceAttachment avatar = group.getAvatar().orNull();
 
     database.create(id, group.getName().orNull(), group.getMembers().orNull(),
-                    avatar != null && avatar.isPointer() ? avatar.asPointer() : null,
-                    envelope.getRelay());
+            avatar != null && avatar.isPointer() ? avatar.asPointer() : null,
+            envelope.getRelay(), group.getAdmin());
+
+    RecipientFactory.clearCache();
 
     return storeMessage(context, masterSecret, envelope, group, builder.build(), outgoing);
+  }
+
+  private static @Nullable Long handleGroupKick(@NonNull Context context,
+                                                @NonNull MasterSecretUnion masterSecret,
+                                                @NonNull SignalServiceEnvelope envelope,
+                                                @NonNull SignalServiceGroup group,
+                                                @NonNull GroupRecord groupRecord) {
+
+    Set<String> recordMembers = new HashSet<>(groupRecord.getMembers());
+    Set<String> messageMembers = new HashSet<>(group.getMembers().get());
+    EncryptingSmsDatabase smsDatabase = DatabaseFactory.getEncryptingSmsDatabase(context);
+    GroupDatabase database = DatabaseFactory.getGroupDatabase(context);
+    Set<String> addedMembers = new HashSet<>(messageMembers);
+    addedMembers.removeAll(recordMembers);
+
+    byte[] id = group.getGroupId();
+
+    GroupContext.Builder builder = createGroupContext(group);
+    builder.setType(GroupContext.Type.KICK);
+
+    if (group.getName().isPresent() || group.getAvatar().isPresent()) {
+      SignalServiceAttachment avatar = group.getAvatar().orNull();
+      database.update(id, group.getName().orNull(), avatar != null ? avatar.asPointer() : null);
+    }
+
+    GroupContext groupContext = builder.build();
+
+    List<String> kick = group.getKick().get();
+
+    Set<String> unionMembers = new HashSet<>(recordMembers);
+    unionMembers.addAll(messageMembers);
+    unionMembers.removeAll(kick);
+
+    database.updateMembers(id, new LinkedList<>(unionMembers));
+
+    String body = Base64.encodeBytes(groupContext.toByteArray());
+    IncomingTextMessage incoming = new IncomingTextMessage(envelope.getSource(), envelope.getSourceDevice(),
+            envelope.getTimestamp(), body, Optional.of(group));
+    IncomingGroupMessage  groupMessage = new IncomingGroupMessage(incoming, groupContext, body);
+
+    Pair<Long, Long> messageAndThreadId = smsDatabase.insertMessageInbox(masterSecret, groupMessage);
+
+    if (kick.contains(TextSecurePreferences.getLocalNumber(context))) {
+      database.setActive(id, false);
+    }
+
+    MessageNotifier.updateNotification(context, masterSecret.getMasterSecret().orNull(), messageAndThreadId.second);
+    return messageAndThreadId.second;
   }
 
   private static @Nullable Long handleGroupUpdate(@NonNull Context context,
@@ -111,9 +172,6 @@ public class GroupMessageProcessor {
     Set<String> addedMembers = new HashSet<>(messageMembers);
     addedMembers.removeAll(recordMembers);
 
-    Set<String> missingMembers = new HashSet<>(recordMembers);
-    missingMembers.removeAll(messageMembers);
-
     GroupContext.Builder builder = createGroupContext(group);
     builder.setType(GroupContext.Type.UPDATE);
 
@@ -127,10 +185,6 @@ public class GroupMessageProcessor {
       builder.clearMembers();
     }
 
-    if (missingMembers.size() > 0) {
-      // TODO We should tell added and missing about each-other.
-    }
-
     if (group.getName().isPresent() || group.getAvatar().isPresent()) {
       SignalServiceAttachment avatar = group.getAvatar().orNull();
       database.update(id, group.getName().orNull(), avatar != null ? avatar.asPointer() : null);
@@ -140,7 +194,13 @@ public class GroupMessageProcessor {
       builder.clearName();
     }
 
-    if (!groupRecord.isActive()) database.setActive(id, true);
+    if (!groupRecord.getAdmin().equals(group.getAdmin())) {
+      database.updateAdmin(group.getGroupId(), group.getAdmin());
+    }
+
+    if (!groupRecord.isActive()) {
+      database.setActive(id, true);
+    }
 
     return storeMessage(context, masterSecret, envelope, group, builder.build(), outgoing);
   }
@@ -179,7 +239,7 @@ public class GroupMessageProcessor {
   {
     if (group.getAvatar().isPresent()) {
       ApplicationContext.getInstance(context).getJobManager()
-                        .add(new AvatarDownloadJob(context, group.getGroupId()));
+              .add(new AvatarDownloadJob(context, group.getGroupId()));
     }
 
     try {
@@ -217,9 +277,9 @@ public class GroupMessageProcessor {
 
     if (group.getAvatar().isPresent() && group.getAvatar().get().isPointer()) {
       builder.setAvatar(AttachmentPointer.newBuilder()
-                                         .setId(group.getAvatar().get().asPointer().getId())
-                                         .setKey(ByteString.copyFrom(group.getAvatar().get().asPointer().getKey()))
-                                         .setContentType(group.getAvatar().get().getContentType()));
+              .setId(group.getAvatar().get().asPointer().getId())
+              .setKey(ByteString.copyFrom(group.getAvatar().get().asPointer().getKey()))
+              .setContentType(group.getAvatar().get().getContentType()));
     }
 
     if (group.getName().isPresent()) {
@@ -229,6 +289,12 @@ public class GroupMessageProcessor {
     if (group.getMembers().isPresent()) {
       builder.addAllMembers(group.getMembers().get());
     }
+
+    if (group.getKick().isPresent()) {
+      builder.addAllKick(group.getKick().get());
+    }
+
+    builder.setAdmin(group.getAdmin());
 
     return builder;
   }

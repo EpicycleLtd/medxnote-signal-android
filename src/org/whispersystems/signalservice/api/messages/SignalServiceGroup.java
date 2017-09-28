@@ -39,22 +39,24 @@ public class SignalServiceGroup {
     UNKNOWN,
     UPDATE,
     DELIVER,
-    QUIT
+    QUIT,
+    KICK
   }
 
   private final byte[]                         groupId;
   private final Type                           type;
   private final Optional<String>               name;
   private final Optional<List<String>>         members;
+  private final Optional<List<String>>         kick;
   private final Optional<SignalServiceAttachment> avatar;
-
+  private final String                         admin;
 
   /**
    * Construct a DELIVER group context.
    * @param groupId
    */
-  public SignalServiceGroup(byte[] groupId) {
-    this(Type.DELIVER, groupId, null, null, null);
+  public SignalServiceGroup(byte[] groupId, String admin) {
+    this(Type.DELIVER, groupId, null, null, null, null, admin);
   }
 
   /**
@@ -67,13 +69,21 @@ public class SignalServiceGroup {
    */
   public SignalServiceGroup(Type type, byte[] groupId, String name,
                             List<String> members,
-                            SignalServiceAttachment avatar)
+                            List<String> kick,
+                            SignalServiceAttachment avatar,
+                            String admin)
   {
     this.type    = type;
     this.groupId = groupId;
     this.name    = Optional.fromNullable(name);
     this.members = Optional.fromNullable(members);
+    this.kick    = Optional.fromNullable(kick);
     this.avatar  = Optional.fromNullable(avatar);
+    this.admin   = admin;
+  }
+
+  public String getAdmin() {
+    return admin;
   }
 
   public byte[] getGroupId() {
@@ -90,6 +100,10 @@ public class SignalServiceGroup {
 
   public Optional<List<String>> getMembers() {
     return members;
+  }
+
+  public Optional<List<String>> getKick() {
+    return kick;
   }
 
   public Optional<SignalServiceAttachment> getAvatar() {
@@ -110,7 +124,9 @@ public class SignalServiceGroup {
     private byte[]               id;
     private String               name;
     private List<String>         members;
+    private List<String>         kick;
     private SignalServiceAttachment avatar;
+    private String               admin;
 
     private Builder(Type type) {
       this.type = type;
@@ -131,19 +147,30 @@ public class SignalServiceGroup {
       return this;
     }
 
+    public Builder withKick(List<String> kick) {
+      this.kick = kick;
+      return this;
+    }
+
     public Builder withAvatar(SignalServiceAttachment avatar) {
       this.avatar = avatar;
+      return this;
+    }
+
+    public Builder withAdmin(String admin) {
+      this.admin = admin;
       return this;
     }
 
     public SignalServiceGroup build() {
       if (id == null) throw new IllegalArgumentException("No group ID specified!");
 
-      if (type == Type.UPDATE && name == null && members == null && avatar == null) {
+      if (type == Type.UPDATE && name == null && members == null && avatar == null
+              && kick == null) {
         throw new IllegalArgumentException("Group update with no updates!");
       }
 
-      return new SignalServiceGroup(type, id, name, members, avatar);
+      return new SignalServiceGroup(type, id, name, members, kick, avatar, admin);
     }
 
   }

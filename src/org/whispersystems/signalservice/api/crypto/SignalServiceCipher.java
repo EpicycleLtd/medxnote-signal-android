@@ -210,12 +210,14 @@ public class SignalServiceCipher {
       case DELIVER: type = SignalServiceGroup.Type.DELIVER; break;
       case UPDATE:  type = SignalServiceGroup.Type.UPDATE;  break;
       case QUIT:    type = SignalServiceGroup.Type.QUIT;    break;
+      case KICK:    type = SignalServiceGroup.Type.KICK;    break;
       default:      type = SignalServiceGroup.Type.UNKNOWN; break;
     }
 
     if (content.getGroup().getType() != DELIVER) {
       String                      name    = null;
       List<String>                members = null;
+      List<String>                kick    = null;
       SignalServiceAttachmentPointer avatar  = null;
 
       if (content.getGroup().hasName()) {
@@ -233,10 +235,14 @@ public class SignalServiceCipher {
                 envelope.getRelay());
       }
 
-      return new SignalServiceGroup(type, content.getGroup().getId().toByteArray(), name, members, avatar);
+      if (content.getGroup().getKickCount() > 0) {
+        kick = content.getGroup().getKickList();
+      }
+
+      return new SignalServiceGroup(type, content.getGroup().getId().toByteArray(), name, members, kick, avatar, content.getGroup().getAdmin());
     }
 
-    return new SignalServiceGroup(content.getGroup().getId().toByteArray());
+    return new SignalServiceGroup(content.getGroup().getId().toByteArray(), content.getGroup().getAdmin());
   }
 
 

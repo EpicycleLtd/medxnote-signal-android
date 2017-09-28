@@ -6,6 +6,7 @@ import android.util.Log;
 import com.medxnote.securesms.MismatchHandler;
 import com.medxnote.securesms.crypto.MasterSecret;
 import com.medxnote.securesms.database.DatabaseFactory;
+import com.medxnote.securesms.database.GroupDatabase;
 import com.medxnote.securesms.database.MmsDatabase;
 import com.medxnote.securesms.database.NoSuchMessageException;
 import com.medxnote.securesms.database.documents.NetworkFailure;
@@ -52,6 +53,13 @@ public class PushGroupSendJob extends PushSendJob implements InjectableType {
 
   private final long messageId;
   private final long filterRecipientId;
+  private byte[] groupId;
+  private boolean isResend;
+
+  public PushGroupSendJob(Context context, long messageId, String destination, long filterRecipientId, boolean isResend) {
+    this(context, messageId, destination, filterRecipientId);
+    this.isResend = isResend;
+  }
 
   public PushGroupSendJob(Context context, long messageId, String destination, long filterRecipientId) {
     super(context, JobParameters.newBuilder()
@@ -64,6 +72,7 @@ public class PushGroupSendJob extends PushSendJob implements InjectableType {
 
     this.messageId         = messageId;
     this.filterRecipientId = filterRecipientId;
+    this.isResend = false;
   }
 
   @Override
@@ -81,10 +90,11 @@ public class PushGroupSendJob extends PushSendJob implements InjectableType {
 
     try {
       // save receipts
-      byte[] groupId = GroupUtil.getDecodedId(message.getRecipients().getPrimaryRecipient().getNumber());
+      groupId = GroupUtil.getDecodedId(message.getRecipients().getPrimaryRecipient().getNumber());
       Recipients recipients = DatabaseFactory.getGroupDatabase(context).getGroupMembers(groupId, false);
-      DatabaseFactory.getReceiptDatabase(context).createReceipts(recipients, message.getSentTimeMillis());
-
+      if (!isResend) {
+        DatabaseFactory.getReceiptDatabase(context).createReceipts(recipients, message.getSentTimeMillis());
+      }
       deliver(masterSecret, message, filterRecipientId);
 
       database.markAsPush(messageId);
@@ -142,8 +152,7 @@ public class PushGroupSendJob extends PushSendJob implements InjectableType {
 
   @Override
   public boolean onShouldRetryThrowable(Exception exception) {
-    if (exception instanceof IOException) return true;
-    return false;
+    return exception instanceof IOException;
   }
 
   @Override
@@ -152,14 +161,15 @@ public class PushGroupSendJob extends PushSendJob implements InjectableType {
   }
 
   private void deliver(MasterSecret masterSecret, OutgoingMediaMessage message, long filterRecipientId)
-      throws IOException, RecipientFormattingException, InvalidNumberException,
-      EncapsulatedExceptions, UndeliverableMessageException
+          throws IOException, RecipientFormattingException, InvalidNumberException,
+          EncapsulatedExceptions, UndeliverableMessageException
   {
-    SignalServiceMessageSender    messageSender = messageSenderFactory.create();
-    byte[]                        groupId       = GroupUtil.getDecodedId(message.getRecipients().getPrimaryRecipient().getNumber());
-    Recipients recipients    = DatabaseFactory.getGroupDatabase(context).getGroupMembers(groupId, false);
+    GroupDatabase groupDatabase = DatabaseFactory.getGroupDatabase(context);
+    SignalServiceMessageSender messageSender = messageSenderFactory.create();
+    Recipients recipients = groupDatabase.getGroupMembers(groupId, false);
     List<SignalServiceAttachment> attachments   = getAttachmentsFor(masterSecret, message.getAttachments());
     List<SignalServiceAddress>    addresses;
+    String groupAdmin = groupDatabase.getAdmin(groupId);
 
     if (filterRecipientId >= 0) addresses = getPushAddresses(filterRecipientId);
     else                        addresses = getPushAddresses(recipients);
@@ -167,14 +177,29 @@ public class PushGroupSendJob extends PushSendJob implements InjectableType {
     if (message.isGroup()) {
       OutgoingGroupMediaMessage groupMessage     = (OutgoingGroupMediaMessage) message;
       GroupContext              groupContext     = groupMessage.getGroupContext();
+      List<String>              kickMembers      = groupContext.getKickList();
+      if (!kickMembers.isEmpty()) {
+        List<String> memberNumbers = recipients.toNumberStringList(false);
+        memberNumbers.removeAll(kickMembers);
+        groupDatabase.updateMembers(groupId, memberNumbers);
+      }
       SignalServiceAttachment   avatar           = attachments.isEmpty() ? null : attachments.get(0);
-      SignalServiceGroup.Type   type             = groupMessage.isGroupQuit() ? SignalServiceGroup.Type.QUIT : SignalServiceGroup.Type.UPDATE;
-      SignalServiceGroup        group            = new SignalServiceGroup(type, groupId, groupContext.getName(), groupContext.getMembersList(), avatar);
+      SignalServiceGroup.Type   type;
+      if (groupMessage.isGroupQuit()) {
+        type = SignalServiceGroup.Type.QUIT;
+      } else if (groupMessage.isGroupUpdate()) {
+        type = SignalServiceGroup.Type.UPDATE;
+      } else if (groupMessage.isGroupKick()) {
+        type = SignalServiceGroup.Type.KICK;
+      } else {
+        type = SignalServiceGroup.Type.UNKNOWN;
+      }
+      SignalServiceGroup        group            = new SignalServiceGroup(type, groupId, groupContext.getName(), groupContext.getMembersList(), groupContext.getKickList(), avatar, groupAdmin);
       SignalServiceDataMessage  groupDataMessage = new SignalServiceDataMessage(message.getSentTimeMillis(), group, null, null);
 
       messageSender.sendMessage(addresses, groupDataMessage);
     } else {
-      SignalServiceGroup       group        = new SignalServiceGroup(groupId);
+      SignalServiceGroup       group        = new SignalServiceGroup(groupId, groupAdmin);
       SignalServiceDataMessage groupMessage = new SignalServiceDataMessage(message.getSentTimeMillis(), group, attachments, message.getBody());
 
       messageSender.sendMessage(addresses, groupMessage);

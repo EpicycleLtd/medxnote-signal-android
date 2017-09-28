@@ -5,6 +5,8 @@ import android.os.Parcelable;
 import android.telephony.SmsMessage;
 
 import com.medxnote.securesms.util.GroupUtil;
+import com.medxnote.securesms.util.Util;
+
 import org.whispersystems.libsignal.util.guava.Optional;
 import org.whispersystems.signalservice.api.messages.SignalServiceGroup;
 import org.whispersystems.signalservice.api.push.SignalServiceAddress;
@@ -36,6 +38,7 @@ public class IncomingTextMessage implements Parcelable {
   private final String  groupId;
   private final boolean push;
   private final int     subscriptionId;
+  private final String  kickNumbers;
 
   public IncomingTextMessage(SmsMessage message, int subscriptionId) {
     this.message              = message.getDisplayMessageBody();
@@ -49,6 +52,7 @@ public class IncomingTextMessage implements Parcelable {
     this.subscriptionId       = subscriptionId;
     this.groupId              = null;
     this.push                 = false;
+    this.kickNumbers          = null;
   }
 
   public IncomingTextMessage(String sender, int senderDeviceId, long sentTimestampMillis,
@@ -67,8 +71,14 @@ public class IncomingTextMessage implements Parcelable {
 
     if (group.isPresent()) {
       this.groupId = GroupUtil.getEncodedId(group.get().getGroupId());
+      if (group.get().getKick().isPresent()) {
+        this.kickNumbers = Util.join(group.get().getKick().get(), ",");
+      } else {
+        this.kickNumbers = null;
+      }
     } else {
       this.groupId = null;
+      this.kickNumbers = null;
     }
   }
 
@@ -84,6 +94,7 @@ public class IncomingTextMessage implements Parcelable {
     this.groupId              = in.readString();
     this.push                 = (in.readInt() == 1);
     this.subscriptionId       = in.readInt();
+    this.kickNumbers          = in.readString();
   }
 
   public IncomingTextMessage(IncomingTextMessage base, String newBody) {
@@ -98,6 +109,7 @@ public class IncomingTextMessage implements Parcelable {
     this.groupId              = base.getGroupId();
     this.push                 = base.isPush();
     this.subscriptionId       = base.getSubscriptionId();
+    this.kickNumbers          = base.getKickNumbers();
   }
 
   public IncomingTextMessage(List<IncomingTextMessage> fragments) {
@@ -118,9 +130,10 @@ public class IncomingTextMessage implements Parcelable {
     this.groupId              = fragments.get(0).getGroupId();
     this.push                 = fragments.get(0).isPush();
     this.subscriptionId       = fragments.get(0).getSubscriptionId();
+    this.kickNumbers          = fragments.get(0).getKickNumbers();
   }
 
-  protected IncomingTextMessage(String sender, String groupId)
+  protected IncomingTextMessage(String sender, String groupId, String kickNumbers)
   {
     this.message              = "";
     this.sender               = sender;
@@ -133,6 +146,11 @@ public class IncomingTextMessage implements Parcelable {
     this.groupId              = groupId;
     this.push                 = true;
     this.subscriptionId       = -1;
+    this.kickNumbers          = kickNumbers;
+  }
+
+  public String getKickNumbers() {
+    return kickNumbers;
   }
 
   public int getSubscriptionId() {
@@ -221,5 +239,6 @@ public class IncomingTextMessage implements Parcelable {
     out.writeString(groupId);
     out.writeInt(push ? 1 : 0);
     out.writeInt(subscriptionId);
+    out.writeString(kickNumbers);
   }
 }

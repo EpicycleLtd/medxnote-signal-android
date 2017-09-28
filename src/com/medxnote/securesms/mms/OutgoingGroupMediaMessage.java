@@ -56,6 +56,10 @@ public class OutgoingGroupMediaMessage extends OutgoingSecureMediaMessage {
     return group.getType().getNumber() == GroupContext.Type.QUIT_VALUE;
   }
 
+  public boolean isGroupKick() {
+    return group.getType().getNumber() == GroupContext.Type.KICK_VALUE;
+  }
+
   public GroupContext getGroupContext() {
     return group;
   }

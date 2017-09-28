@@ -472,7 +472,7 @@ public class TextSecurePreferences {
     return getBooleanPreference(context, AUTOACCEPT_PREF, true);
   }
 
-  public static boolean isAutoacceptMessageEnabled(Context context) {
+  public static boolean isAutoAcceptMessageEnabled(Context context) {
     return getBooleanPreference(context, AUTOACCEPT_MSG_PREF, true);
   }
 

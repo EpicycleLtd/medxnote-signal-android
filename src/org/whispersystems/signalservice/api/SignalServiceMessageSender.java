@@ -61,8 +61,6 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.medxnote.securesms.database.DatabaseFactory;
-
 /**
  * The main interface for sending Signal Service messages.
  *
@@ -223,7 +221,7 @@ public class SignalServiceMessageSender {
     Content.Builder     container = Content.newBuilder();
     SyncMessage.Builder builder   = SyncMessage.newBuilder();
     builder.setContacts(SyncMessage.Contacts.newBuilder()
-      .setBlob(createAttachmentPointer(contacts)));
+            .setBlob(createAttachmentPointer(contacts)));
 
     return container.setSyncMessage(builder).build().toByteArray();
   }
@@ -273,13 +271,21 @@ public class SignalServiceMessageSender {
     GroupContext.Builder builder = GroupContext.newBuilder();
     builder.setId(ByteString.copyFrom(group.getGroupId()));
 
-    if (group.getType() != SignalServiceGroup.Type.DELIVER) {
-      if      (group.getType() == SignalServiceGroup.Type.UPDATE) builder.setType(GroupContext.Type.UPDATE);
-      else if (group.getType() == SignalServiceGroup.Type.QUIT)   builder.setType(GroupContext.Type.QUIT);
-      else                                                     throw new AssertionError("Unknown type: " + group.getType());
+    SignalServiceGroup.Type type = group.getType();
+    if (type != SignalServiceGroup.Type.DELIVER) {
+      if (type == SignalServiceGroup.Type.UPDATE) {
+        builder.setType(GroupContext.Type.UPDATE);
+      } else if (type == SignalServiceGroup.Type.QUIT) {
+        builder.setType(GroupContext.Type.QUIT);
+      } else if (type == SignalServiceGroup.Type.KICK) {
+        builder.setType(GroupContext.Type.KICK);
+      } else {
+        throw new AssertionError("Unknown type: " + group.getType());
+      }
 
       if (group.getName().isPresent()) builder.setName(group.getName().get());
       if (group.getMembers().isPresent()) builder.addAllMembers(group.getMembers().get());
+      if (group.getKick().isPresent()) builder.addAllKick(group.getKick().get());
 
       if (group.getAvatar().isPresent() && group.getAvatar().get().isStream()) {
         AttachmentPointer pointer = createAttachmentPointer(group.getAvatar().get().asStream());
@@ -287,6 +293,10 @@ public class SignalServiceMessageSender {
       }
     } else {
       builder.setType(GroupContext.Type.DELIVER);
+    }
+
+    if (group.getAdmin() != null && !group.getAdmin().isEmpty()) {
+      builder.setAdmin(group.getAdmin());
     }
 
     return builder.build();
@@ -467,8 +477,8 @@ public class SignalServiceMessageSender {
     }
   }
 
-  public static interface EventListener {
-    public void onSecurityEvent(SignalServiceAddress address);
+  public interface EventListener {
+    void onSecurityEvent(SignalServiceAddress address);
   }
 
 }

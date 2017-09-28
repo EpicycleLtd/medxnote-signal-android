@@ -14,6 +14,7 @@ import com.medxnote.securesms.crypto.storage.SignalProtocolStoreImpl;
 import com.medxnote.securesms.crypto.storage.TextSecureSessionStore;
 import com.medxnote.securesms.database.DatabaseFactory;
 import com.medxnote.securesms.database.EncryptingSmsDatabase;
+import com.medxnote.securesms.database.GroupDatabase.GroupRecord;
 import com.medxnote.securesms.database.MmsDatabase;
 import com.medxnote.securesms.database.NoSuchMessageException;
 import com.medxnote.securesms.database.PushDatabase;
@@ -67,6 +68,7 @@ import org.whispersystems.signalservice.api.messages.multidevice.SignalServiceSy
 import org.whispersystems.signalservice.api.push.SignalServiceAddress;
 import org.whispersystems.signalservice.internal.push.SignalServiceProtos.PredefinedAnswers;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -339,6 +341,12 @@ public class PushDecryptJob extends ContextJob {
             message.getGroupInfo(),
             message.getAttachments());
 
+    if (message.getGroupInfo().isPresent()) {
+      if (!isValidGroupRecipient(message.getGroupInfo().get(), envelope)) {
+        return;
+      }
+    }
+
     Pair<Long, Long>         messageAndThreadId = database.insertSecureDecryptedMessageInbox(masterSecret, mediaMessage, -1);
     List<DatabaseAttachment> attachments        = DatabaseFactory.getAttachmentDatabase(context).getAttachmentsForMessage(messageAndThreadId.first);
 
@@ -407,6 +415,13 @@ public class PushDecryptJob extends ContextJob {
               message.getGroupInfo());
 
       textMessage = new IncomingEncryptedMessage(textMessage, body);
+
+      if (message.getGroupInfo().isPresent()) {
+        if (!isValidGroupRecipient(message.getGroupInfo().get(), envelope)) {
+          return;
+        }
+      }
+
       messageAndThreadId = database.insertMessageInbox(masterSecret, textMessage);
 
       if (smsMessageId.isPresent()) database.deleteMessage(smsMessageId.get());
@@ -550,6 +565,19 @@ public class PushDecryptJob extends ContextJob {
     } catch (InvalidMessageException | InvalidVersionException e) {
       throw new AssertionError(e);
     }
+  }
+
+  private boolean isValidGroupRecipient(@NonNull SignalServiceGroup group,
+                                     @NonNull SignalServiceEnvelope envelope) {
+    GroupRecord record = DatabaseFactory.getGroupDatabase(context).getGroup(group.getGroupId());
+    if (record != null) {
+      HashSet<String> members = new HashSet<>(record.getMembers());
+      String sender = envelope.getSource();
+      if (!members.contains(sender)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private Pair<Long, Long> insertPlaceholder(@NonNull SignalServiceEnvelope envelope) {

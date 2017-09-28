@@ -80,9 +80,9 @@ public abstract class DisplayRecord {
 
   public boolean isFailed() {
     return
-        MmsSmsColumns.Types.isFailedMessageType(type)            ||
-        MmsSmsColumns.Types.isPendingSecureSmsFallbackType(type) ||
-        deliveryStatus >= SmsDatabase.Status.STATUS_FAILED;
+            MmsSmsColumns.Types.isFailedMessageType(type)            ||
+                    MmsSmsColumns.Types.isPendingSecureSmsFallbackType(type) ||
+                    deliveryStatus >= SmsDatabase.Status.STATUS_FAILED;
   }
 
   public boolean isPending() {
@@ -91,6 +91,10 @@ public abstract class DisplayRecord {
 
   public boolean isOutgoing() {
     return MmsSmsColumns.Types.isOutgoingMessageType(type);
+  }
+
+  public boolean isIncoming() {
+    return MmsSmsColumns.Types.isInboxType(type);
   }
 
   public abstract SpannableString getDisplayBody();
@@ -131,8 +135,12 @@ public abstract class DisplayRecord {
     return SmsDatabase.Types.isGroupQuit(type);
   }
 
+  public boolean isGroupKick() {
+    return SmsDatabase.Types.isGroupKick(type);
+  }
+
   public boolean isGroupAction() {
-    return isGroupUpdate() || isGroupQuit();
+    return isGroupUpdate() || isGroupQuit() || isGroupKick();
   }
 
   public boolean isCallLog() {

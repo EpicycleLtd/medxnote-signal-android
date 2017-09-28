@@ -682,7 +682,8 @@ public class MmsDatabase extends MessagingDatabase {
 
         Recipients recipients = RecipientFactory.getRecipientsFromStrings(context, destinations, false);
 
-        if (body != null && (Types.isGroupQuit(outboxType) || Types.isGroupUpdate(outboxType))) {
+        if (body != null && (Types.isGroupQuit(outboxType) || Types.isGroupUpdate(outboxType)
+                || Types.isGroupKick(outboxType))) {
           return new OutgoingGroupMediaMessage(recipients, body, attachments, timestamp);
         }
 
@@ -895,8 +896,14 @@ public class MmsDatabase extends MessagingDatabase {
     if (forceSms)           type |= Types.MESSAGE_FORCE_SMS_BIT;
 
     if (message.isGroup()) {
-      if      (((OutgoingGroupMediaMessage)message).isGroupUpdate()) type |= Types.GROUP_UPDATE_BIT;
-      else if (((OutgoingGroupMediaMessage)message).isGroupQuit())   type |= Types.GROUP_QUIT_BIT;
+      OutgoingGroupMediaMessage msg = (OutgoingGroupMediaMessage) message;
+      if (msg.isGroupUpdate()) {
+        type |= Types.GROUP_UPDATE_BIT;
+      } else if (msg.isGroupQuit()) {
+        type |= Types.GROUP_QUIT_BIT;
+      } else if (msg.isGroupKick()) {
+        type |= Types.GROUP_KICK_BIT;
+      }
     }
 
     List<String> recipientNumbers = message.getRecipients().toNumberStringList(true);

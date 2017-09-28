@@ -11,6 +11,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.medxnote.securesms.R;
+import com.medxnote.securesms.components.emoji.EmojiTextView;
 import com.medxnote.securesms.recipients.Recipient;
 
 import org.whispersystems.libsignal.util.guava.Optional;
@@ -26,21 +27,24 @@ public class SelectedRecipientsAdapter extends BaseAdapter {
   @NonNull  private Context                    context;
   @Nullable private OnRecipientDeletedListener onRecipientDeletedListener;
   @NonNull  private List<RecipientWrapper>     recipients;
+            private Recipient                  admin;
 
   public SelectedRecipientsAdapter(@NonNull Context context) {
-    this(context, Collections.<Recipient>emptyList());
+    this(context, Collections.<Recipient>emptyList(), null);
   }
 
   public SelectedRecipientsAdapter(@NonNull Context context,
-                                   @NonNull Collection<Recipient> existingRecipients)
+                                   @NonNull Collection<Recipient> existingRecipients,
+                                   Recipient admin)
   {
     this.context    = context;
     this.recipients = wrapExistingMembers(existingRecipients);
+    this.admin = admin;
   }
 
   public void add(@NonNull Recipient recipient, boolean isPush) {
     if (!find(recipient).isPresent()) {
-      RecipientWrapper wrapper = new RecipientWrapper(recipient, true, isPush);
+      RecipientWrapper wrapper = new RecipientWrapper(recipient, isPush);
       this.recipients.add(0, wrapper);
       notifyDataSetChanged();
     }
@@ -100,31 +104,50 @@ public class SelectedRecipientsAdapter extends BaseAdapter {
 
     final RecipientWrapper rw         = (RecipientWrapper)getItem(position);
     final Recipient        p          = rw.getRecipient();
-    final boolean          modifiable = rw.isModifiable();
 
-    TextView    name   = (TextView)    v.findViewById(R.id.name);
-    TextView    phone  = (TextView)    v.findViewById(R.id.phone);
+    EmojiTextView name = (EmojiTextView) v.findViewById(R.id.name);
+    EmojiTextView phone = (EmojiTextView) v.findViewById(R.id.phone);
     ImageButton delete = (ImageButton) v.findViewById(R.id.delete);
+    ImageButton adminStatus = (ImageButton) v.findViewById(R.id.admin_status);
+
+    if (admin != null && p.equals(admin)) {
+      adminStatus.setImageResource(R.mipmap.ic_admin);
+      delete.setVisibility(View.GONE);
+    } else {
+      adminStatus.setImageResource(R.mipmap.ic_not_admin);
+      delete.setVisibility(View.VISIBLE);
+    }
 
     name.setText(p.getName());
     phone.setText(p.getNumber());
-    delete.setVisibility(modifiable ? View.VISIBLE : View.GONE);
     delete.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
         if (onRecipientDeletedListener != null) {
-          onRecipientDeletedListener.onRecipientDeleted(recipients.get(position).getRecipient());
+          onRecipientDeletedListener.onRecipientDeleted(p);
         }
+      }
+    });
+
+    adminStatus.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        admin = p;
+        notifyDataSetChanged();
       }
     });
 
     return v;
   }
 
+  public Recipient getAdministrator() {
+    return this.admin;
+  }
+
   private static List<RecipientWrapper> wrapExistingMembers(Collection<Recipient> recipients) {
     final LinkedList<RecipientWrapper> wrapperList = new LinkedList<>();
     for (Recipient recipient : recipients) {
-      wrapperList.add(new RecipientWrapper(recipient, false, true));
+      wrapperList.add(new RecipientWrapper(recipient, true));
     }
     return wrapperList;
   }
@@ -139,24 +162,16 @@ public class SelectedRecipientsAdapter extends BaseAdapter {
 
   public static class RecipientWrapper {
     private final Recipient recipient;
-    private final boolean   modifiable;
     private final boolean   push;
 
     public RecipientWrapper(final @NonNull Recipient recipient,
-                            final boolean modifiable,
-                            final boolean push)
-    {
+                            final boolean push) {
       this.recipient  = recipient;
-      this.modifiable = modifiable;
       this.push       = push;
     }
 
     public @NonNull Recipient getRecipient() {
       return recipient;
-    }
-
-    public boolean isModifiable() {
-      return modifiable;
     }
 
     public boolean isPush() {

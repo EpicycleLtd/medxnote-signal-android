@@ -79,7 +79,8 @@ public class DatabaseFactory {
   private static final int INTRODUCED_MENU_DATABASE                        = 31;
   private static final int INTRODUCED_HIDDEN_MESSAGE                       = 32;
   private static final int INTRODUCED_HIDDEN_MESSAGE_MMS                   = 33;
-  private static final int DATABASE_VERSION                                = 33;
+  private static final int INTRODUCED_GROUP_ADMIN_VERSION                  = 34;
+  private static final int DATABASE_VERSION                                = 34;
 
   private static final String DATABASE_NAME    = "messages.db";
   private static final Object lock             = new Object();
@@ -881,6 +882,11 @@ public class DatabaseFactory {
         if (cursor.getColumnIndex("hidden") < 0){
           db.execSQL("ALTER TABLE mms ADD COLUMN hidden INTEGER DEFAULT 0;");
         }
+      }
+
+      if (oldVersion < INTRODUCED_GROUP_ADMIN_VERSION) {
+        db.execSQL("ALTER TABLE groups ADD COLUMN admin TEXT;");
+        db.execSQL("ALTER TABLE groups ADD COLUMN version INTEGER DEFAULT 0;");
       }
 
       db.setTransactionSuccessful();
