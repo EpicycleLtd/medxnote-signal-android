@@ -88,6 +88,7 @@ public class GroupManager {
     } else {
       admin = newAdmin.getNumber();
     }
+    admin = Util.canonicalizeNumber(context, admin);
 
     memberE164Numbers.add(TextSecurePreferences.getLocalNumber(context));
     groupDatabase.updateMembers(groupId, new LinkedList<>(memberE164Numbers));

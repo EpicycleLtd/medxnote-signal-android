@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.medxnote.securesms.GroupMembersListItem xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="?android:attr/listPreferredItemHeight"
+    android:layout_marginStart="10dp"
+    android:layout_marginEnd="10dp"
+    android:gravity="center">
+
+    <com.medxnote.securesms.components.AvatarImageView
+        android:id="@+id/contact_photo_image"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:foreground="@drawable/contact_photo_background"
+        android:cropToPadding="true"
+        tools:src="@color/blue_600"
+        android:layout_marginRight="10dp"
+        android:layout_marginEnd="10dp" />
+
+    <LinearLayout android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <com.medxnote.securesms.components.emoji.EmojiTextView
+            android:id="@+id/name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checkMark="?android:attr/listChoiceIndicatorMultiple"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textSize="16sp"
+            tools:text="Frieeeeeeedrich Nieeeeeeeeeetzscheeeeeee" />
+
+        <TextView android:id="@+id/number"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textDirection="ltr"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif-light"
+            tools:text="+1 (555) 555-5555" />
+
+    </LinearLayout>
+
+    <TextView android:id="@+id/status_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/admin_background"
+        android:visibility="gone"
+        android:text="@string/GroupMemberActivity__group_admin"
+        android:textSize="14sp"
+        android:padding="5dp" />
+
+</com.medxnote.securesms.GroupMembersListItem>

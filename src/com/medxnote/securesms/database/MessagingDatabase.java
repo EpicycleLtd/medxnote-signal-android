@@ -12,8 +12,10 @@ import com.medxnote.securesms.database.documents.Document;
 import com.medxnote.securesms.database.documents.IdentityKeyMismatch;
 import com.medxnote.securesms.database.documents.IdentityKeyMismatchList;
 import com.medxnote.securesms.util.JsonUtils;
+import com.medxnote.securesms.util.Util;
 
 import org.whispersystems.libsignal.IdentityKey;
+import org.whispersystems.signalservice.api.util.InvalidNumberException;
 
 import java.io.IOException;
 import java.util.ArrayList;

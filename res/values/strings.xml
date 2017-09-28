@@ -125,7 +125,7 @@
         <item quantity="one">1 member</item>
         <item quantity="other">%d members</item>
     </plurals>
-    <string name="ConversationActivity__set_new_administrator_before_you_leave_this_group">Please promote someone to admin before leave the group.</string>
+    <string name="ConversationActivity__set_new_administrator_before_you_leave_this_group">Set new administrator, before you leave this group</string>
     <string name="ConversationActivity_saved_draft">Saved draft</string>
     <string name="ConversationActivity_invalid_recipient">Invalid recipient!</string>
     <string name="ConversationActivity_calls_not_supported">Calls not supported</string>

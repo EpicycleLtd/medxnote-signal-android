@@ -81,6 +81,7 @@ public abstract class PushReceivedJob extends ContextJob {
 
   private void handleReceipt(SignalServiceEnvelope envelope) {
     Log.w(TAG, String.format("Received receipt: (XXXXX, %d)", envelope.getTimestamp()));
+    Log.w(TAG, "XXXXX " + envelope.getSource());
     SyncMessageId syncMessageId = new SyncMessageId(
       envelope.getSource(),
       envelope.getTimestamp(),

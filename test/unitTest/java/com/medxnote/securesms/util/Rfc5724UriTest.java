@@ -15,14 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.medxnote.securesms.util;
+package com.medxnote.securesms.util;
 
 import com.medxnote.securesms.util.Rfc5724Uri;
 
 import junit.framework.AssertionFailedError;
 
 import org.junit.Test;
-import org.medxnote.securesms.BaseUnitTest;
+import com.medxnote.securesms.BaseUnitTest;
 
 import java.net.URISyntaxException;
 

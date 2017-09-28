@@ -1,4 +1,4 @@
-package org.medxnote.securesms.database;
+package com.medxnote.securesms.database;
 
 import android.content.Context;
 import android.database.Cursor;

@@ -1,8 +1,8 @@
-package org.medxnote.securesms.jobs;
+package com.medxnote.securesms.jobs;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.medxnote.securesms.BaseUnitTest;
+import com.medxnote.securesms.BaseUnitTest;
 import com.medxnote.securesms.attachments.Attachment;
 import com.medxnote.securesms.attachments.AttachmentId;
 import com.medxnote.securesms.jobs.AttachmentDownloadJob;

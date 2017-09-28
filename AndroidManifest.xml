@@ -414,6 +414,9 @@
             android:name=".QrCodeScannerActivity"
             android:screenOrientation="portrait" />
 
+        <activity android:name=".GroupMembersActivity"
+            android:screenOrientation="portrait" />
+
         <service
             android:name="com.medxnote.redphone.RedPhoneService"
             android:enabled="true" />

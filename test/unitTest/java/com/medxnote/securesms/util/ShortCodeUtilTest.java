@@ -1,4 +1,4 @@
-package org.medxnote.securesms.util;
+package com.medxnote.securesms.util;
 
 import com.medxnote.securesms.util.ShortCodeUtil;
 

@@ -1,9 +1,9 @@
-package org.medxnote.securesms.util;
+package com.medxnote.securesms.util;
 
 import junit.framework.AssertionFailedError;
 
 import org.junit.Test;
-import org.medxnote.securesms.BaseUnitTest;
+import com.medxnote.securesms.BaseUnitTest;
 import org.whispersystems.signalservice.api.util.InvalidNumberException;
 import org.whispersystems.signalservice.api.util.PhoneNumberFormatter;
 

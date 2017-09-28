@@ -25,12 +25,14 @@ import com.medxnote.securesms.recipients.RecipientFactory;
 import com.medxnote.securesms.recipients.Recipients;
 import com.medxnote.securesms.sms.IncomingGroupMessage;
 import com.medxnote.securesms.util.TextSecurePreferences;
+import com.medxnote.securesms.util.Util;
 
 import org.whispersystems.libsignal.util.guava.Optional;
 import org.whispersystems.signalservice.api.messages.SignalServiceAttachment;
 import org.whispersystems.signalservice.api.messages.SignalServiceDataMessage;
 import org.whispersystems.signalservice.api.messages.SignalServiceEnvelope;
 import org.whispersystems.signalservice.api.messages.SignalServiceGroup;
+import org.whispersystems.signalservice.api.util.InvalidNumberException;
 
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -58,18 +60,24 @@ public class GroupMessageProcessor {
       return null;
     }
 
-    GroupDatabase      database = DatabaseFactory.getGroupDatabase(context);
-    SignalServiceGroup group    = message.getGroupInfo().get();
-    byte[]             id       = group.getGroupId();
-    GroupRecord        record   = database.getGroup(id);
+    GroupDatabase      database  = DatabaseFactory.getGroupDatabase(context);
+    SignalServiceGroup group     = message.getGroupInfo().get();
+    byte[]             id        = group.getGroupId();
+    GroupRecord        record    = database.getGroup(id);
+    String             initiator = "";
+    try {
+      initiator = Util.canonicalizeNumber(context, envelope.getSource());
+    } catch (InvalidNumberException e ){
+      return null;
+    }
 
     if (record != null) {
       if (group.getType() == SignalServiceGroup.Type.UPDATE) {
-        if (record.getVersion() == 0 || record.isAdminUpdate(envelope.getSource())) {
+        if (record.getVersion() == 0 || record.isAdminUpdate(initiator)) {
           return handleGroupUpdate(context, masterSecret, envelope, group, record, outgoing);
         }
       } else if (group.getType() == SignalServiceGroup.Type.KICK) {
-        if (record.getVersion() == 0 || record.isAdminUpdate(envelope.getSource())) {
+        if (record.getVersion() == 0 || record.isAdminUpdate(initiator)) {
           return handleGroupKick(context, masterSecret, envelope, group, record);
         }
       } else if (group.getType() == SignalServiceGroup.Type.QUIT) {

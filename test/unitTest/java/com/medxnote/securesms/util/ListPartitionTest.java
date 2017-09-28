@@ -1,9 +1,9 @@
-package org.medxnote.securesms.util;
+package com.medxnote.securesms.util;
 
 import com.medxnote.securesms.util.Util;
 
 import org.junit.Test;
-import org.medxnote.securesms.BaseUnitTest;
+import com.medxnote.securesms.BaseUnitTest;
 
 import java.util.LinkedList;
 import java.util.List;

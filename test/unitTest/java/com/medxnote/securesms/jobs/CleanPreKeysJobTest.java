@@ -1,7 +1,7 @@
-package org.medxnote.securesms.jobs;
+package com.medxnote.securesms.jobs;
 
 import org.junit.Test;
-import org.medxnote.securesms.BaseUnitTest;
+import com.medxnote.securesms.BaseUnitTest;
 import com.medxnote.securesms.crypto.MasterSecret;
 import com.medxnote.securesms.dependencies.AxolotlStorageModule;
 import com.medxnote.securesms.jobs.CleanPreKeysJob;

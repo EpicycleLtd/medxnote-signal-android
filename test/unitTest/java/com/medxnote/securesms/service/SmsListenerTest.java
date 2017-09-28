@@ -1,4 +1,4 @@
-package org.medxnote.securesms.service;
+package com.medxnote.securesms.service;
 
 import com.medxnote.securesms.service.SmsListener;
 
@@ -6,7 +6,7 @@ import junit.framework.AssertionFailedError;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.medxnote.securesms.BaseUnitTest;
+import com.medxnote.securesms.BaseUnitTest;
 
 import java.util.HashMap;
 import java.util.Map;

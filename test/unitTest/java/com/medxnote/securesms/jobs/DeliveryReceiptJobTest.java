@@ -1,9 +1,9 @@
-package org.medxnote.securesms.jobs;
+package com.medxnote.securesms.jobs;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.medxnote.securesms.BaseUnitTest;
+import com.medxnote.securesms.BaseUnitTest;
 import com.medxnote.securesms.dependencies.TextSecureCommunicationModule.TextSecureMessageSenderFactory;
 import com.medxnote.securesms.jobs.DeliveryReceiptJob;
 

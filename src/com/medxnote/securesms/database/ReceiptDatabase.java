@@ -42,6 +42,8 @@ import com.medxnote.securesms.sms.IncomingGroupMessage;
 import com.medxnote.securesms.sms.IncomingTextMessage;
 import com.medxnote.securesms.sms.OutgoingTextMessage;
 import com.medxnote.securesms.util.JsonUtils;
+import com.medxnote.securesms.util.Util;
+
 import org.whispersystems.jobqueue.JobManager;
 import org.whispersystems.signalservice.api.messages.SignalServiceDataMessage;
 import org.whispersystems.signalservice.api.push.SignalServiceAddress;
@@ -53,7 +55,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import static com.medxnote.securesms.util.Util.canonicalizeNumber;
 
 /**
  * Database for storage of SMS receipts.
@@ -101,7 +102,7 @@ public class ReceiptDatabase extends MessagingDatabase {
             ADDRESS + " = ?",
         new String[]{
             messageId.getTimestamp() + "",
-            messageId.getAddress().replaceAll("[\\s\\(\\)-]+", "")
+            canonicalizeNumber(messageId.getAddress())
         }
     );
     notifyConversationListListeners();
@@ -255,7 +256,7 @@ public class ReceiptDatabase extends MessagingDatabase {
     SQLiteDatabase db = databaseHelper.getWritableDatabase();
     String condition = MESSAGE + " = ?";
     if(address != "*"){
-      condition += " AND " + ADDRESS + " = " + address.replaceAll("[\\s\\(\\)-]+", "");
+      condition += " AND " + ADDRESS + " = " + canonicalizeNumber(address);
     }
     db.delete(
       TABLE_NAME,
@@ -277,7 +278,7 @@ public class ReceiptDatabase extends MessagingDatabase {
   public void createReceipts(Recipients addresses, long timeStamp){
     for(Recipient address : addresses.getRecipientsList()){
       createReceipts(new SyncMessageId(
-          address.getNumber().replaceAll("[\\s\\(\\)-]+", ""),
+          canonicalizeNumber(address.getNumber()),
           timeStamp
         )
       );
@@ -294,9 +295,18 @@ public class ReceiptDatabase extends MessagingDatabase {
     }
   }
 
+  private String canonicalizeNumber(String address){
+    try {
+      address = Util.canonicalizeNumber(context, address.replaceAll("[\\s\\(\\)-]+",""));
+    } catch (InvalidNumberException e){
+      Log.e(TAG, e.getMessage(), e);
+    }
+    return address;
+  }
+
   public void createReceipts(SyncMessageId messageId){
     ContentValues values = new ContentValues(5);
-    values.put(ADDRESS, messageId.getAddress().replaceAll("[\\s\\(\\)-]+",""));
+    values.put(ADDRESS, canonicalizeNumber(messageId.getAddress()));
     values.put(MESSAGE, messageId.getTimestamp());
     values.put(DATE_SENT, messageId.getTimestamp());
     values.put(DATE_RECEIVED, -1);
@@ -307,7 +317,7 @@ public class ReceiptDatabase extends MessagingDatabase {
 
   public Cursor getReceiptsById(long timestamp, String address) {
     SQLiteDatabase db = databaseHelper.getReadableDatabase();
-    String formatted_address = "%" + address.replaceAll("[\\s\\(\\)-]+","").replaceFirst("^0*", "");
+    String formatted_address = "%" + canonicalizeNumber(address).replaceFirst("^0*", "");
     return db.query(
       TABLE_NAME,
       MESSAGE_PROJECTION,

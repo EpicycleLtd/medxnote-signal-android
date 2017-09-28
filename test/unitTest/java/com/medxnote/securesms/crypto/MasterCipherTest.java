@@ -1,11 +1,11 @@
-package org.medxnote.securesms.crypto;
+package com.medxnote.securesms.crypto;
 
 import com.medxnote.securesms.crypto.MasterCipher;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.medxnote.securesms.BaseUnitTest;
+import com.medxnote.securesms.BaseUnitTest;
 import org.whispersystems.libsignal.InvalidMessageException;
 
 @PowerMockIgnore("javax.crypto.*")
