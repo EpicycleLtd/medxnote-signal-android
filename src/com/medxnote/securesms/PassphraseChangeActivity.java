@@ -107,7 +107,7 @@ public class PassphraseChangeActivity extends PassphraseActivity {
     } else if (passphrase.equals("")) {
       this.newPassphrase.setError(getString(R.string.PassphraseChangeActivity_enter_new_passphrase_exclamation));
       this.newPassphrase.requestFocus();
-    } else if(BuildConfig.APPLICATION_ID.contains("uk") && passphrase.length() < 4) {
+    } else if(BuildConfig.APPLICATION_ID.contains("uk") && passphrase.length() < 6) {
       this.newPassphrase.setText("");
       this.repeatPassphrase.setText("");
       this.newPassphrase.setError(getString(R.string.PassphraseCreateActivity_minimum_length));

@@ -393,7 +393,7 @@
     <string name="PassphraseCreateActivity_passphrase_progress">Please wait to generate and store passphrase.</string>
     <string name="PassphraseCreateActivity_passphrases_dont_match_exclamation">Passphrases don\'t match!</string>
     <string name="PassphraseCreateActivity_you_must_specify_a_password">You need to enter passprase</string>
-    <string name="PassphraseCreateActivity_minimum_length">Your passphrase needs at least 4 characters.</string>
+    <string name="PassphraseCreateActivity_minimum_length">Your passphrase needs at least 6 characters.</string>
     <string name="PassphraseCreateActivity_submit_button">Submit passphrase</string>
     <string name="PassphraseCreateActivity_enter_passphrase">Enter passphrase!</string>
     <string name="PassphraseCreateActivity_retype_passphrase">Retype passphrase!</string>
