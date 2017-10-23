@@ -182,10 +182,10 @@ android {
         versionName "3.20.14"
 
         buildConfigField "long", "BUILD_TIMESTAMP", getLastCommitTimestamp() + "L"
-        buildConfigField "String", "TEXTSECURE_URL", "\"https://global2.textsecure.medx.im\""
+        buildConfigField "String", "TEXTSECURE_URL", "\"https://globalv2.textsecure.medx.im\""
         buildConfigField "String", "USER_AGENT", "\"OWA\""
-        buildConfigField "String", "REDPHONE_MASTER_URL", "\"https://global2.textsecure.medx.im\""
-        buildConfigField "String", "REDPHONE_RELAY_HOST", "\"global2.textsecure.medx.im\""
+        buildConfigField "String", "REDPHONE_MASTER_URL", "\"https://globalv2.textsecure.medx.im\""
+        buildConfigField "String", "REDPHONE_RELAY_HOST", "\"globalv2.textsecure.medx.im\""
         buildConfigField "String", "REDPHONE_PREFIX_NAME", "\".medx.im\""
         buildConfigField "boolean", "DEV_BUILD", "false"
     }
@@ -250,15 +250,15 @@ android {
         uk {
             applicationIdSuffix ".uk"
 
-            versionCode 3
-            versionName "3.20.17"
+            versionCode 8
+            versionName "3.20.22"
 
             resValue "string", "account_type", "com.medxnote.securesms.uk"
             buildConfigField "String", "PROVIDER", "\"com.medxnote.provider.securesms.uk\""
 
-            buildConfigField "String", "TEXTSECURE_URL", "\"https://uk.textsecure.medx.im\""
-            buildConfigField "String", "REDPHONE_MASTER_URL", "\"https://uk.textsecure.medx.im\""
-            buildConfigField "String", "REDPHONE_RELAY_HOST", "\"uk.textsecure.medx.im\""
+            buildConfigField "String", "TEXTSECURE_URL", "\"https://ukv2.textsecure.medx.im\""
+            buildConfigField "String", "REDPHONE_MASTER_URL", "\"https://ukv2.textsecure.medx.im\""
+            buildConfigField "String", "REDPHONE_RELAY_HOST", "\"ukv2.textsecure.medx.im\""
             buildConfigField "String", "REDPHONE_PREFIX_NAME", "\".medx.im\""
         }
 
