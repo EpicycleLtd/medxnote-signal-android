@@ -257,8 +257,8 @@ android {
             buildConfigField "String", "PROVIDER", "\"com.medxnote.provider.securesms.uk\""
 
             buildConfigField "String", "TEXTSECURE_URL", "\"https://ukv2.textsecure.medx.im\""
-            buildConfigField "String", "REDPHONE_MASTER_URL", "\"https://ukv2.textsecure.medx.im\""
-            buildConfigField "String", "REDPHONE_RELAY_HOST", "\"ukv2.textsecure.medx.im\""
+            buildConfigField "String", "REDPHONE_MASTER_URL", "\"https://redphonev2.medx.im\""
+            buildConfigField "String", "REDPHONE_RELAY_HOST", "\"redphonev2.medx.im\""
             buildConfigField "String", "REDPHONE_PREFIX_NAME", "\".medx.im\""
         }
 

@@ -3,7 +3,7 @@
     <string name="app_name">Medxnote UK</string>
 
     <string name="app_protection_fragment_timeout_minimum">Please enter time between 1 and 30 minutes</string>
-    <string name="PassphraseCreateActivity_passphrase_explanation">Please choose your passphrase. You will need it to open the app after some period of inactivity.  Medxnote UK requires an app specific passphrase to help prevent inadvertent access.  Please choose a passphrase at least 4 characters in length, different to your phone passphrase.  Don\'t forget your passphrase, Medxnote can not reset it.</string>
-    <string name="PassphraseChangeActivity_passphrase_explanation">Please choose a passphrase at least 4 characters in length</string>
+    <string name="PassphraseCreateActivity_passphrase_explanation">Please choose your passphrase. You will need it to open the app after some period of inactivity.  Medxnote UK requires an app specific passphrase to help prevent inadvertent access.  Please choose a passphrase at least 6 characters in length, different to your phone passphrase.  Don\'t forget your passphrase, Medxnote can not reset it.</string>
+    <string name="PassphraseChangeActivity_passphrase_explanation">Please choose a passphrase at least 6 characters in length</string>
 
 </resources>
