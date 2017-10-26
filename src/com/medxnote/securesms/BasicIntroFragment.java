@@ -45,6 +45,7 @@ public class BasicIntroFragment extends Fragment {
                            Bundle savedInstanceState) {
     View v = inflater.inflate(R.layout.color_fragment, container, false);
 
+    ((ImageView)v.findViewById(R.id.watermark)).setImageResource(drawable);
     ((TextView)v.findViewById(R.id.blurb)).setText(text);
 
     return v;
