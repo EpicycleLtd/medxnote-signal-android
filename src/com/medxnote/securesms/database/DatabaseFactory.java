@@ -25,6 +25,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.medxnote.securesms.BuildConfig;
 import com.medxnote.securesms.crypto.MasterSecret;
 import com.medxnote.securesms.notifications.MessageNotifier;
 import com.medxnote.securesms.recipients.Recipient;
@@ -81,7 +82,7 @@ public class DatabaseFactory {
   private static final int INTRODUCED_HIDDEN_MESSAGE_MMS                   = 33;
   private static final int DATABASE_VERSION                                = 33;
 
-  private static final String DATABASE_NAME    = "messages.db";
+  private static final String DATABASE_NAME    = getDatabaseName();
   private static final Object lock             = new Object();
 
   private static DatabaseFactory instance;
@@ -182,6 +183,14 @@ public class DatabaseFactory {
   public static MenuDatabase getMenuDatabase(Context context){
     return getInstance(context).menuDatabase;
   }
+
+  private static String getDatabaseName() {
+    if (BuildConfig.APPLICATION_ID.contains("uk")) {
+      return "ukmessages.db";
+    }
+    return "messages.db";
+  }
+
 
   private DatabaseFactory(Context context) {
     this.databaseHelper              = new DatabaseHelper(context, DATABASE_NAME, null, DATABASE_VERSION);
