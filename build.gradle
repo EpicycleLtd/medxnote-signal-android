@@ -181,6 +181,7 @@ android {
         versionCode 222
         versionName "3.20.14"
 
+        buildConfigField "String", "REGISTRATION_ID", "\"108428513090\""
         buildConfigField "long", "BUILD_TIMESTAMP", getLastCommitTimestamp() + "L"
         buildConfigField "String", "TEXTSECURE_URL", "\"https://globalv2.textsecure.medx.im\""
         buildConfigField "String", "USER_AGENT", "\"OWA\""

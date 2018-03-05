@@ -522,7 +522,9 @@ public class PushDecryptJob extends ContextJob {
       EncryptingSmsDatabase database       = DatabaseFactory.getEncryptingSmsDatabase(context);
       Recipients            recipients     = RecipientFactory.getRecipientsFromString(context, envelope.getSource(), false);
       long                  recipientId    = recipients.getPrimaryRecipient().getRecipientId();
-      PreKeySignalMessage   whisperMessage = new PreKeySignalMessage(envelope.getLegacyMessage());
+      PreKeySignalMessage   whisperMessage = new PreKeySignalMessage(
+          envelope.hasLegacyMessage() ? envelope.getLegacyMessage() : envelope.getContent()
+      );
       IdentityKey           identityKey    = whisperMessage.getIdentityKey();
       String                encoded        = Base64.encodeBytes(envelope.getLegacyMessage());
       IncomingTextMessage   textMessage    = new IncomingTextMessage(envelope.getSource(), envelope.getSourceDevice(),

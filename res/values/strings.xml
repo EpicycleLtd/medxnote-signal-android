@@ -1238,5 +1238,6 @@
 
     <string name="unread_message">1 UNREAD MESSAGE</string>
     <string name="unread_messages">%1$d UNREAD MESSAGES</string>
-
+    <!-- this line should be not only in uk dir -->
+    <string name="app_protection_fragment_timeout_minimum">Please enter time between 1 and 30 minutes</string>
 </resources>
