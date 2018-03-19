@@ -25,6 +25,7 @@ import org.whispersystems.libsignal.SessionBuilder;
 import org.whispersystems.libsignal.logging.Log;
 import org.whispersystems.libsignal.state.SignalProtocolStore;
 import org.whispersystems.libsignal.state.PreKeyBundle;
+import org.whispersystems.libsignal.util.Pair;
 import org.whispersystems.libsignal.util.guava.Optional;
 import org.whispersystems.signalservice.api.crypto.SignalServiceCipher;
 import org.whispersystems.signalservice.api.crypto.UntrustedIdentityException;
@@ -370,12 +371,16 @@ public class SignalServiceMessageSender {
             attachment.getListener(),
             attachmentKey);
 
-    long attachmentId = socket.sendAttachment(attachmentData);
+    Pair<Long, byte[]> attachmentIdAndDigest = socket.sendAttachment(attachmentData);
+
+    long attachmentId = attachmentIdAndDigest.first();
+    byte[] digest = attachmentIdAndDigest.second();
 
     AttachmentPointer.Builder builder = AttachmentPointer.newBuilder()
             .setContentType(attachment.getContentType())
             .setId(attachmentId)
             .setKey(ByteString.copyFrom(attachmentKey))
+            .setDigest(ByteString.copyFrom(digest))
             .setSize((int)attachment.getLength());
 
     if (attachment.getPreview().isPresent()) {

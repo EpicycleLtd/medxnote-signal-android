@@ -1,19 +1,9 @@
-/**
- * Copyright (C) 2014 Open Whisper Systems
+/*
+ * Copyright (C) 2014-2017 Open Whisper Systems
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Licensed according to the LICENSE file in this repository.
  */
+
 package org.whispersystems.signalservice.api.crypto;
 
 import org.whispersystems.signalservice.internal.util.Util;
@@ -30,31 +20,26 @@ import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
-public class AttachmentCipherOutputStream extends OutputStream {
+public class AttachmentCipherOutputStream extends DigestingOutputStream {
 
-  private final Cipher       cipher;
-  private final Mac          mac;
-  private final OutputStream outputStream;
-
-  private long ciphertextLength = 0;
+  private final Cipher cipher;
+  private final Mac    mac;
 
   public AttachmentCipherOutputStream(byte[] combinedKeyMaterial,
                                       OutputStream outputStream)
           throws IOException
   {
+    super(outputStream);
     try {
-      this.outputStream = outputStream;
       this.cipher       = initializeCipher();
       this.mac          = initializeMac();
-
       byte[][] keyParts = Util.split(combinedKeyMaterial, 32, 32);
 
       this.cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(keyParts[0], "AES"));
       this.mac.init(new SecretKeySpec(keyParts[1], "HmacSHA256"));
 
       mac.update(cipher.getIV());
-      outputStream.write(cipher.getIV());
-      ciphertextLength += cipher.getIV().length;
+      super.write(cipher.getIV());
     } catch (InvalidKeyException e) {
       throw new AssertionError(e);
     }
@@ -71,8 +56,7 @@ public class AttachmentCipherOutputStream extends OutputStream {
 
     if (ciphertext != null) {
       mac.update(ciphertext);
-      outputStream.write(ciphertext);
-      ciphertextLength += ciphertext.length;
+      super.write(ciphertext);
     }
   }
 
@@ -87,13 +71,10 @@ public class AttachmentCipherOutputStream extends OutputStream {
       byte[] ciphertext = cipher.doFinal();
       byte[] auth       = mac.doFinal(ciphertext);
 
-      outputStream.write(ciphertext);
-      outputStream.write(auth);
+      super.write(ciphertext);
+      super.write(auth);
 
-      ciphertextLength += ciphertext.length;
-      ciphertextLength += auth.length;
-
-      outputStream.flush();
+      super.flush();
     } catch (IllegalBlockSizeException | BadPaddingException e) {
       throw new AssertionError(e);
     }
