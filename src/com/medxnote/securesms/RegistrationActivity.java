@@ -14,6 +14,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -49,6 +51,8 @@ public class RegistrationActivity extends BaseActionBarActivity {
   private TextView             number;
   private Button               createButton;
   private Button               skipButton;
+  private CheckBox             eula;
+  private TextView             eulaTxt;
 
   private MasterSecret masterSecret;
 
@@ -80,16 +84,19 @@ public class RegistrationActivity extends BaseActionBarActivity {
     this.number         = (TextView)findViewById(R.id.number);
     this.createButton   = (Button)findViewById(R.id.registerButton);
     this.skipButton     = (Button)findViewById(R.id.skipButton);
+    this.eula           = (CheckBox) findViewById(R.id.eulaCheckBox);
+    this.eulaTxt        = (TextView)findViewById(R.id.eula);
 
     this.countryCode.addTextChangedListener(new CountryCodeChangedListener());
     this.number.addTextChangedListener(new NumberChangedListener());
     this.createButton.setOnClickListener(new CreateButtonListener());
     this.skipButton.setOnClickListener(new CancelButtonListener());
+    this.eula.setOnCheckedChangeListener(new EulaCheckBoxListener());
 
     if (getIntent().getBooleanExtra("cancel_button", false)) {
       this.skipButton.setVisibility(View.VISIBLE);
     } else {
-      this.skipButton.setVisibility(View.INVISIBLE);
+      this.skipButton.setVisibility(View.GONE);
     }
 
     findViewById(R.id.twilio_shoutout).setOnClickListener(new View.OnClickListener() {
@@ -192,6 +199,13 @@ public class RegistrationActivity extends BaseActionBarActivity {
         Toast.makeText(self,
                        getString(R.string.RegistrationActivity_you_must_specify_your_phone_number),
                        Toast.LENGTH_LONG).show();
+        return;
+      }
+
+      if (!eula.isChecked()){
+        Toast.makeText(self,
+                getString(R.string.RegistrationActivity_you_must_accept_eula),
+                Toast.LENGTH_LONG).show();
         return;
       }
 
@@ -311,6 +325,14 @@ public class RegistrationActivity extends BaseActionBarActivity {
 
       startActivity(nextIntent);
       finish();
+    }
+  }
+
+  private class EulaCheckBoxListener implements CompoundButton.OnCheckedChangeListener{
+
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+      createButton.setEnabled(isChecked);
     }
   }
 }
